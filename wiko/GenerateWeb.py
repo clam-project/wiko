@@ -3,6 +3,27 @@
 import glob
 import os.path
 import re
+import sys
+
+inlineHtmlSubsitutions = [  # the order is important
+	(r"'''(([^']|'[^']|''[^'])*)'''", r"<b>\1</b>"),
+	(r"''(([^']|'[^'])*)''", r"<em>\1</em>"),
+]
+text = """Normal ''emphasis'' Normal. ''Another emphasis'' Normal
+	Normal ''em'phasis'' Normal. ''Another emphasis'' Normal.
+	Normal '''bold''' Normal. '''Another bold''' Normal.
+	Normal '''bold ''emphasis'' more bold. don't ''' Normal. '''Another bold''' Normal.
+	Normal ''emphasis '''bold don't''' more emphasis'' Normal. '''Another bold''' Normal.
+"""
+
+inlineHtmlSubstitutionsCompiled = [ (re.compile(wikipattern), substitution) 
+	for wikipattern, substitution in inlineHtmlSubsitutions  ]
+
+def substituteHtmlInline(line) :
+	for compiledPattern, htmlSubstitution in inlineHtmlSubstitutionsCompiled :
+		line = compiledPattern.sub(htmlSubstitution, line)
+	return line
+
 h1  = re.compile(r"^=([^=]+)=")
 h2  = re.compile(r"^==([^=]+)==")
 h3  = re.compile(r"^===([^=]+)===")
@@ -30,7 +51,7 @@ divMarkersHtml = {
 	'Math' :     ('<div class="equation"><b>Equation:</b>', '</div>'),
 }
 
-class Wiki2LaTeXCompiler :
+class LaTeXCompiler :
 	def closeAnyOpen(self) :
 		if self.closing == "" : return
 		self.result.append(self.closing)
@@ -169,7 +190,7 @@ class Wiki2LaTeXCompiler :
 
 
 
-class WikiCompiler :
+class HtmlCompiler :
 	def closeAnyOpen(self) :
 		if self.closing == "" : return
 		self.result.append(self.closing)
@@ -311,6 +332,7 @@ class WikiCompiler :
 			if levelToAdd == "#" : tag = "ol"
 			self.result.append("%s<%s>"%("\t"*len(self.itemLevel),tag))
 			self.itemLevel += levelToAdd
+		line = substituteHtmlInline(line)	
 		self.result.append(line)
 
 
@@ -345,9 +367,9 @@ for contentFile in glob.glob("*.wiki") :
 	print "Generating", target, "from", contentFile, "..."
 	content = file(contentFile).read()
 	content = content[3:] # remove the utf8 marker
-	htmlResult = WikiCompiler().process(content)
+	htmlResult = HtmlCompiler().process(content)
 	file(target,"w").write(scheleton%htmlResult)
-	texResult = Wiki2LaTeXCompiler().process(content)
+	texResult = LaTeXCompiler().process(content)
 	file(targetTex,"w").write(texResult['content'])
 
 #os.system("(cd img; bash ./generateImages.sh)")

@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+# bugs: @cite:some at end of line
 import glob
 import os.path
 import re

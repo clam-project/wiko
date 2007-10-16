@@ -1,0 +1,178 @@
+body {
+	background: #7ac;
+	color: #000;
+	text-align: justify;
+	font-family: sans-serif;
+}
+h1, h2, h3, h4, h5 {
+	color: #449;
+	padding: 0pt 2pt;
+	clear: both;
+}
+h1 {
+	border: solid #218;
+	border-bottom: solid 5pt;
+}
+h2 {
+	background: transparent url('ensamblingbox.png') no-repeat 99% 2pt;
+	border: none;
+	padding-right: 120px;
+	border-bottom: solid 2pt;
+	border-right: solid 2pt;
+}
+.head {
+	border: 2pt solid black;
+	background: #00A0C2 url('ensamblingbox.png') no-repeat 99% 50%;
+}
+.body {
+	margin-left: auto;
+	margin-right: auto;
+	padding-left: 2em;
+	padding-right: 2em;
+	padding-top: 0.5ex;
+	padding-bottom: 0.5ex;
+	background: #cc8;
+	width: 80%;
+	border: solid 1pt black;
+}
+.footer {
+	margin-top: 0.5em;
+	margin-bottom: 1em;
+	border-top: solid 2pt #237;
+	border-left: solid 2pt #237;
+	padding: 4pt;
+	background: transparent url('think.png') no-repeat 0% 100%;
+	min-height: 2em;
+}
+.footer .copyright {
+	text-align: right;
+	float: right;
+	clear: right;
+	color: #174;
+}
+.footer .email {
+	color: #369;
+	text-align: right;
+	clear: right;
+	float: right;
+}
+.footer .banners {
+	margin-left: 140px;
+	text-align: left;
+	vertical-align: bottom;
+}
+
+.footer .banners img,
+.footer .banners *
+{
+	margin: 0pt;
+	padding: 0pt;
+}
+
+.heading td {
+	background: #005;
+	color: #54e;
+}
+tr, td, th {
+	border: 2mm;
+	color: #ba4;
+	background: #237;
+	font-weight: bold;
+	border-color: #014;
+	}
+td {
+	background: #ba6;
+	color: #333;
+	padding-left:3pt;
+	padding-right:3pt;
+}
+
+b {
+	font-weight: bold;
+	color: #078;
+}
+em {
+	font-weight: bold;
+	color: #922;
+}
+tt, pre {
+	font-weight: bold;
+	color: #522;
+}
+pre
+{
+	background: #bbb;
+	border: 1pt solid black;
+	padding: 4pt 10pt 10pt 10pt;
+}
+
+a {
+	text-decoration: none;
+	font-weight: bold;
+}
+a:visited {
+	color: #46a;
+}
+a:link {
+	color: #369;
+}
+a:hover
+{
+	text-decoration: underline;
+	color: #56b;
+}
+
+img {
+	margin: 4pt;
+	border: none;
+}
+
+.figure {
+	border: solid 1pt grey;
+	display: block;
+	text-align: center;
+	background: #dd9;
+}
+.rightfigure {
+	border: solid 1pt grey;
+	float: right;
+	background: #dd9;
+	margin-left: 3em;
+}
+ul.menu {
+	text-align: center;
+	margin-left: auto;
+	margin-right: auto;
+	padding: 0pt;
+}
+.menu li {
+	display: inline;
+	background: #dd9;
+	margin-right: 0pt;
+	margin-left: 0pt;
+	margin-top: 3pt;
+	margin-bottom: 3pt;
+	list-style: none;
+	list-style-position: outside;
+}
+.menu li a {
+	border: 1pt solid black;
+	padding-left: 1em;
+	padding-right: 1em;
+	white-space: nowrap;
+}
+
+.menu li a:hover {
+	text-decoration: none;
+	background: #dea;
+}
+.abstract {
+	padding:2em;
+}
+.todo {
+/*	display: none;*/
+	color: red;
+	background-color: yellow;
+}
+
+

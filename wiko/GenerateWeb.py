@@ -5,13 +5,16 @@ import os.path
 import re
 import sys
 
+enableLaTeX = False
+
 inlineHtmlSubsitutions = [  # the order is important
 	(r"'''(([^']|'[^']|''[^'])*)'''", r"<b>\1</b>"),
 	(r"''(([^']|'[^'])*)''", r"<em>\1</em>"),
 	(r"\[(\S*)\s(.+)\]", r"<a href='\1'>\2</a>"),
 	(r"\[(\S*)\]", r"<a href='\1'>\1</a>"),
-	(r"@cite:(\S*)", r"<a href='biblio.bib'>[\1]</a>"), #TODO complete
-	(r"`([^`]*)`", r"<img src=http://www.forkosh.dreamhost.com/mimetex.cgi?\1 /> <img src=http://l.wordpress.com/latex.php?latex=\1 />"),
+	(r"@cite:(\S*)", r"<a href='dataflow.bib.html#\1'>[\1]</a>"), #TODO complete
+	(r"`([^`]*)`", r"<img src=http://www.forkosh.dreamhost.com/mimetex.cgi?\1 />"),
+	#(r"`([^`]*)`", r"<img src=http://www.forkosh.dreamhost.com/mimetex.cgi?\1 />"), #this is another url that provides latex images
 ]
 
 #TODO move this to specific class
@@ -209,6 +212,7 @@ class HtmlCompiler :
 		self.toc = []
 		self.vars = {
 			'title': '',
+			'author': '',
 		}
 		for line in content.splitlines() :
 			self.processLine(line)
@@ -369,8 +373,9 @@ for contentFile in glob.glob("*.wiki") :
 	content = content[3:] # remove the utf8 marker
 	htmlResult = HtmlCompiler().process(content)
 	file(target,"w").write(scheleton%htmlResult)
-	texResult = LaTeXCompiler().process(content)
-	file(targetTex,"w").write(texResult['content'])
+	if enableLaTeX :
+		texResult = LaTeXCompiler().process(content)
+		file(targetTex,"w").write(texResult['content'])
 
 #os.system("(cd img; bash ./generateImages.sh)")
 #os.system("bibtex TICMA_master_thesis_DavidGarcia")

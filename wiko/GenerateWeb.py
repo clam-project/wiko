@@ -8,17 +8,17 @@ import sys
 inlineHtmlSubsitutions = [  # the order is important
 	(r"'''(([^']|'[^']|''[^'])*)'''", r"<b>\1</b>"),
 	(r"''(([^']|'[^'])*)''", r"<em>\1</em>"),
+	(r"\[(\S*)\s(.+)\]", r"<a href='\1'>\2</a>"),
+	(r"\[(\S*)\]", r"<a href='\1'>\1</a>"),
+	(r"@cite:(\S*)", r"<a href='biblio.bib'>[\1]</a>"), #TODO complete
+	(r"`([^`]*)`", r"<img src=http://www.forkosh.dreamhost.com/mimetex.cgi?\1 /> <img src=http://l.wordpress.com/latex.php?latex=\1 />"),
 ]
-text = """Normal ''emphasis'' Normal. ''Another emphasis'' Normal
-	Normal ''em'phasis'' Normal. ''Another emphasis'' Normal.
-	Normal '''bold''' Normal. '''Another bold''' Normal.
-	Normal '''bold ''emphasis'' more bold. don't ''' Normal. '''Another bold''' Normal.
-	Normal ''emphasis '''bold don't''' more emphasis'' Normal. '''Another bold''' Normal.
-"""
 
+#TODO move this to specific class
 inlineHtmlSubstitutionsCompiled = [ (re.compile(wikipattern), substitution) 
 	for wikipattern, substitution in inlineHtmlSubsitutions  ]
 
+#TODO move this to abstract class (and rename)
 def substituteHtmlInline(line) :
 	for compiledPattern, htmlSubstitution in inlineHtmlSubstitutionsCompiled :
 		line = compiledPattern.sub(htmlSubstitution, line)

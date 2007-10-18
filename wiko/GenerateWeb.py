@@ -8,24 +8,39 @@ import sys
 
 enableLaTeX = True
 
-inlineHtmlSubsitutions = [  # the order is important
+inlineHtmlSubstitutions = [  # the order is important
 	(r"'''(([^']|'[^']|''[^'])*)'''", r"<b>\1</b>"),
 	(r"''(([^']|'[^'])*)''", r"<em>\1</em>"),
 	(r"\[(\S*)\s(.+)\]", r"<a href='\1'>\2</a>"),
 	(r"\[(\S*)\]", r"<a href='\1'>\1</a>"),
-	(r"@cite:(\S*)", r"<a href='dataflow.bib.html#\1'>[\1]</a>"), #TODO complete
+	(r"@cite:([-_a-zA-Z0-9]*)", r"<a href='dataflow.bib.html#\1'>[\1]</a>"), # TODO: hover box with bib info
 	(r"`([^`]*)`", r"<img src=http://www.forkosh.dreamhost.com/mimetex.cgi?\1 />"),
-	#(r"`([^`]*)`", r"<img src=http://www.forkosh.dreamhost.com/mimetex.cgi?\1 />"), #this is another url that provides latex images
+]
+inlineLatexSubstitutions = [  # the order is important
+	(r"'''(([^']|'[^']|''[^'])*)'''", r"{\\bf \1}"),
+	(r"''(([^']|'[^'])*)''", r"{\\em \1}"),
+	(r"\[(\S*)\s(.+)\]", r"\2\\footnote{\\hyperef{\1}{\1}}"),
+	(r"\[(\S*)\]", r"\\hyperef{\1}{\1}"),
+	(r"@cite:([-_a-zA-Z0-9]*)", r"\cite{\1}"),
+	(r"`([^`]*)`", r"$\1$"),
 ]
 
 #TODO move this to specific class
 inlineHtmlSubstitutionsCompiled = [ (re.compile(wikipattern), substitution) 
-	for wikipattern, substitution in inlineHtmlSubsitutions  ]
+	for wikipattern, substitution in inlineHtmlSubstitutions  ]
+
+inlineLatexSubstitutionsCompiled = [ (re.compile(wikipattern), substitution) 
+	for wikipattern, substitution in inlineLatexSubstitutions  ]
 
 #TODO move this to abstract class (and rename)
 def substituteHtmlInline(line) :
-	for compiledPattern, htmlSubstitution in inlineHtmlSubstitutionsCompiled :
-		line = compiledPattern.sub(htmlSubstitution, line)
+	for compiledPattern, substitution in inlineHtmlSubstitutionsCompiled :
+		line = compiledPattern.sub(substitution, line)
+	return line
+
+def substituteLatexInline(line) :
+	for compiledPattern, substitution in inlineLatexSubstitutionsCompiled :
+		line = compiledPattern.sub(substitution, line)
 	return line
 
 h1  = re.compile(r"^=([^=]+)=")
@@ -56,6 +71,10 @@ divMarkersHtml = {
 }
 
 class WikiCompiler :
+	def compileInlines(self, inlines) :
+		self.inlines = [ (re.compile(wikipattern), substitution) 
+			for wikipattern, substitution in inlines  ]
+
 	def closeAnyOpen(self) :
 		if self.closing == "" : return
 		self.result.append(self.closing)
@@ -90,6 +109,8 @@ class WikiCompiler :
 
 
 class LaTeXCompiler(WikiCompiler) :
+	def __init__(self) :
+		self.compileInlines(inlineLatexSubstitutions)
 	def processLine(self, line) :
 		newItemLevel = ""
 		liMatch = li.match(line)
@@ -192,10 +213,13 @@ class LaTeXCompiler(WikiCompiler) :
 			if levelToAdd == "#" : tag = "enumerate"
 			self.result.append("%s\\begin{%s}"%("\t"*len(self.itemLevel),tag))
 			self.itemLevel += levelToAdd
+		line = substituteLatexInline(line)	
 		self.result.append(line)
 
 
 class HtmlCompiler(WikiCompiler) :
+	def __init__(self) :
+		self.compileInlines(inlineHtmlSubstitutions)
 	def buildToc(self) :
 		result = []
 		lastLevel = 0

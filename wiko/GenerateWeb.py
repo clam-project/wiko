@@ -350,6 +350,30 @@ for contentFile in glob.glob("*.wiki") :
 		texResult = LaTeXCompiler().process(content)
 		file(targetTex,"w").write(texResult['content'])
 
+blogEntries = []
+for contentFile in glob.glob("blog/*.wiki") :
+	blogDict = HtmlCompiler().process(stripUtfMarker(file(contentFile).read()))
+	blogDict['name'] = os.path.splitext(os.path.split(contentFile)[-1])[0]
+	blogEntries.append(blogDict)
+
+def compareTimeStamps(x,y) :
+	from datetime import datetime
+	xTime = datetime.strptime(x['timestamp'], "%d/%m/%Y %H:%M")
+	yTime = datetime.strptime(y['timestamp'], "%d/%m/%Y %H:%M")
+	return yTime.toordinal()-xTime.toordinal()
+
+blogEntries.sort(compareTimeStamps)
+
+for entry in blogEntries :
+	from datetime import datetime
+	entry['timestamp'] = str(datetime.strptime(entry['timestamp'], "%d/%m/%Y %H:%M"))
+	print entry['timestamp'], entry['name'] , "|" , entry['title']
+	targetBlog = "blog."+entry["name"]+".html"
+	file(targetBlog,"w").write(entry['content'])
+	
+	
+
+
 #os.system("(cd img; bash ./generateImages.sh)")
 #os.system("bibtex TICMA_master_thesis_DavidGarcia")
 #os.system("pdflatex TICMA_master_thesis_DavidGarcia")

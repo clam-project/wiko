@@ -40,10 +40,6 @@ headersLatex = [
 	r"\subsubsection{%(title)s}",
 ]
 
-h1  = re.compile(r"^=([^=]+)=")
-h2  = re.compile(r"^==([^=]+)==")
-h3  = re.compile(r"^===([^=]+)===")
-h4  = re.compile(r"^====([^=]+)====")
 li  = re.compile(r"^([*#]+)(.*)")
 pre = re.compile(r"^[ \t](.*)")
 var = re.compile(r"^@([^:]*): (.*)")
@@ -125,15 +121,12 @@ class WikiCompiler :
 class LaTeXCompiler(WikiCompiler) :
 	def __init__(self) :
 		self.compileInlines(inlineLatexSubstitutions)
+		self.headerPatterns = headersLatex
 	def processLine(self, line) :
 		newItemLevel = ""
 		liMatch = li.match(line)
 		preMatch = pre.match(line)
 		headerMatch = header.match(line)
-		h1Match = h1.match(line)
-		h2Match = h2.match(line)
-		h3Match = h3.match(line)
-		h4Match = h4.match(line)
 		varMatch = var.match(line)
 		figMatch = fig.match(line)
 		todoMatch = todo.match(line)
@@ -193,7 +186,7 @@ class LaTeXCompiler(WikiCompiler) :
 			title = headerMatch.group(3)
 			level = len(headerMatch.group(1))
 			n=self.addToc(level,title)
-			line = headersLatex[level-1]%{
+			line = self.headerPatterns[level-1]%{
 				"title": title,
 				"label": n,
 				"level": level,
@@ -222,6 +215,7 @@ class LaTeXCompiler(WikiCompiler) :
 class HtmlCompiler(WikiCompiler) :
 	def __init__(self) :
 		self.compileInlines(inlineHtmlSubstitutions)
+		self.headerPatterns = headersHtml
 	def buildToc(self) :
 		result = []
 		lastLevel = 0
@@ -248,10 +242,6 @@ class HtmlCompiler(WikiCompiler) :
 		liMatch = li.match(line)
 		preMatch = pre.match(line)
 		headerMatch = header.match(line)
-		h1Match = h1.match(line)
-		h2Match = h2.match(line)
-		h3Match = h3.match(line)
-		h4Match = h4.match(line)
 		varMatch = var.match(line)
 		figMatch = fig.match(line)
 		todoMatch = todo.match(line)
@@ -294,7 +284,7 @@ class HtmlCompiler(WikiCompiler) :
 			title = headerMatch.group(3)
 			level = len(headerMatch.group(1))
 			n=self.addToc(level,title)
-			line = headersHtml[level-1]%{
+			line = self.headerPatterns[level-1]%{
 				"title": title,
 				"n": n,
 				"level": level,

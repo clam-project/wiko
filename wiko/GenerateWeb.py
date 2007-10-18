@@ -26,6 +26,20 @@ inlineLatexSubstitutions = [  # the order is important
 	(r"`([^`]*)`", r"$\1$"),
 ]
 
+header = re.compile(r"^(=+)([*]?)\s*([^=]+?)\s*\1\s*$")
+headersHtml = [
+	r"<h1 id='toc_%(n)s'>%(title)s</h1>",
+	r"<h2 id='toc_%(n)s'>%(title)s</h2>",
+	r"<h3 id='toc_%(n)s'>%(title)s</h3>",
+	r"<h4 id='toc_%(n)s'>%(title)s</h4>",
+]
+headersLatex = [
+	r"\chapter{%(title)s}",
+	r"\section{%(title)s}",
+	r"\subsection{%(title)s}",
+	r"\subsubsection{%(title)s}",
+]
+
 h1  = re.compile(r"^=([^=]+)=")
 h2  = re.compile(r"^==([^=]+)==")
 h3  = re.compile(r"^===([^=]+)===")
@@ -115,6 +129,7 @@ class LaTeXCompiler(WikiCompiler) :
 		newItemLevel = ""
 		liMatch = li.match(line)
 		preMatch = pre.match(line)
+		headerMatch = header.match(line)
 		h1Match = h1.match(line)
 		h2Match = h2.match(line)
 		h3Match = h3.match(line)
@@ -131,8 +146,7 @@ class LaTeXCompiler(WikiCompiler) :
 		while len(newItemLevel) < len(self.itemLevel) or  \
 				self.itemLevel != newItemLevel[0:len(self.itemLevel)]:
 #			print "pop '", self.itemLevel, "','", newItemLevel, "'"
-			tag = "itemize"
-			if self.itemLevel[-1]=="#" : tag = "enumerate"
+			tag = "itemize" if self.itemLevel[-1] is "*" else "enumerate"
 			self.result.append("%s\\end{%s}"%("\t"*(len(self.itemLevel)-1),tag))
 			self.itemLevel=self.itemLevel[0:-1]
 		if line=="" :
@@ -174,27 +188,16 @@ class LaTeXCompiler(WikiCompiler) :
 			line="\\marginpar{\\footnotesize TODO: %s}"%todoMatch.group(1)
 		elif labelMatch :
 			line="\label{%s}"%labelMatch.group(1)
-		elif h1Match :
+		elif headerMatch :
 			self.closeAnyOpen()
-			title = h1Match.group(1).strip()
-			n=self.addToc(1,title)
-#			line = "\\title{%s}\n\\maketitle"%(title)
-			line = "\\chapter{%s}\n"%(title)
-		elif h2Match :
-			self.closeAnyOpen()
-			title = h2Match.group(1).strip()
-			n=self.addToc(2,title)
-			line = "\\section{%s}"%(title)
-		elif h3Match :
-			self.closeAnyOpen()
-			title = h3Match.group(1).strip()
-			n=self.addToc(3,title)
-			line = "\\subsection{%s}"%(title)
-		elif h4Match :
-			self.closeAnyOpen()
-			title = h4Match.group(1).strip()
-			n=self.addToc(4,title)
-			line = "\\subsubsection{%s}"%(title)
+			title = headerMatch.group(3)
+			level = len(headerMatch.group(1))
+			n=self.addToc(level,title)
+			line = headersLatex[level-1]%{
+				"title": title,
+				"label": n,
+				"level": level,
+			}
 		elif not liMatch : 
 			if divMatch :
 				divType = divMatch.group(1)
@@ -244,6 +247,7 @@ class HtmlCompiler(WikiCompiler) :
 		newItemLevel = ""
 		liMatch = li.match(line)
 		preMatch = pre.match(line)
+		headerMatch = header.match(line)
 		h1Match = h1.match(line)
 		h2Match = h2.match(line)
 		h3Match = h3.match(line)
@@ -260,8 +264,7 @@ class HtmlCompiler(WikiCompiler) :
 		while len(newItemLevel) < len(self.itemLevel) or  \
 				self.itemLevel != newItemLevel[0:len(self.itemLevel)]:
 #			print "pop '", self.itemLevel, "','", newItemLevel, "'"
-			tag = "ul"
-			if self.itemLevel[-1]=="#" : tag = "ol"
+			tag = "ul" if self.itemLevel[-1] is "*" else "ol"
 			self.result.append("%s</%s>"%("\t"*(len(self.itemLevel)-1),tag))
 			self.itemLevel=self.itemLevel[0:-1]
 		if line=="" :
@@ -286,26 +289,16 @@ class HtmlCompiler(WikiCompiler) :
 			line=" <span class='todo'>TODO: %s</span> "%todoMatch.group(1)
 		elif labelMatch :
 			line=" <a name='#%s'></a>"%labelMatch.group(1)
-		elif h1Match :
+		elif headerMatch :
 			self.closeAnyOpen()
-			title = h1Match.group(1).strip()
-			n=self.addToc(1,title)
-			line = "<h1 id='toc_%i'>%s</h1>"%(n,title)
-		elif h2Match :
-			self.closeAnyOpen()
-			title = h2Match.group(1).strip()
-			n=self.addToc(2,title)
-			line = "<h2 id='toc_%i'>%s</h2>"%(n,title)
-		elif h3Match :
-			self.closeAnyOpen()
-			title = h3Match.group(1).strip()
-			n=self.addToc(3,title)
-			line = "<h3 id='toc_%i'>%s</h3>"%(n,title)
-		elif h4Match :
-			self.closeAnyOpen()
-			title = h4Match.group(1).strip()
-			n=self.addToc(4,title)
-			line = "<h4 id='toc_%i'>%s</h4>"%(n,title)
+			title = headerMatch.group(3)
+			level = len(headerMatch.group(1))
+			n=self.addToc(level,title)
+			line = headersHtml[level-1]%{
+				"title": title,
+				"n": n,
+				"level": level,
+			}
 		elif not liMatch : 
 			if divMatch :
 				divType = divMatch.group(1)
@@ -322,8 +315,7 @@ class HtmlCompiler(WikiCompiler) :
 			self.closeAnyOpen()
 #			print "push '", self.itemLevel, "','", newItemLevel, "'"
 			levelToAdd = newItemLevel[len(self.itemLevel)]
-			tag = "ul"
-			if levelToAdd == "#" : tag = "ol"
+			tag = "ul" if levelToAdd is "*" else "ol"
 			self.result.append("%s<%s>"%("\t"*len(self.itemLevel),tag))
 			self.itemLevel += levelToAdd
 		line = self.substituteInlines(line)	

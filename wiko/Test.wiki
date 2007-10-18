@@ -56,6 +56,10 @@ And the Keywords: special paragraph
 
 == Toc generation ==
 
+=== Third level ===
+
+==== Fourth level ====
+
 Headers generate labels.
 They can be refered from a Table of Content.
 This is the place holder for a Table of Content

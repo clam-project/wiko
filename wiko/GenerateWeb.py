@@ -7,6 +7,7 @@ import re
 import sys
 
 enableLaTeX = True
+enableHtml = True
 
 inlineHtmlSubstitutions = [  # the order is important
 	(r"'''(([^']|'[^']|''[^'])*)'''", r"<b>\1</b>"),
@@ -24,24 +25,6 @@ inlineLatexSubstitutions = [  # the order is important
 	(r"@cite:([-_a-zA-Z0-9]*)", r"\cite{\1}"),
 	(r"`([^`]*)`", r"$\1$"),
 ]
-
-#TODO move this to specific class
-inlineHtmlSubstitutionsCompiled = [ (re.compile(wikipattern), substitution) 
-	for wikipattern, substitution in inlineHtmlSubstitutions  ]
-
-inlineLatexSubstitutionsCompiled = [ (re.compile(wikipattern), substitution) 
-	for wikipattern, substitution in inlineLatexSubstitutions  ]
-
-#TODO move this to abstract class (and rename)
-def substituteHtmlInline(line) :
-	for compiledPattern, substitution in inlineHtmlSubstitutionsCompiled :
-		line = compiledPattern.sub(substitution, line)
-	return line
-
-def substituteLatexInline(line) :
-	for compiledPattern, substitution in inlineLatexSubstitutionsCompiled :
-		line = compiledPattern.sub(substitution, line)
-	return line
 
 h1  = re.compile(r"^=([^=]+)=")
 h2  = re.compile(r"^==([^=]+)==")
@@ -70,10 +53,25 @@ divMarkersHtml = {
 	'Math' :     ('<div class="equation"><b>Equation:</b>', '</div>'),
 }
 
+def stripUtfMarker(content) :
+	import codecs
+	if content.startswith( codecs.BOM_UTF8 ):
+		encoded = unicode(content,"utf8")
+		stripped = encoded.lstrip( unicode( codecs.BOM_UTF8, "utf8" ) )
+		return stripped.encode("utf8")
+	return content
+#		content = content[3:] # remove the utf8 marker
+
 class WikiCompiler :
+
 	def compileInlines(self, inlines) :
 		self.inlines = [ (re.compile(wikipattern), substitution) 
 			for wikipattern, substitution in inlines  ]
+	def substituteInlines(self, line) :
+		for compiledPattern, substitution in self.inlines :
+			line = compiledPattern.sub(substitution, line)
+		return line
+
 
 	def closeAnyOpen(self) :
 		if self.closing == "" : return
@@ -213,7 +211,7 @@ class LaTeXCompiler(WikiCompiler) :
 			if levelToAdd == "#" : tag = "enumerate"
 			self.result.append("%s\\begin{%s}"%("\t"*len(self.itemLevel),tag))
 			self.itemLevel += levelToAdd
-		line = substituteLatexInline(line)	
+		line = self.substituteInlines(line)	
 		self.result.append(line)
 
 
@@ -327,7 +325,7 @@ class HtmlCompiler(WikiCompiler) :
 			if levelToAdd == "#" : tag = "ol"
 			self.result.append("%s<%s>"%("\t"*len(self.itemLevel),tag))
 			self.itemLevel += levelToAdd
-		line = substituteHtmlInline(line)	
+		line = self.substituteInlines(line)	
 		self.result.append(line)
 
 
@@ -341,7 +339,7 @@ def needsRebuild(target, source) :
 	if os.path.getmtime(target)<os.path.getmtime(scheletonFileName) : return True
 	return False
 
-# Generate HTML with HTML content files
+# Generate HTML with HTML content files + scheleton
 for contentFile in glob.glob("content/*.html") :
 	target = os.path.basename(contentFile)
 	if not needsRebuild(target, contentFile) :
@@ -361,9 +359,10 @@ for contentFile in glob.glob("*.wiki") :
 		continue
 	print "Generating", target, "from", contentFile, "..."
 	content = file(contentFile).read()
-	content = content[3:] # remove the utf8 marker
-	htmlResult = HtmlCompiler().process(content)
-	file(target,"w").write(scheleton%htmlResult)
+	content = stripUtfMarker(content)
+	if enableHtml :
+		htmlResult = HtmlCompiler().process(content)
+		file(target,"w").write(scheleton%htmlResult)
 	if enableLaTeX :
 		texResult = LaTeXCompiler().process(content)
 		file(targetTex,"w").write(texResult['content'])
@@ -371,4 +370,5 @@ for contentFile in glob.glob("*.wiki") :
 #os.system("(cd img; bash ./generateImages.sh)")
 #os.system("bibtex TICMA_master_thesis_DavidGarcia")
 #os.system("pdflatex TICMA_master_thesis_DavidGarcia")
+
 

@@ -6,7 +6,7 @@ import os.path
 import re
 import sys
 
-enableLaTeX = False
+enableLaTeX = True
 
 inlineHtmlSubsitutions = [  # the order is important
 	(r"'''(([^']|'[^']|''[^'])*)'''", r"<b>\1</b>"),
@@ -55,17 +55,21 @@ divMarkersHtml = {
 	'Math' :     ('<div class="equation"><b>Equation:</b>', '</div>'),
 }
 
-class LaTeXCompiler :
+class WikiCompiler :
 	def closeAnyOpen(self) :
 		if self.closing == "" : return
 		self.result.append(self.closing)
 		self.closing=""
-
 	def openBlock(self,opening,closing):
 		self.closeAnyOpen()
 		self.result.append(opening)
 		self.closing=closing
-
+	def addToc(self, level, title) :
+		self.toc.append( (level, title) )
+		return len(self.toc)
+	def buildToc(self) :
+		"""Default, empty toc"""
+		return ""
 	def process(self, content) :
 		self.itemLevel = ""
 		self.closing=""
@@ -74,20 +78,18 @@ class LaTeXCompiler :
 		self.toc = []
 		self.vars = {
 			'title': '',
+			'author': '',
 		}
 		for line in content.splitlines() :
 			self.processLine(line)
 		self.processLine("")
-		self.vars["content"] = ("\n".join(self.result))
+		self.vars["content"] = ("\n".join(self.result)) % {
+			'toc': self.buildToc(),
+		}
 		return self.vars
 
-	def values(self) :
-		return self.vars
 
-	def addToc(self, level, title) :
-		self.toc.append( (level, title) )
-		return len(self.toc)
-
+class LaTeXCompiler(WikiCompiler) :
 	def processLine(self, line) :
 		newItemLevel = ""
 		liMatch = li.match(line)
@@ -137,7 +139,7 @@ class LaTeXCompiler :
 			self.openBlock(
 				"\\begin{figure*}[htbp]\n"
 				"\\begin{center}\\includegraphics%(size)s{%(img)s}\end{center}\n"
-				"\\caption{%%"%{
+				"\\caption{%%%%"%{
 					'img': figMatch.group(2),
 					'size': sizeSpecifier,
 					},
@@ -193,43 +195,7 @@ class LaTeXCompiler :
 		self.result.append(line)
 
 
-
-class HtmlCompiler :
-	def closeAnyOpen(self) :
-		if self.closing == "" : return
-		self.result.append(self.closing)
-		self.closing=""
-
-	def openBlock(self,opening,closing):
-		self.closeAnyOpen()
-		self.result.append(opening)
-		self.closing=closing
-
-	def process(self, content) :
-		self.itemLevel = ""
-		self.closing=""
-		self.result=[]
-		self.spanStack = []
-		self.toc = []
-		self.vars = {
-			'title': '',
-			'author': '',
-		}
-		for line in content.splitlines() :
-			self.processLine(line)
-		self.processLine("")
-		self.vars["content"] = ("\n".join(self.result)) % {
-			'toc': self.buildToc(),
-		}
-		return self.vars
-
-	def values(self) :
-		return self.vars
-
-	def addToc(self, level, title) :
-		self.toc.append( (level, title) )
-		return len(self.toc)
-
+class HtmlCompiler(WikiCompiler) :
 	def buildToc(self) :
 		result = []
 		lastLevel = 0

@@ -93,7 +93,7 @@ Normal ''emphasis '''bold don't''' more emphasis'' Normal. '''Another bold''' No
 [http://link.com a link]
 [http://link.com] without alias
 
-This work can be found in @cite:lee87.
+This work can be found in @cite:lee87. And also in @cite:www-CLAM.
 
 
 `r_iO_i=r_jI_j`

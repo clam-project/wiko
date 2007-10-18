@@ -20,7 +20,7 @@ footer = """
 </html>
 """
 import sys
-bibfilename = "dataflow.bib"
+bibfilename = "bibliography.bib"
 result = []
 result += [header]
 

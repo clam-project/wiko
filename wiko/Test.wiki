@@ -54,6 +54,8 @@ colon ended keyword such as 'Abstract:'
 Keywords:
 And the Keywords: special paragraph
 
+TODO: This is a pending task
+
 == Toc generation ==
 
 === Third level ===
@@ -82,8 +84,6 @@ a\over{b}
 
 Equation:
 a\over{b}
-
-TODO: This is a pending task
 
 
 == Inline substitutions ==

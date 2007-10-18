@@ -81,12 +81,14 @@ class WikiCompiler :
 		self.closeAnyOpen()
 		self.result.append(opening)
 		self.closing=closing
+
 	def addToc(self, level, title) :
 		self.toc.append( (level, title) )
 		return len(self.toc)
 	def buildToc(self) :
 		"""Default, empty toc"""
 		return ""
+
 	def process(self, content) :
 		self.itemLevel = ""
 		self.closing=""
@@ -197,9 +199,9 @@ class LaTeXCompiler(WikiCompiler) :
 			if divMatch :
 				divType = divMatch.group(1)
 				try :
-						opening, closing = divMarkersLatex[divType]
-						self.openBlock(opening, closing)
-						return
+					opening, closing = divMarkersLatex[divType]
+					self.openBlock(opening, closing)
+					return
 				except: 
 					print "Not supported block class", divType
 		# Equilibrate the item level
@@ -207,8 +209,7 @@ class LaTeXCompiler(WikiCompiler) :
 			self.closeAnyOpen()
 #			print "push '", self.itemLevel, "','", newItemLevel, "'"
 			levelToAdd = newItemLevel[len(self.itemLevel)]
-			tag = "itemize"
-			if levelToAdd == "#" : tag = "enumerate"
+			tag = "itemize" if levelToAdd is "*" else "enumerate"
 			self.result.append("%s\\begin{%s}"%("\t"*len(self.itemLevel),tag))
 			self.itemLevel += levelToAdd
 		line = self.substituteInlines(line)	

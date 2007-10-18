@@ -364,14 +364,23 @@ def compareTimeStamps(x,y) :
 
 blogEntries.sort(compareTimeStamps)
 
+blogEntryScheleton = file("blogEntryScheleton.html").read()
+blogScheleton = file("blogScheleton.html").read()
+
+blogFrontPage = []
+
 for entry in blogEntries :
 	from datetime import datetime
 	entry['timestamp'] = str(datetime.strptime(entry['timestamp'], "%d/%m/%Y %H:%M"))
-	print entry['timestamp'], entry['name'] , "|" , entry['title']
+	if not entry.has_key("tags") : entry["tags"] = ""
+	print entry['timestamp'], entry['name'] , "|" , entry['title'] , "[", entry["tags"], ']'
+	entry['link'] = "blog.%s.html"%entry["name"]
 	targetBlog = "blog."+entry["name"]+".html"
-	file(targetBlog,"w").write(entry['content'])
-	
-	
+	composed = blogEntryScheleton%entry
+	file(targetBlog,"w").write(blogScheleton%{'content':composed})
+	blogFrontPage.append(composed)
+
+file("blog.index.html","w").write(blogScheleton%{'content':"\n".join(blogFrontPage)})
 
 
 #os.system("(cd img; bash ./generateImages.sh)")

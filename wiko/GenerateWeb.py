@@ -350,6 +350,8 @@ for contentFile in glob.glob("*.wiki") :
 		texResult = LaTeXCompiler().process(content)
 		file(targetTex,"w").write(texResult['content'])
 
+print "Generating blog..."
+
 blogEntries = []
 for contentFile in glob.glob("blog/*.wiki") :
 	blogDict = HtmlCompiler().process(stripUtfMarker(file(contentFile).read()))
@@ -366,21 +368,27 @@ blogEntries.sort(compareTimeStamps)
 
 blogEntryScheleton = file("blogEntryScheleton.html").read()
 blogScheleton = file("blogScheleton.html").read()
+blogRssEntryScheleton = file("blogRssEntryScheleton.html").read()
+blogRssScheleton = file("blogRssScheleton.html").read()
 
 blogFrontPage = []
-
+rssItems = []
 for entry in blogEntries :
 	from datetime import datetime
 	entry['timestamp'] = str(datetime.strptime(entry['timestamp'], "%d/%m/%Y %H:%M"))
 	if not entry.has_key("tags") : entry["tags"] = ""
-	print entry['timestamp'], entry['name'] , "|" , entry['title'] , "[", entry["tags"], ']'
+	print entry['timestamp'], entry['name'] , "|" , entry['title'] , "[" + entry["tags"]+']'
 	entry['link'] = "blog.%s.html"%entry["name"]
 	targetBlog = "blog."+entry["name"]+".html"
 	composed = blogEntryScheleton%entry
 	file(targetBlog,"w").write(blogScheleton%{'content':composed})
 	blogFrontPage.append(composed)
+	from xml.sax.saxutils import escape
+	entry["encodedContent"] = escape(entry["content"])
+	rssItems.append(blogRssEntryScheleton%entry)
 
 file("blog.index.html","w").write(blogScheleton%{'content':"\n".join(blogFrontPage)})
+file("blog.rss","w").write(blogRssScheleton%{'items':"\n".join(rssItems)})
 
 
 #os.system("(cd img; bash ./generateImages.sh)")

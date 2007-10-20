@@ -350,6 +350,8 @@ for contentFile in glob.glob("*.wiki") :
 		texResult = LaTeXCompiler().process(content)
 		file(targetTex,"w").write(texResult['content'])
 
+print "Skiping blog generation..." #TODO needs proper integration
+sys.exit()
 print "Generating blog..."
 
 blogEntries = []

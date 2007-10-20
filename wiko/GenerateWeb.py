@@ -1,6 +1,15 @@
 #!/usr/bin/python
 
-# bugs: @cite:some at end of line
+# Bugs: 
+# * @cite:some at end of line, or @cite:some, something.
+# * don't work with iso encoding only utf8
+ 
+# TODOs:
+# * refactor most behaviour to a base class (done in-flight and lost)
+# * use @toc in the .wiki file
+# * deactivate implicit <pre> mode when in explicit "{{{ }}}" <pre> mode
+# * bullets should allow breaking line into a new line with spaces.
+
 import glob
 import os.path
 import re
@@ -16,6 +25,9 @@ inlineHtmlSubstitutions = [  # the order is important
 	(r"\[(\S*)\]", r"<a href='\1'>\1</a>"),
 	(r"@cite:([-_a-zA-Z0-9]*)", r"<a href='dataflow.bib.html#\1'>[\1]</a>"), # TODO: hover box with bib info
 	(r"`([^`]*)`", r"<img src=http://www.forkosh.dreamhost.com/mimetex.cgi?\1 />"),
+	(r"{{{", r"<pre>"),
+	(r"}}}", r"</pre>"),
+	(r"^@toc\s*$", r"%(toc)s"),
 ]
 inlineLatexSubstitutions = [  # the order is important
 	(r"'''(([^']|'[^']|''[^'])*)'''", r"{\\bf \1}"),

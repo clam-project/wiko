@@ -21,7 +21,7 @@ enableHtml = True
 inlineHtmlSubstitutions = [  # the order is important
 	(r"'''(([^']|'[^']|''[^'])*)'''", r"<b>\1</b>"),
 	(r"''(([^']|'[^'])*)''", r"<em>\1</em>"),
-	(r"\[(\S*)\s(.+)\]", r"<a href='\1'>\2</a>"),
+	(r"\[(\S*)\s([^\]]+)\]", r"<a href='\1'>\2</a>"),
 	(r"\[(\S*)\]", r"<a href='\1'>\1</a>"),
 	(r"@cite:([-_a-zA-Z0-9]*)", r"<a href='dataflow.bib.html#\1'>[\1]</a>"), # TODO: hover box with bib info
 	(r"`([^`]*)`", r"<img src=http://www.forkosh.dreamhost.com/mimetex.cgi?\1 />"),
@@ -362,47 +362,84 @@ for contentFile in glob.glob("*.wiki") :
 		texResult = LaTeXCompiler().process(content)
 		file(targetTex,"w").write(texResult['content'])
 
-print "Skiping blog generation..." #TODO needs proper integration
-sys.exit()
 print "Generating blog..."
 
+from datetime import datetime
+blog = {
+	'title': "Voki Codder",
+	'editor': "Vokimon",
+	'description': "Code for the masses",
+	'generator': "WikiFormater",
+	'lastbuilddate': datetime.utcnow().ctime(), #strftime("%c"), # TODO: was 'Thu, 18 Oct 2007 17:13:32 +0000',
+	'homeurl': "http://vokicodder.blogspot.com/",
+	'baseurl': "localhost",
+	'blogid' : "tag:blogger.com,1999:blog-36421488",
+}
 blogEntries = []
+tags=set()
 for contentFile in glob.glob("blog/*.wiki") :
-	blogDict = HtmlCompiler().process(stripUtfMarker(file(contentFile).read()))
-	blogDict['name'] = os.path.splitext(os.path.split(contentFile)[-1])[0]
-	blogEntries.append(blogDict)
-
-def compareTimeStamps(x,y) :
-	from datetime import datetime
-	xTime = datetime.strptime(x['timestamp'], "%d/%m/%Y %H:%M")
-	yTime = datetime.strptime(y['timestamp'], "%d/%m/%Y %H:%M")
-	return yTime.toordinal()-xTime.toordinal()
-
-blogEntries.sort(compareTimeStamps)
-
-blogEntryScheleton = file("blogEntryScheleton.html").read()
-blogScheleton = file("blogScheleton.html").read()
-blogRssEntryScheleton = file("blogRssEntryScheleton.html").read()
-blogRssScheleton = file("blogRssScheleton.html").read()
-
-blogFrontPage = []
-rssItems = []
-for entry in blogEntries :
-	from datetime import datetime
-	entry['timestamp'] = str(datetime.strptime(entry['timestamp'], "%d/%m/%Y %H:%M"))
-	if not entry.has_key("tags") : entry["tags"] = ""
-	print entry['timestamp'], entry['name'] , "|" , entry['title'] , "[" + entry["tags"]+']'
+	entry = HtmlCompiler().process(stripUtfMarker(file(contentFile).read()))
+	entry['name'] = os.path.splitext(os.path.split(contentFile)[-1])[0]
+	entry.setdefault('tags',"")
+	entry['splittedTags']=[tag.strip() for tag in entry["tags"].split(",") if tag!=""]
+	for tag in entry['splittedTags']: tags.add(tag)
+	entry['linkedTags']=', '.join([
+		"<a href='blog.tag.%(tag)s.html'>%(tag)s</a>"%{'tag':tag} 
+		for tag in entry['splittedTags']])
+	entry["rsscategories"]="\n".join([
+		"<category domain='http://www.blogger.com/atom/ns#'>%s</category>"%tag for tag in entry["splittedTags"] ])
+	publishedTime = datetime.strptime(entry['timestamp'],  "%d/%m/%Y %H:%M")
+	updatedTime = datetime.utcfromtimestamp(os.path.getmtime(contentFile))
+	entry['timestamp'] = str(publishedTime)
+	entry["updatedtime"] = updatedTime.isoformat() #  2007-07-21T11:47:11.001-07:00
+	entry["publishedtime"] = publishedTime.strftime("%a, %d %b %Y %T") # was: Fri, 20 Jul 2007 18:10:00 +0000
+	entry["entryid"] = "tag:blogger.com,1999:blog-36421488.post-8207308771074649324" # TODO
 	entry['link'] = "blog.%s.html"%entry["name"]
-	targetBlog = "blog."+entry["name"]+".html"
-	composed = blogEntryScheleton%entry
-	file(targetBlog,"w").write(blogScheleton%{'content':composed})
-	blogFrontPage.append(composed)
 	from xml.sax.saxutils import escape
 	entry["encodedContent"] = escape(entry["content"])
-	rssItems.append(blogRssEntryScheleton%entry)
+	# fulluri was: http://vokicodder.blogspot.com/2007/07/simplifying-spectral-processing-in-clam.html
+	entry["fulluri"] = blog["baseurl"] + "/" + entry["link"]
+	blogEntries.append(entry)
+blogEntries.sort(key=lambda a: a['timestamp'], reverse=True)
 
-file("blog.index.html","w").write(blogScheleton%{'content':"\n".join(blogFrontPage)})
-file("blog.rss","w").write(blogRssScheleton%{'items':"\n".join(rssItems)})
+if len(blogEntries) != 0 :
+	tagPages = dict([(tag,[]) for tag in tags])
+	blogEntryScheleton = file("blog/entryScheleton.html").read()
+	blogScheleton = file("blog/scheleton.html").read()
+	blogRssEntryScheleton = file("blog/rssEntryScheleton.rss").read()
+	blogRssScheleton = file("blog/rssScheleton.rss").read()
+	htmlentries = []
+	rssItems = []
+	for entry in blogEntries :
+		print entry['timestamp'], entry['name'] , "|" , entry['title'] , "[" + entry["tags"]+']'
+	for entry in blogEntries :
+		targetBlog = entry['link']
+		composed = blogEntryScheleton%entry
+		htmlentries.append(composed)
+		for tag in entry['splittedTags'] :
+			tagPages[tag].append(composed)
+		rssItems.append(blogRssEntryScheleton%entry)
+
+	taglist=[(tag,len(entries)) for tag, entries in tagPages.items()]
+	taglist.sort(key=lambda a : a[1],reverse=True)
+	blog['taglist'] = "\n".join([
+		"<li><a href='blog.tag.%s.html'>%s</a> (%i)</li>"%(
+			tag,tag,nitems) for tag,nitems in taglist])
+	for entry in blogEntries :
+		blog['htmlentries'] = blogEntryScheleton % entry
+		file(entry['link'],"w").write(blogScheleton % blog)
+		
+
+	blog.update({
+		'htmlentries': "\n".join(htmlentries),
+		'rssitems': "\n".join(rssItems),
+	})
+	file("blog.index.html","w").write(blogScheleton%blog)
+	file("blog.rss","w").write(blogRssScheleton%blog)
+	for tag, tagEntries in tagPages.items() :
+		blog['htmlentries'] = "\n".join(tagEntries)
+		file("blog.tag.%s.html"%tag,"w").write(blogScheleton%blog)
+	
 
 
 #os.system("(cd img; bash ./generateImages.sh)")

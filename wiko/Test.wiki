@@ -96,6 +96,7 @@ Normal ''emphasis '''bold don't''' more emphasis'' Normal. '''Another bold''' No
 
 [http://link.com a link]
 [http://link.com] without alias
+[http://link.com one] and [http://link.com other] link in the same line.
 
 This work can be found in @cite:lee87. And also in @cite:www-CLAM.
 

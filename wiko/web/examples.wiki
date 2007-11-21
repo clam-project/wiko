@@ -1,0 +1,21 @@
+﻿@title: Wiko, the Wiki Compiler: examples
+@author: David Garcia and Pau Arumi
+
+= WiKo, the Wiki Compiler =
+
+== Usage Examples ==
+
+This page compiles some available material they using WiKo.
+
+
+=== Thesis ===
+* [http://ocata48124.upf.es/~vokimon/masterThesis-dgarcia/ David's master thesis] (uses an old version of WiKo but still powerfull enough to built a thesis)
+* [http://ocata48123.upf.es/~parumi/masterThesis-dgarcia/ Pau's PhD thesis] (in progress)
+
+=== Web sites ===
+* [http://wiko.sourceforge.net WiKo site] (yes! this site!)
+* [http://www.iua.upf.edu/~dgarcia Can Voki]
+* [http://www.iua.upf.edu/~dgarcia/Codders Codders]
+* [http://www.iua.upf.edu/~dgarcia/KKEP KKEPerians UNLTD]
+
+

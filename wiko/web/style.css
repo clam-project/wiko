@@ -1,0 +1,232 @@
+/*** basic text styles ***/
+
+body {
+  font-family: "Lucida Grande", Verdana, Arial, sans-serif;
+/*  font-size: 14px;*/
+  font-style: normal;
+  font-weight: normal;
+  color: #000;
+  background-color: #fff;
+}
+/*
+h1 {
+  font-size: 24px;
+  font-weight: bold;
+}
+h2 {
+  font-size: 18px;
+  font-weight: bold;
+}
+p, li, td, dt, dd {
+  font-size: 14px;
+}
+p, ul {
+  margin-top: 0.7em;
+  margin-bottom: 0.7em;
+}
+dd {
+  margin-bottom: 0.7em;
+}
+li {
+  margin-bottom: 0.2em;
+}
+p#vcinfo, p#copyright {
+  font-size: 12px;
+}
+tt, pre {
+  font-family: Courier, "Courier New", monospace;
+  font-size: 13px;
+}
+
+body {
+  background: #fff url(/img/back.png) repeat-y;
+  margin: 0;
+  padding: 0;
+}
+div {
+  margin: 0;
+  padding: 0;
+}
+#trail {
+  padding-top: 0;
+  padding-bottom: 0;
+  margin-top: 0;
+  margin-bottom: 4pt;
+}
+p.picture {
+  text-align: center;
+}
+p.picture img {
+  margin: 4px;
+}
+
+#footer {
+  margin: 1.5em -8pt 0;
+  padding: 0.7em 8pt 1em;
+  border-top: 1px solid #ccc;
+}
+p#vcinfo {
+  float: left;
+  width: 55%;
+  text-align: left;
+  margin: 0;
+}
+p#copyright {
+  float: right;
+  width: 42%;
+  text-align: right;
+  margin: 0;
+}
+#footerclear {
+  clear: both;
+}
+*/
+
+a:link, a:visited, a:hover {
+  color:#669;
+}
+a:hover {
+  background-color: #f0f0f0;
+}
+a:active {
+  color: #ffc63b;
+  background-color: #fff;
+}
+img {
+  border: 0;
+  padding: 0;
+  vertical-align: top;
+}
+#sitelogo {
+  margin: 0;
+  border-bottom: 1px solid #fff;
+  padding: 0;
+  margin-bottom: 1px;
+}
+#logobar {
+  top: 0px;
+  left: 8px;
+/*  background-color: #f0f0f0; */
+}
+#sidebar {
+/*  float: left;*/
+  width: 160px;
+  position: fixed;
+  top: 5px;
+  left: 8px;
+  background-color: #f0f0f0;
+}
+#content {
+  padding: 1em 2em 0;
+  margin-left: 168px;
+  background-color: #fff;
+  min-width: 20em;
+  max-width: 45em;
+}
+
+h1, h2, h3 {
+  color:#942;
+}
+#content b{
+  color:#900;
+}
+#content em{
+  color:#933;
+}
+#content h1 {
+  padding: 0 2em 0 0;
+  margin-top: 0;
+  text-align: center;
+}
+#content h1#hometitle {
+  margin-top: 0.5em;
+}
+#content pre {
+  margin-left: 6pt;
+  margin-right: 6pt;
+}
+#content table {
+  margin: 1em 6pt;
+  padding: 0;
+  border: none;
+  border-collapse: collapse;
+}
+#content table td, #content table th {
+  border: 2px solid #999;
+  margin: 0;
+  padding: 3px;
+  vertical-align: top;
+}
+p#pagelink {
+  margin-top: 1.5em;
+  text-align: center;
+}
+/*** sidebar styles ***/
+
+#sflogo {
+  padding: 4px 8px;
+  text-align: center;
+}
+#sflogo img {
+  margin: 3px;
+}
+#sflogo a {
+  background-color: #d8d8d8;
+}
+#sitenavhead {
+  padding: 4px 8px;
+  background-color: #ccc;
+  color: #555;
+}
+.navlist {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.navlist li {
+  display: inline;
+  margin: 0;
+  padding: 0;
+}
+.navlist a {
+  display: block;
+  margin: 0;
+  padding: 3px 8px;
+  border-bottom: 1px solid #fff;
+  text-decoration: none;
+}
+.navlist a:link, .navlist a:visited {
+  background-color: #f0f0f0;
+}
+.navlist a:hover {
+  color: #d55a00;
+  background-color: #d8d8d8;
+}
+.navlist a:active {
+  color: #ffc63b;
+  background-color: #fff;
+}
+.navlist a.sublink {
+  padding-left: 16px;
+}
+#content
+{
+	text-align: justify;
+}
+
+#content h2 {
+	margin-left: -8pt;
+	margin-right: -8pt;
+	padding-left: 0.2em;
+	padding-right: 8pt;
+	clear: both;
+}
+#content h2 {
+	background: transparent url('ensamblingbox.png') no-repeat 99% 2pt;
+	border: none;
+	padding-right: 120px;
+	border-bottom: grey solid 2pt;
+	border-right: grey solid 2pt;
+}
+
+/* EOF */

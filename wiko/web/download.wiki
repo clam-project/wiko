@@ -1,0 +1,14 @@
+﻿@title: Wiko, the Wiki Compiler
+@author: David Garcia and Pau Arumi
+
+= WiKo, the Wiki Compiler =
+
+== Download ==
+
+* [wiko WiKo script]
+* [generateImages.sh generateImages] A bash script that takes dia, dot and eps figures and converts them into WiKo usable images: png for web and LaTeX and pdf for LaTex.
+* [bib2html.py bib2html]: A python script to generate an agregated anchored html with bibtex entries from all the bibtex file in a directory so that bibtex works with html.
+
+
+
+

@@ -1,0 +1,32 @@
+#!/usr/bin/python
+
+import re, sys
+
+substitutions = [
+	(r"{\\em\s([^{^}]*?)}", r"''\1''"),
+	(r"{\\bf\s([^{^}]*?)}", r"'''\1'''"),
+	(r"\\textbf{([^{^}]*?)}", r"'''\1'''"),
+	(r"\\textit{([^{^}]*?)}", r"''\1''"),
+	(r"\\textbf{([^{^}]*?)}", r"'''\1'''"),
+	(r"\\cite{([^}^,]*),([^}^,]*),([^}^,]*),([^}^,]*,([^}^,]*)),([^}^,]*)}", r"@cite:\1 @cite:\2 @cite:\3 @cite:\4 @cite:\5 @cite:\6"),
+	(r"\\cite{([^}^,]*),([^}^,]*),([^}^,]*),([^}^,]*),([^}^,]*)}", r"@cite:\1 @cite:\2 @cite:\3 @cite:\4 @cite:\5"),
+	(r"\\cite{([^}^,]*),([^}^,]*),([^}^,]*),([^}^,]*)}", r"@cite:\1 @cite:\2 @cite:\3 @cite:\4"),
+	(r"\\cite{([^}^,]*),([^}^,]*),([^}^,]*)}", r"@cite:\1 @cite:\2 @cite:\3"),
+	(r"\\cite{([^}^,]*),([^}^,]*)}", r"@cite:\1 @cite:\2"),
+	(r"\\cite{([^}]*)}", r"@cite:\1"),
+]
+substitutions = [ (re.compile(pattern), substitution)
+	for pattern, substitution in substitutions ]
+
+
+input = file(sys.argv[1]) if len(sys.argv)>1 else sys.stdin
+
+output = []
+for line in input :
+	for pattern, substitution in substitutions :
+		line = pattern.sub(substitution, line)
+	output.append(line)
+
+print "".join(output)
+
+

@@ -21,10 +21,10 @@ enableHtml = True
 inlineHtmlSubstitutions = [  # the order is important
 	(r"'''(([^']|'[^']|''[^'])*)'''", r"<b>\1</b>"),
 	(r"''(([^']|'[^'])*)''", r"<em>\1</em>"),
-	(r"\[(\S+)\s([^\]]+)\]", r"<a href='\1'>\2</a>"),
-	(r"\[(\S+)\]", r"<a href='\1'>\1</a>"),
-	(r"@cite:([-_a-zA-Z0-9]*)", r"<a href='dataflow.bib.html#\1'>[\1]</a>"), # TODO: hover box with bib info
-	(r"`([^`]*)`", r"<img src=http://www.forkosh.dreamhost.com/mimetex.cgi?\1 />"),
+	(r"\[\[(\S+)\s([^\]]+)\]\]", r"<a href='\1'>\2</a>"),
+	(r"\[\[(\S+)\]\]", r"<a href='\1'>\1</a>"),
+	(r"@cite:([-+_a-zA-Z0-9]*)", r" <a href='bibliography.bib.html#\1'>[\1]</a>"), # TODO: hover box with bib info
+	(r"`([^`]+)`", r"<img src=http://www.forkosh.dreamhost.com/mimetex.cgi?\1 />"),
 	(r"{{{", r"<pre>"),
 	(r"}}}", r"</pre>"),
 	(r"^@toc\s*$", r"%(toc)s"),
@@ -32,10 +32,10 @@ inlineHtmlSubstitutions = [  # the order is important
 inlineLatexSubstitutions = [  # the order is important
 	(r"'''(([^']|'[^']|''[^'])*)'''", r"{\\bf \1}"),
 	(r"''(([^']|'[^'])*)''", r"{\\em \1}"),
-	(r"\[(\S+)\s(.+)\]", r"\2\\footnote{\\hyperef{\1}{\1}}"),
-	(r"\[(\S+)\]", r"\\hyperef{\1}{\1}"),
-	(r"@cite:([-_a-zA-Z0-9]*)", r"\cite{\1}"),
-	(r"`([^`]*)`", r"$\1$"),
+	(r"\[\[(\S+)\s(.+)\]\]", r"\2\\footnote{\\hyperef{\1}{\1}}"),
+	(r"\[\[(\S+)\]\]", r"\\hyperef{\1}{\1}"),
+	(r"@cite:([-+_a-zA-Z0-9]*)", r"\cite{\1}"),
+	(r"`([^`]+)`", r"$\1$"),
 ]
 
 header = re.compile(r"^(=+)([*]?)\s*([^=]+?)\s*\1\s*$")

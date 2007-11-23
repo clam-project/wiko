@@ -162,7 +162,6 @@ class LaTeXCompiler(WikiCompiler) :
 			line=line[1:] # remove the pre indicator space
 		elif varMatch :
 			self.vars[varMatch.group(1)] = varMatch.group(2)
-			print "Var '%s': %s"%(varMatch.group(1),varMatch.group(2))
 			return
 		elif figMatch :
 			self.closeAnyOpen()
@@ -277,6 +276,7 @@ class HtmlCompiler(WikiCompiler) :
 			line=line[1:] # remove the pre indicator space
 		elif varMatch :
 			self.vars[varMatch.group(1)] = varMatch.group(2)
+			print "Var '%s': %s"%(varMatch.group(1),varMatch.group(2))
 			return
 		elif figMatch :
 			self.closeAnyOpen()
@@ -323,7 +323,6 @@ class HtmlCompiler(WikiCompiler) :
 		line = self.substituteInlines(line)	
 		self.result.append(line)
 
-
 scheletonFileName = "scheleton.html"
 scheleton = file(scheletonFileName).read()
 
@@ -345,6 +344,17 @@ for contentFile in glob.glob("content/*.html") :
 	file(target,"w").write(scheleton%{'title':'', 'content':content})
 
 # Generate LaTeX and HTML from wiki files
+
+def fileNamesBasesForExtension(extension) :
+	return set([ os.path.splitext(file)[0] for file in glob.glob("*."+extension) ])
+
+# TeX skeletons are not generated from wiki files
+texSkeletons = fileNamesBasesForExtension("tex") - fileNamesBasesForExtension("wiki")
+# ...and contain \documentclass directive
+texSkeletons = [ skeleton 
+		for skeleton in texSkeletons
+		if file(skeleton+".tex").read().find(r"\documentclass") != -1
+	]
 for contentFile in glob.glob("*.wiki") :
 	base = os.path.basename(contentFile)
 	target = "".join(os.path.splitext(base)[0:-1])+".html"
@@ -359,13 +369,14 @@ for contentFile in glob.glob("*.wiki") :
 		htmlResult = HtmlCompiler().process(content)
 		htmlResult['wikiSource']=contentFile;
 		file(target,"w").write(scheleton%htmlResult)
-	if enableLaTeX :
+	if enableLaTeX and len(texSkeletons):
 		texResult = LaTeXCompiler().process(content)
 		file(targetTex,"w").write(texResult['content'])
 
 print "Generating blog..."
 
 from datetime import datetime
+# TODO: Should be a config file with default values
 blog = {
 	'title': "Voki Codder",
 	'editor': "Vokimon",
@@ -440,11 +451,81 @@ if len(blogEntries) != 0 :
 	for tag, tagEntries in tagPages.items() :
 		blog['htmlentries'] = "\n".join(tagEntries)
 		file("blog.tag.%s.html"%tag,"w").write(blogScheleton%blog)
-	
+
+
+print "Generating download zones..."
+
+def humanReadableSize(filename) :
+	if os.path.isdir(filename) : return ""
+	sufixes = [
+		("P",1<<50),
+		("T",1<<40),
+		("G",1<<30),
+		("M",1<<20),
+		("K",1<<10),
+	]
+	size = os.path.getsize(filename)
+	for suffix, scale in sufixes:
+		if size/scale > 1.1:
+			return "%.2f %sb"%(float(size)/scale, suffix)
+	return str(size)+" b"
+
+def humanReadableTime(filename) :
+	if os.path.isdir(filename) : return ""
+	return str(datetime.fromtimestamp(os.path.getmtime(filename)))
+
+def generateDownloadZones(dirs, skeletonFilename, blacklist) :
+	lineTemplate = "<tr><td style='width:100%%'><a href='%(filename)s'>%(filename)s</a></td><td>%(size)s</td><td>%(date)s</td></tr>"
+	skeleton = file(skeletonFilename).read()
+	for title, dirname in dirs:
+		dirname = os.path.expanduser(dirname)
+		if not os.access(dirname, os.X_OK):
+			print "Not available: %s"%dirname
+			continue
+		print "Generating download index at '%s'"%dirname
+		files = os.listdir(dirname)
+		files = filter((lambda a : a not in blacklist ), files) # Filter blacklisted
+		dirs = [dir+"/" for dir in filter((lambda a : os.path.isdir(os.path.join(dirname, a)) ), files) ]
+		files = filter((lambda a : not os.path.isdir(os.path.join(dirname, a)) ), files) # Filter dirs
+		files.sort()
+
+		table = "\n".join( [ lineTemplate%{
+				'filename': filename,
+				'size': humanReadableSize(os.path.join(dirname, filename)),
+				'date': humanReadableTime(os.path.join(dirname, filename)),
+			} for filename in dirs + files ])
+		content = "<h1> Downloads </h1>"
+		content += "<h2> %s </h2>"%title
+		content += "\n".join(["<table style='white-space:nowrap' width='100%'>",table,"</table>"])
+		index = skeleton%{
+			'title': title,
+			'content': content,
+			'author':'generated',
+			'wikiSource':''
+		}
+		open(os.path.join(dirname,"index.html"),"w").write(index)
+
+dzConfig = {
+	'dirs' : [],
+	'blacklist' : [
+		"index.html",
+		"style.css",
+		"img",
+	],
+	'template' : scheletonFileName
+}
+try :
+	dzConfig.update(eval(file("downloadZones.wiko").read()))
+except :
+	pass
+if len(dzConfig['dirs']) :
+	generateDownloadZones(dzConfig['dirs'], dzConfig['template']), dzConfig['blacklist'])
 
 
 #os.system("(cd img; bash ./generateImages.sh)")
-#os.system("bibtex TICMA_master_thesis_DavidGarcia")
-#os.system("pdflatex TICMA_master_thesis_DavidGarcia")
+
+for texSkeleton in texSkeletons :
+	os.system("bibtex %s" % texSkeleton)
+	os.system("pdflatex %s" % texSkeleton)
 
 

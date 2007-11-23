@@ -13,7 +13,7 @@
    id="svg2160"
    sodipodi:version="0.32"
    inkscape:version="0.45.1"
-   sodipodi:docbase="/home/vokimon/CajitasDeArena/wiko"
+   sodipodi:docbase="/home/vokimon/CajitasDeArena/clam/docs/wikiformatter/web"
    sodipodi:docname="wikologo.svg"
    inkscape:output_extension="org.inkscape.output.svg.inkscape"
    inkscape:export-filename="/home/vokimon/CajitasDeArena/wiko/wikologo.png"
@@ -28,9 +28,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.70710678"
-     inkscape:cx="151.66667"
-     inkscape:cy="67.859426"
+     inkscape:zoom="1"
+     inkscape:cx="164.7789"
+     inkscape:cy="59.814216"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
      inkscape:window-width="1280"
@@ -59,9 +59,9 @@
        sodipodi:nodetypes="ccccccccccccccc" />
     <path
        style="fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1pt;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       d="M 137.89907,102.07045 C 139.50093,106.72335 138.98437,112.51239 140.04906,117.85166 C 140.51227,119.95893 141.3778,121.95541 142.0406,123.99584 C 142.46986,126.01274 147.34854,127.77484 148.05471,129.13025 C 145.51642,134.61936 142.97812,140.31349 140.43981,145.80259 C 136.96111,143.97202 131.42499,140.72613 129.1882,137.48214 C 126.65887,134.43851 125.66404,130.54291 124.3099,126.90877 C 122.81297,122.40696 121.2114,117.64424 121.20093,112.90733 C 121.25338,106.94775 120.00896,100.97226 122.89831,95.623767 C 123.35704,94.29661 126.30532,94.41242 127.82618,95.384135 C 133.44642,97.69228 136.56589,98.333253 137.89907,102.07045 z "
+       d="M 137.36874,101.18657 C 137.20238,115.26304 136.69862,116.11363 147.87793,130.19091 C 145.33964,135.68002 145.22812,138.31349 142.68981,143.80259 C 126.66479,134.42876 119.88056,112.774 122.72153,91.381127 C 124.70027,86.903849 134.44876,97.684067 137.36874,101.18657 z "
        id="path2181"
-       sodipodi:nodetypes="ccccccccccc" />
+       sodipodi:nodetypes="ccccc" />
     <path
        style="fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1pt;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        d="M 174.29661,23.33852 C 173.84935,29.255024 173.79584,35.204106 173.32963,41.125677 C 173.14831,50.578734 172.85224,60.059366 171.16697,69.387091 C 168.92436,81.549937 167.42533,93.828499 165.72678,106.07311 C 164.42752,113.89321 162.55807,121.60088 160.91064,129.35077 C 154.99456,130.13423 149.07848,130.91769 143.1624,131.70115 C 145.52147,122.41267 147.70928,113.06933 149.57888,103.67009 C 151.6935,89.879317 154.27774,76.146942 155.74289,62.265939 C 156.61241,53.054517 155.96407,43.792066 156.59461,34.569054 C 157.13512,32.388032 154.78276,28.490254 158.17719,28.39004 C 163.55033,26.7062 168.92347,25.02236 174.29661,23.33852 z "

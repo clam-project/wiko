@@ -8,6 +8,20 @@ body {
   color: #000;
   background-color: #fff;
 }
+
+tt, pre {
+	color: #blue;
+}
+pre {
+	background-color: #eee;
+	padding: 4px;
+}
+
+.todo {
+	color: red;
+	background-color: yellow;
+	padding: 3pt;
+}
 /*
 h1 {
   font-size: 24px;

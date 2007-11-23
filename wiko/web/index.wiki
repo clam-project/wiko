@@ -1,8 +1,6 @@
 ﻿@title: Wiko, the Wiki Compiler
 @author: David Garcia and Pau Arumi
 
-= WiKo, the Wiki Compiler =
-
 == Description ==
 
 WiKo is a very simple but powerful python script
@@ -24,7 +22,7 @@ Main benefits of using WiKo are:
 === Common formatting ===
 
 * Text formating: '''bold''', ''italics''...
-* Hypertext and anchoring: [http://lalala.com links] and the like
+* Hypertext and anchoring: [[http://lalala.com links]] and the like
 * Lists and enumerations
 * Table of content generation for HTML pages
 * LaTeX constructs supported on both formats: figures, formulae, bibliography, footnotes...
@@ -39,11 +37,10 @@ combines and distributes them in different pages and RSS's
 according to attributes you can define for each entry
 such as publication date, author, tags...
 
-* Filtered pages by author and tags
-* [http://en.wikipedia.org/wiki/RSS RSS] files with the last entries
-* Objects for the sidebar such as:
-** Access to the old entries
-** Access to the tag specific pages
+* a front page with newer entries,
+* [[http://en.wikipedia.org/wiki/RSS RSS]] file with the last entries
+* filtered pages with entries by the same author or with a given tag,
+* objects for the sidebar with archived entries and tags list
 
 == Authors ==
 

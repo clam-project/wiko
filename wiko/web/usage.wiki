@@ -10,8 +10,6 @@ depending on what it founds on the working directory.
 
 === Wrapping HTML content ===
 
-[[wikosample-htmlcontent.zip Sample WiKo project using html content]]
-
 This is the simplest mode of usage.
 WiKo takes each .html file at the subdirectory 'content'
 and creates an homonym html files at the working
@@ -22,29 +20,32 @@ This way you can fully update the look and feel of you web site
 just by updating the skeleton without having to edit every html file
 but still being an static page.
 
-=== Generating HTML from wiki files ===
+<!-- [[wikosample-htmlcontent.zip Sample WiKo project using html content]] -->
 
-[[wikosample-wikicontent.zip Sample WiKo project using wiki content]]
+=== Generating HTML from wiki files ===
 
 WiKo also takes any .wiki file in the working directory
 and will reformat it to an .html file also using the skeleton.
 In the example files you can take a look at the syntax we are using
 which is very similar to the one on Wikimedia and Moin-Moin wiki.
 
-=== Generating PDF (LaTeX) from wiki files ===
+Just take a quick look at this [[Sample.wiki]] which has most syntax elements.
+It renders into [[Sample.html this html file]].
 
-[[wikosample-article.zip Sample WiKo project for a PDF article]]
+<!-- [[wikosample-wikicontent.zip Sample WiKo project using wiki content]] -->
+
+=== Generating PDF (LaTeX) from wiki files ===
 
 If WiKo finds a .tex file on the working directory which base file name
 does not match with any of the .wiki files it considers that such file
 is the LaTeX skeleton and it will generate .tex files for any .wiki
 file in the working directory.
 
-Later
+Then it will execute pdflatex and bibtex for the LaTeX skeleton.
+
+<!-- [[wikosample-article.zip Sample WiKo project for a PDF article]] -->
 
 === Generating Blogs ===
-
-[[wikosample-blog.zip Sample WiKo project for a blog]]
 
 Blog entries can be defined by adding files into the
 ''blog'' subdirectory of the working directory.
@@ -63,17 +64,14 @@ We would like to evolve it in two directions:
 * User definable side bar widgets
 * Interacting with [[http://www.blogger.com blogger]] and [[http://www.wordpress.org wordpress]] API's to export and import
 
+<!-- [[wikosample-blog.zip Sample WiKo project for a blog]] -->
+
 === Generating download zones ===
 
 A download zone is a folder with a set of files you want to list and download.
 WiKo generate directory listings which integrates on the web page look and feel.
 
 TODO: Document how to create download zones
-
-== Wiki Syntax ==
-
-Just take a quick look at this [[Sample.wiki]] which has most syntax elements.
-It renders into [[Sample.html this html file]].
 
 == Other features ==
 

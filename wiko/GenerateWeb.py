@@ -519,7 +519,7 @@ try :
 except :
 	pass
 if len(dzConfig['dirs']) :
-	generateDownloadZones(dzConfig['dirs'], dzConfig['template']), dzConfig['blacklist'])
+	generateDownloadZones(dzConfig['dirs'], dzConfig['template'], dzConfig['blacklist'])
 
 
 #os.system("(cd img; bash ./generateImages.sh)")

@@ -94,9 +94,14 @@ Normal '''bold''' Normal. '''Another bold''' Normal.
 Normal '''bold ''emphasis'' more bold. don't ''' Normal. '''Another bold''' Normal.
 Normal ''emphasis '''bold don't''' more emphasis'' Normal. '''Another bold''' Normal.
 
-[[http://link.com a link]]
-[[http://link.com]] without alias
-[[http://link.com one]] and [[http://link.com other]] link in the same line.
+[http://link.com a link]
+[http://link.com] without alias
+[http://link.com one] and [http://link.com other] link in the same line.
+
+[[link.html a local link]]
+[[link.html local link without alias]]
+[[link.html one]] and [[link.html other]] local link in the same line.
+
 
 This work can be found in @cite:lee87. And also in @cite:www-CLAM.
 

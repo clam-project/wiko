@@ -23,6 +23,8 @@ inlineHtmlSubstitutions = [  # the order is important
 	(r"''(([^']|'[^'])*)''", r"<em>\1</em>"),
 	(r"\[\[(\S+)\s([^\]]+)\]\]", r"<a href='\1'>\2</a>"),
 	(r"\[\[(\S+)\]\]", r"<a href='\1'>\1</a>"),
+	(r"\[(http://\S+)\s([^\]]+)\]", r"<a href='\1'>\2</a>"),
+	(r"\[(http://\S+)\]", r"<a href='\1'>\1</a>"),
 	(r"@cite:([-+_a-zA-Z0-9]*)", r" <a href='bibliography.bib.html#\1'>[\1]</a>"), # TODO: hover box with bib info
 	(r"`([^`]+)`", r"<img src=http://www.forkosh.dreamhost.com/mimetex.cgi?\1 />"),
 	(r"{{{", r"<pre>"),

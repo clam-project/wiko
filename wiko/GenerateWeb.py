@@ -523,8 +523,29 @@ except :
 if len(dzConfig['dirs']) :
 	generateDownloadZones(dzConfig['dirs'], dzConfig['template'], dzConfig['blacklist'])
 
-
 #os.system("(cd img; bash ./generateImages.sh)")
+
+bibfiles = glob.glob("*.bib")
+if len(bibfiles) :
+	result = []
+	bibfilename = "bibliography.bib.html"
+	entry = re.compile(r"@\w*{([^,]*),")
+	for bibfile in bibfiles :
+		for line in file(bibfile) :
+			m = entry.search(line)
+			if m and not 'comment' in line:
+				id = m.group(1).strip()
+				result += ["<a id='%s' />\n"%id]
+			result.append(line)
+	# TODO: Is it needed to have a 
+	bibfileout=file(bibfilename, "w").write(scheleton%dict(
+		content="<pre>"+"".join(result)+"</pre>",
+		title="Bibliography",
+		author="",
+		revision="",
+		prev="",
+		next="",
+		))
 
 for texSkeleton in texSkeletons :
 	os.system("bibtex %s" % texSkeleton)

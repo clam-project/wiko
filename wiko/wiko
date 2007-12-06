@@ -17,6 +17,7 @@ import sys
 
 enableLaTeX = True
 enableHtml = True
+forceRebuild = True
 
 inlineHtmlSubstitutions = [  # the order is important
 	(r"'''(([^']|'[^']|''[^'])*)'''", r"<b>\1</b>"),
@@ -76,6 +77,22 @@ divMarkersHtml = {
 	'Equation' : ('<div class="equation"><b>Equation:</b>', '</div>'),
 	'Math' :     ('<div class="equation"><b>Equation:</b>', '</div>'),
 }
+
+defaultSkeleton = """
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+    "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" >
+<head>
+<title>%(title)s</title>
+<meta name="name" content="%(author)s">
+<!--<link rel='stylesheet' href='style.css' type='text/css'/>-->
+</head>
+<body>
+%(content)s
+</body>
+</html>
+"""
 
 def stripUtfMarker(content) :
 	import codecs
@@ -325,17 +342,19 @@ class HtmlCompiler(WikiCompiler) :
 		line = self.substituteInlines(line)	
 		self.result.append(line)
 
-scheletonFileName = "scheleton.html"
-scheleton = file(scheletonFileName).read()
+skeletonFileName = "skeleton.html"
+try: skeleton = file(skeletonFileName).read()
+except: skeleton=defaultSkeleton
 
 def needsRebuild(target, source) :
-	return True
+	if forceRebuild: return True
 	if not os.path.exists(target) : return True
 	if os.path.getmtime(target)<os.path.getmtime(source): return True
-	if os.path.getmtime(target)<os.path.getmtime(scheletonFileName) : return True
+	if not os.access(skeletonFileName, os.F_OK) : return False
+	if os.path.getmtime(target)<os.path.getmtime(skeletonFileName) : return True
 	return False
 
-# Generate HTML with HTML content files + scheleton
+# Generate HTML with HTML content files + skeleton
 for contentFile in glob.glob("content/*.html") :
 	target = os.path.basename(contentFile)
 	if not needsRebuild(target, contentFile) :
@@ -343,7 +362,7 @@ for contentFile in glob.glob("content/*.html") :
 		continue
 	print "Generating", target, "from", contentFile, "..."
 	content = file(contentFile).read()
-	file(target,"w").write(scheleton%{'title':'', 'content':content})
+	file(target,"w").write(skeleton%{'title':'', 'content':content})
 
 # Generate LaTeX and HTML from wiki files
 
@@ -370,7 +389,7 @@ for contentFile in glob.glob("*.wiki") :
 	if enableHtml :
 		htmlResult = HtmlCompiler().process(content)
 		htmlResult['wikiSource']=contentFile;
-		file(target,"w").write(scheleton%htmlResult)
+		file(target,"w").write(skeleton%htmlResult)
 	if enableLaTeX and len(texSkeletons):
 		texResult = LaTeXCompiler().process(content)
 		file(targetTex,"w").write(texResult['content'])
@@ -419,7 +438,7 @@ blogEntries.sort(key=lambda a: a['timestamp'], reverse=True)
 if len(blogEntries) != 0 :
 	tagPages = dict([(tag,[]) for tag in tags])
 	blogEntryScheleton = file("blog/entryScheleton.html").read()
-	blogScheleton = file("blog/scheleton.html").read()
+	blogScheleton = file("blog/skeleton.html").read()
 	blogRssEntryScheleton = file("blog/rssEntryScheleton.rss").read()
 	blogRssScheleton = file("blog/rssScheleton.rss").read()
 	htmlentries = []
@@ -514,7 +533,7 @@ dzConfig = {
 		"style.css",
 		"img",
 	],
-	'template' : scheletonFileName
+	'template' : skeletonFileName
 }
 try :
 	dzConfig.update(eval(file("downloadZones.wiko").read()))
@@ -538,7 +557,7 @@ if len(bibfiles) :
 				result += ["<a id='%s' />\n"%id]
 			result.append(line)
 	# TODO: Is it needed to have a 
-	bibfileout=file(bibfilename, "w").write(scheleton%dict(
+	bibfileout=file(bibfilename, "w").write(skeleton%dict(
 		content="<pre>"+"".join(result)+"</pre>",
 		title="Bibliography",
 		author="",

@@ -43,8 +43,8 @@ class LoginPage(QWizardPage) :
 		self.registerField("Login", self.login)
 		self.registerField("Password", self.passwd)
 
-		self.login.setText("dgarcia@iua.upf.edu")
-		self.passwd.setText("nmadmp")
+		self.login.setText("yourname@gmail.com")
+		self.passwd.setText("")
 		self.setCommitPage(True)
 		self.setButtonText(QWizard.CommitButton, "Connect")
 		

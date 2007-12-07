@@ -103,6 +103,9 @@ def stripUtfMarker(content) :
 	return content
 #		content = content[3:] # remove the utf8 marker
 
+def readUtfSafe(filename) :
+	return stripUtfMarker(file(filename).read())
+
 class WikiCompiler :
 
 	def compileInlines(self, inlines) :
@@ -343,8 +346,8 @@ class HtmlCompiler(WikiCompiler) :
 		self.result.append(line)
 
 skeletonFileName = "skeleton.html"
-try: skeleton = file(skeletonFileName).read()
-except: skeleton=defaultSkeleton
+try: skeleton = readUtfSafe(skeletonFileName)
+except: skeleton = defaultSkeleton
 
 def needsRebuild(target, source) :
 	if forceRebuild: return True
@@ -361,7 +364,7 @@ for contentFile in glob.glob("content/*.html") :
 		print target, "is up to date."
 		continue
 	print "Generating", target, "from", contentFile, "..."
-	content = file(contentFile).read()
+	content = readUtfSafe(contentFile)
 	file(target,"w").write(skeleton%{'title':'', 'content':content})
 
 # Generate LaTeX and HTML from wiki files
@@ -384,8 +387,7 @@ for contentFile in glob.glob("*.wiki") :
 		print target, "is up to date."
 		continue
 	print "Generating", target, "from", contentFile, "..."
-	content = file(contentFile).read()
-	content = stripUtfMarker(content)
+	content = readUtfSafe(contentFile)
 	if enableHtml :
 		htmlResult = HtmlCompiler().process(content)
 		htmlResult['wikiSource']=contentFile;
@@ -402,7 +404,7 @@ blog = {
 	'title': "Voki Codder",
 	'editor': "Vokimon",
 	'description': "Code for the masses",
-	'generator': "WikiFormater",
+	'generator': "WiKo",
 	'lastbuilddate': datetime.utcnow().ctime(), #strftime("%c"), # TODO: was 'Thu, 18 Oct 2007 17:13:32 +0000',
 	'homeurl': "http://vokicodder.blogspot.com/",
 	'baseurl': "localhost",
@@ -411,16 +413,17 @@ blog = {
 blogEntries = []
 tags=set()
 for contentFile in glob.glob("blog/*.wiki") :
-	entry = HtmlCompiler().process(stripUtfMarker(file(contentFile).read()))
+	entry = HtmlCompiler().process(readUtfSafe(contentFile))
 	entry['name'] = os.path.splitext(os.path.split(contentFile)[-1])[0]
 	entry.setdefault('tags',"")
 	entry['splittedTags']=[tag.strip() for tag in entry["tags"].split(",") if tag!=""]
-	for tag in entry['splittedTags']: tags.add(tag)
+	tags=tags.union(entry['splittedTags'])
 	entry['linkedTags']=', '.join([
 		"<a href='blog.tag.%(tag)s.html'>%(tag)s</a>"%{'tag':tag} 
-		for tag in entry['splittedTags']])
+			for tag in entry['splittedTags']])
 	entry["rsscategories"]="\n".join([
-		"<category domain='http://www.blogger.com/atom/ns#'>%s</category>"%tag for tag in entry["splittedTags"] ])
+		"<category domain='http://www.blogger.com/atom/ns#'>%s</category>"%tag 
+			for tag in entry["splittedTags"] ])
 	publishedTime = datetime.strptime(entry['timestamp'],  "%d/%m/%Y %H:%M")
 	updatedTime = datetime.utcfromtimestamp(os.path.getmtime(contentFile))
 	entry['timestamp'] = str(publishedTime)
@@ -437,10 +440,10 @@ blogEntries.sort(key=lambda a: a['timestamp'], reverse=True)
 
 if len(blogEntries) != 0 :
 	tagPages = dict([(tag,[]) for tag in tags])
-	blogEntryScheleton = file("blog/entryScheleton.html").read()
-	blogScheleton = file("blog/skeleton.html").read()
-	blogRssEntryScheleton = file("blog/rssEntryScheleton.rss").read()
-	blogRssScheleton = file("blog/rssScheleton.rss").read()
+	blogEntryScheleton = readUtfSafe("blog/entryScheleton.html")
+	blogScheleton = readUtfSafe("blog/skeleton.html")
+	blogRssEntryScheleton = readUtfSafe("blog/rssEntryScheleton.rss")
+	blogRssScheleton = readUtfSafe("blog/rssScheleton.rss")
 	htmlentries = []
 	rssItems = []
 	for entry in blogEntries :
@@ -497,7 +500,7 @@ def humanReadableTime(filename) :
 
 def generateDownloadZones(dirs, skeletonFilename, blacklist) :
 	lineTemplate = "<tr><td style='width:100%%'><a href='%(filename)s'>%(filename)s</a></td><td>%(size)s</td><td>%(date)s</td></tr>"
-	skeleton = file(skeletonFilename).read()
+	skeleton = readUtfSafe(skeletonFilename)
 	for title, dirname in dirs:
 		dirname = os.path.expanduser(dirname)
 		if not os.access(dirname, os.X_OK):

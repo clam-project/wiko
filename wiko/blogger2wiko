@@ -30,6 +30,8 @@ class LoginPage(QWizardPage) :
 		QWizardPage.__init__(self, parent)
 		self.setTitle("Validation")
 		self.setSubTitle("Introduce the login information for blogger.com.")
+		self.server = QLineEdit(self)
+		serverLabel = buddyFor(self.server,"Server")
 		self.login = QLineEdit(self)
 		loginLabel = buddyFor(self.login,"Login")
 		self.passwd = QLineEdit(self)
@@ -40,30 +42,39 @@ class LoginPage(QWizardPage) :
 
 		layout = QGridLayout(self)
 		self.setLayout(layout)
-		layout.addWidget(loginLabel, 0, 0)
-		layout.addWidget(self.login, 0, 1)
-		layout.addWidget(passwdLabel, 1, 0)
-		layout.addWidget(self.passwd, 1, 1)
-		layout.addWidget(self.errorMessage, 2, 0, 1, 2)
+		layout.addWidget(serverLabel, 0, 0)
+		layout.addWidget(self.server, 0, 1)
+		layout.addWidget(loginLabel, 1, 0)
+		layout.addWidget(self.login, 1, 1)
+		layout.addWidget(passwdLabel, 2, 0)
+		layout.addWidget(self.passwd, 2, 1)
+		layout.addWidget(self.errorMessage, 3, 1)
 
+		self.registerField("Server", self.server)
 		self.registerField("Login", self.login)
 		self.registerField("Password", self.passwd)
 
+		self.server.setText("www.blogger.com")
 		self.login.setText("yourname@gmail.com")
 		self.passwd.setText("")
 		self.setCommitPage(True)
 		self.setButtonText(QWizard.CommitButton, "Connect")
-		
 
 	def validatePage(self) :
-		self.errorMessage.setText("<span style='color:blue'>Validating user</span>")
+		self.updateStatus("Validating user...", "blue")
 		try :
-			self.wizard().login(self.login.text(), self.passwd.text())
-		except Exception, e:
-			self.errorMessage.setText("<span style='color:red'>%s</span>"%e)
+			self.wizard().login(self.login.text(), self.passwd.text(), self.server.text())
+		except Exception, error:
+			self.updateStatus(error, "red")
 			return False
-		self.errorMessage.setText("<span style='color:green'>Logged in</span>")
+		self.updateStatus("Logged in", "green")
 		return True
+
+	def updateStatus(self, message, color) :
+		self.errorMessage.setText("<span style='color:%s'>%s</span>"%(color,message))
+		# Force a widget update before continuing (proper way?)
+		QApplication.sendPostedEvents()
+		QApplication.processEvents()
 
 class BlogSelectionPage(QWizardPage) :
 	def __init__(self, parent=None) :
@@ -116,22 +127,30 @@ class DirectoryPage(QWizardPage) :
 
 	def initializePage(self) :
 		self.fileedit.setText(self.wizard().targetDir)
-	def validatePage(self) :
+
+	def isComplete(self) :
 		from os.path import isdir
 		from os import access, W_OK
 		targetdir = str(self.fileedit.text())
 		if not isdir(targetdir): return False
 		if not access(targetdir, W_OK) : return False
+		return True
+
+	def validatePage(self) :
+		if not self.isComplete() : return False
+		targetdir = str(self.fileedit.text())
 		self.wizard().targetDir = targetdir
 		return True
 
+
 class BloggerImportWizard (QWizard) :
 
-	def login(self, user, password) :
+	def login(self, user, password, server) :
+		print "Login:", user, password, "at", server
 		self.service = gdata.service.GDataService(user, password)
-		self.service.source = 'Blogger_Python_Sample-1.0'
+		self.service.source = 'WiKo'
 		self.service.service = 'blogger'
-		self.service.server = 'www.blogger.com'
+		self.service.server = unicode(server)
 		self.service.ProgrammaticLogin()
 
 	def getBlogList(self) :
@@ -145,7 +164,7 @@ class BloggerImportWizard (QWizard) :
 				entry.GetSelfLink().href.split('/')[-1],
 			) for entry in feed.entry ]
 		return blogs
-		
+
 	def __init__(self, parent=None) :
 		QWizard.__init__(self)
 		self.setWindowTitle("Blogger.com to WiKo")
@@ -193,13 +212,11 @@ class BloggerImportWizard (QWizard) :
 			title = entry.title.text or "No title"
 			id = entry.id.text.split("-")[-1]
 			filename = "blog-"+id+"-"+title.title().translate(string.maketrans("",""),"! ,./:?")
-			if entry.content.type=="html" : filename+=".wiki"
-			else : filename+=".wiki"
-			print self.targetDir, filename
+			filename += ".wiki" # if entry.content.type is not "html" else ".html"
 			fullfilename = os.path.join(self.targetDir,filename)
+			print "Generating", fullfilename
 			import codecs
 			blogfile=codecs.open(fullfilename,'w','utf-8')
-			print "Generating", fullfilename
 			print >> blogfile, "@id:", id
 			
 			print >> blogfile, "@author:", (", ".join([author.name.text for author in entry.author]))

@@ -30,6 +30,7 @@ class LoginPage(QWizardPage) :
 		QWizardPage.__init__(self, parent)
 		self.setTitle("Validation")
 		self.setSubTitle("Introduce the login information for blogger.com.")
+
 		self.server = QLineEdit(self)
 		serverLabel = buddyFor(self.server,"Server")
 		self.login = QLineEdit(self)
@@ -37,7 +38,6 @@ class LoginPage(QWizardPage) :
 		self.passwd = QLineEdit(self)
 		self.passwd.setEchoMode(self.passwd.Password)
 		passwdLabel = buddyFor(self.passwd,"Password")
-
 		self.errorMessage=QLabel("")
 
 		layout = QGridLayout(self)
@@ -58,7 +58,7 @@ class LoginPage(QWizardPage) :
 		self.login.setText("yourname@gmail.com")
 		self.passwd.setText("")
 		self.setCommitPage(True)
-		self.setButtonText(QWizard.CommitButton, "Connect")
+		self.setButtonText(QWizard.CommitButton, "&Connect")
 
 	def validatePage(self) :
 		self.updateStatus("Validating user...", "blue")
@@ -111,7 +111,7 @@ class DirectoryPage(QWizardPage) :
 
 		self.fileedit = QLineEdit(self)
 		self.pushButton = QPushButton(self)
-		self.pushButton.setText('Choose')
+		self.pushButton.setText('&Choose')
 		layout = QHBoxLayout(self)
 		self.setLayout(layout)
 		layout.addWidget(self.fileedit)
@@ -119,6 +119,10 @@ class DirectoryPage(QWizardPage) :
 		self.connect(self.pushButton,SIGNAL("clicked()"),
 			self.chooseDirectory)
 		self.registerField("Directory*", self.fileedit)
+
+		self.setCommitPage(True)
+		self.setButtonText(QWizard.CommitButton, "&Export")
+
 
 	def chooseDirectory(self) :
 		directory = QFileDialog.getExistingDirectory(self, "Choose a directory")
@@ -132,21 +136,47 @@ class DirectoryPage(QWizardPage) :
 		from os.path import isdir
 		from os import access, W_OK
 		targetdir = str(self.fileedit.text())
+		self.emit(SIGNAL("isComplete()"))
 		if not isdir(targetdir): return False
 		if not access(targetdir, W_OK) : return False
 		return True
 
 	def validatePage(self) :
-		if not self.isComplete() : return False
 		targetdir = str(self.fileedit.text())
 		self.wizard().targetDir = targetdir
 		return True
 
+class RunPage(QWizardPage) :
+	def __init__(self, parent=None) :
+		QWizardPage.__init__(self, parent)
+		self.setTitle("Execution")
+		self.setSubTitle("Exporting the blog into your file system")
+
+		self.log = QTextEdit(self)
+		self.log.setReadOnly(True)
+		self.log.setText("Exporting...")
+
+		layout = QHBoxLayout(self)
+		self.setLayout(layout)
+		layout.addWidget(self.log)
+
+	def isComplete(self) :
+		for action in self.wizard().dump(stepped=True) :
+			print "Execution", action
+			self.log.append(action)
+			QApplication.sendPostedEvents()
+			QApplication.processEvents()
+		return True
+
+
+	def initializePage(self) :
+		pass
+
+	
 
 class BloggerImportWizard (QWizard) :
 
 	def login(self, user, password, server) :
-		print "Login:", user, password, "at", server
 		self.service = gdata.service.GDataService(user, password)
 		self.service.source = 'WiKo'
 		self.service.service = 'blogger'
@@ -193,18 +223,19 @@ class BloggerImportWizard (QWizard) :
 		self.loginPage  = self.addPage(LoginPage(self))
 		self.blogPage   = self.addPage(BlogSelectionPage(self))
 		self.targetPage = self.addPage(DirectoryPage(self))
+		self.runPage = self.addPage(RunPage(self))
 
-	def dump(self) :
-		print "Fetching blog %s"%self.blogId
+	def dump(self, stepped=False) :
+		if stepped :
+			yield "Fetching blog %s"%self.blogId
 		feed = self.service.GetFeed('/feeds/%s/posts/default' % self.blogId )
-
 		print "Generator:", feed.generator.text
 		print "Category:", [category.text for category in feed.category]
 		print "Contributor:", [contributor.text for contributor in feed.contributor]
 		print "Id:", feed.id.text
-		print "Title:", feed.title and feed.title.text
-		print "Subtitle:", feed.subtitle and feed.subtitle.text
-		print "Link:", [link.href for link in feed.link]
+		if stepped : yield "Title: " + (feed.title and feed.title.text)
+		if stepped and feed.subtitle: yield "Subtitle: " + feed.subtitle.text
+		print "Link:", [(link.href, dir(link)) for link in feed.link]
 		print "Updated:", feed.updated.text
 		import string
 		import os.path
@@ -214,7 +245,7 @@ class BloggerImportWizard (QWizard) :
 			filename = "blog-"+id+"-"+title.title().translate(string.maketrans("",""),"! ,./:?")
 			filename += ".wiki" # if entry.content.type is not "html" else ".html"
 			fullfilename = os.path.join(self.targetDir,filename)
-			print "Generating", fullfilename
+			if stepped: yield "Generating " + filename
 			import codecs
 			blogfile=codecs.open(fullfilename,'w','utf-8')
 			print >> blogfile, "@id:", id
@@ -254,7 +285,6 @@ class BloggerImportWizard (QWizard) :
 		]
 		substitutions = [(re.compile(old), new) for old, new in substitutions]
 		for old, new in substitutions :
-			print "Content:", content
 			content = old.sub(new, content)
 		return content
 
@@ -277,10 +307,10 @@ def main():
 	wizard = BloggerImportWizard()
 	wizard.targetDir="blogdump/"
 	if wizard.exec_() != QDialog.Accepted :
-		return
-	wizard.dump()
-
+		exit(-1)
+	exit(0)
 
 if __name__ == '__main__':
 	main()
+
 

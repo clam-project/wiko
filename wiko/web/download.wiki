@@ -8,5 +8,8 @@
 * [[bib2html.py bib2html]]: A python script to generate an agregated anchored html with bibtex entries from all the bibtex file in a directory so that bibtex works with html.
 
 
+== Subversion ==
 
+Checkout the repository :
 
+ svn co https://wiko.svn.sourceforge.net/svnroot/wiko/wiko wiko

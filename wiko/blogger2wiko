@@ -2,17 +2,23 @@
 
 useTidy=False
 
+import sys
 try:
 	from xml.etree import ElementTree # for Python 2.5 users
 except:
 	from elementtree import ElementTree
-
-import gdata.service
-import gdata
-import sys
-from PyQt4 import QtGui, QtCore
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+try:
+	import gdata
+	import gdata.service
+except:
+	print >> sys.stderr, "Execution failed: gdata python module not found"
+	sys.exit()
+try:
+	from PyQt4.QtCore import *
+	from PyQt4.QtGui import *
+except:
+	print >> sys.stderr, "Execution failed: This script requires PyQt4 installed"
+	sys.exit()
 
 def buddyFor(widget, labelText) :
 	label = QLabel(labelText)
@@ -89,8 +95,8 @@ class BlogSelectionPage(QWizardPage) :
 class DirectoryPage(QWizardPage) :
 	def __init__(self, parent=None) :
 		QWizardPage.__init__(self, parent)
-		self.setTitle("Target")
-		self.setSubTitle("Choose the directory whery you want to dump the blog")
+		self.setTitle("Destination directory")
+		self.setSubTitle("Choose the directory where you want to dump the blog into")
 
 		self.fileedit = QLineEdit(self)
 		self.pushButton = QPushButton(self)
@@ -99,7 +105,7 @@ class DirectoryPage(QWizardPage) :
 		self.setLayout(layout)
 		layout.addWidget(self.fileedit)
 		layout.addWidget(self.pushButton)
-		self.connect(self.pushButton,QtCore.SIGNAL("clicked()"),
+		self.connect(self.pushButton,SIGNAL("clicked()"),
 			self.chooseDirectory)
 		self.registerField("Directory*", self.fileedit)
 
@@ -250,7 +256,7 @@ class BloggerImportWizard (QWizard) :
 			) for entry in feed.entry ]
 
 def main():
-	app=QtGui.QApplication(sys.argv)
+	app=QApplication(sys.argv)
 	wizard = BloggerImportWizard()
 	wizard.targetDir="blogdump/"
 	if wizard.exec_() != QDialog.Accepted :

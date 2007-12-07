@@ -22,7 +22,7 @@ table = [
 ]
 count=1
 for filename in files:
-	table += ["<td><a href='%s' <img src='%s'/></a><br />%s </td>" % (
+	table += ["<td style='text-align:center'><a href='%s' <img src='%s'/></a><br />%s </td>" % (
 		filename, 
 		prefix+filename,
 		filename[:-4])

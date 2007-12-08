@@ -379,10 +379,11 @@ def fileNamesBasesForExtension(extension) :
 # TeX skeletons are not generated from wiki files
 texSkeletons = fileNamesBasesForExtension("tex") - fileNamesBasesForExtension("wiki")
 # ...and contain \documentclass directive
-texSkeletons = [ skeleton 
-		for skeleton in texSkeletons
-		if file(skeleton+".tex").read().find(r"\documentclass") != -1
+texSkeletons = [ texSkeleton 
+		for texSkeleton in texSkeletons
+		if file(texSkeleton+".tex").read().find(r"\documentclass") != -1
 	]
+
 for contentFile in glob.glob("*.wiki") :
 	base = os.path.basename(contentFile)
 	target = "".join(os.path.splitext(base)[0:-1])+".html"
@@ -390,15 +391,17 @@ for contentFile in glob.glob("*.wiki") :
 	if not needsRebuild(target, contentFile) :
 		print target, "is up to date."
 		continue
-	print "Generating", target, "from", contentFile, "..."
 	content = readUtfSafe(contentFile)
 	if enableHtml :
+		print "Generating", target, "from", contentFile, "..."
 		htmlResult = HtmlCompiler().process(content)
 		htmlResult['wikiSource']=contentFile;
 		file(target,"w").write(skeleton%htmlResult)
 	if enableLaTeX and len(texSkeletons):
+		print "Generating", targetTex, "from", contentFile, "..."
 		texResult = LaTeXCompiler().process(content)
 		file(targetTex,"w").write(texResult['content'])
+
 
 print "Generating blog..."
 
@@ -463,7 +466,7 @@ if len(blogEntries) != 0 :
 	taglist=[(tag,len(entries)) for tag, entries in tagPages.items()]
 	taglist.sort(key=lambda a : a[1],reverse=True)
 	blog['taglist'] = "\n".join([
-		"<li><a href='blog.tag.%s.html'>%s</a> (%i)</li>"%(
+		"<li><a href='blog.tag.%s.html'>%s&nbsp;(%i)</a></li>"%(
 			tag,tag,nitems) for tag,nitems in taglist])
 	for entry in blogEntries :
 		blog['htmlentries'] = blogEntryScheleton % entry

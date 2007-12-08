@@ -11,7 +11,7 @@ Checkout the repository :
 
 === Direct download ===
 
-You can also just download the concrete scripts:
+If you don't know how to use ''subversion'', you still can just download the script:
 
 * [[https://wiko.svn.sourceforge.net/svnroot/wiko/wiko/wiko WiKo]]
 The main script which compiles it all depending on what it finds on the working directory: 

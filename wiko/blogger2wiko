@@ -110,12 +110,20 @@ class DirectoryPage(QWizardPage) :
 		self.setSubTitle("Choose the directory where you want to dump the blog into")
 
 		self.fileedit = QLineEdit(self)
+		self.completer = QCompleter(self)
+		self.completer.setModel(QDirModel(self.completer));
+		self.fileedit.setCompleter(self.completer);
 		self.pushButton = QPushButton(self)
 		self.pushButton.setText('&Choose')
+		self.error = QLabel(self)
+		layoutV = QVBoxLayout(self)
 		layout = QHBoxLayout(self)
-		self.setLayout(layout)
+		layoutV.addLayout(layout)
+		layoutV.addWidget(self.error)
 		layout.addWidget(self.fileedit)
 		layout.addWidget(self.pushButton)
+		self.setLayout(layoutV)
+
 		self.connect(self.pushButton,SIGNAL("clicked()"),
 			self.chooseDirectory)
 		self.registerField("Directory*", self.fileedit)
@@ -137,8 +145,13 @@ class DirectoryPage(QWizardPage) :
 		from os import access, W_OK
 		targetdir = str(self.fileedit.text())
 		self.emit(SIGNAL("isComplete()"))
-		if not isdir(targetdir): return False
-		if not access(targetdir, W_OK) : return False
+		if not isdir(targetdir):
+			self.error.setText("<span style='color:red'>Directory does not exist</span>")
+			return False
+		if not access(targetdir, W_OK) :
+			self.error.setText("<span style='color:red'>Directory can not be written</span>")
+			return False
+		self.error.setText("")
 		return True
 
 	def validatePage(self) :

@@ -3,13 +3,28 @@
 
 == Download ==
 
-* [[wiko WiKo script]]
-* [[generateImages.sh generateImages]] A bash script that takes dia, dot and eps figures and converts them into WiKo usable images: png for web and LaTeX and pdf for LaTex.
-* [[bib2html.py bib2html]]: A python script to generate an agregated anchored html with bibtex entries from all the bibtex file in a directory so that bibtex works with html.
-
-
-== Subversion ==
+=== Subversion ===
 
 Checkout the repository :
 
  svn co https://wiko.svn.sourceforge.net/svnroot/wiko/wiko wiko
+
+=== Direct download ===
+
+You can also just download the concrete scripts:
+
+* [[https://wiko.svn.sourceforge.net/svnroot/wiko/wiko/wiko WiKo]]
+The main script which compiles it all depending on what it finds on the working directory: 
+Just wrapping Html into a skeleton, wiki to html, wiki to latex, generating download zones and blogs.
+
+You may find also useful some of the helper scripts:
+* [[https://wiko.svn.sourceforge.net/svnroot/wiko/wiko/generate_figures.py generate_figures.py]]:
+** It takes dia, dot, svg and eps figures and converts them into WiKo usable images: png for web and LaTeX and pdf for LaTex.
+** Depending on the conversions you need it requires: epstopdf (texlive-extra-utils), dia (dia|dia-gnome), dot (graphviz) and inkscape (inkscape)
+* [[https://wiko.svn.sourceforge.net/svnroot/wiko/wiko/generate_gallery.py generate_gallery.py]]:
+** ''(Experimental)'' Generates a gallery page using the images on a given directory.
+* [[https://wiko.svn.sourceforge.net/svnroot/wiko/wiko/bib2html.py bib2html.py]]:
+** Makes LaTeX bibliography (BibTeX) to also work with generated HTML by aggregating any BibTeX file withing the workind directory into an HTML file and providing anchors to each entry.
+
+
+

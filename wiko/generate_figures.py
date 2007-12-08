@@ -60,8 +60,8 @@ def main() :
 		print >> sys.stderr, "\t--help     Prints this help"
 		exit(0)
 
-	forceRebuild = "-f" in sys.argv
-	verbose = "-v" in sys.argv
+	forceRebuild = "-f" in sys.argv or "--force" in sys.argv
+	verbose = "-v" in sys.argv or "--verbose" in sys.argv
 
 	for fromSuffix, toSuffix, commands in converters :
 		sources = glob.glob("*"+fromSuffix)

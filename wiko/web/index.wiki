@@ -47,7 +47,7 @@ such as publication date, author, tags...
 This script has been developed mainly by ''David Garcia Garzon'' and ''Pau Arumi Albo''.
 They developed the script for their own personal use
 on their webs, scientific articles and even their thesis.
-See at the [examples.html WiKo examples page].
+See at the [[examples.html WiKo examples page]].
 
 
 

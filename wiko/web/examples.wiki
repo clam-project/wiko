@@ -3,8 +3,7 @@
 
 == Usage Examples ==
 
-This page compiles some available material they using WiKo.
-
+This page compiles some available materials that use WiKo.
 
 === Thesis ===
 
@@ -14,6 +13,7 @@ This page compiles some available material they using WiKo.
 === Web sites ===
 * [[http://wiko.sourceforge.net WiKo site]] (yes! this site!)
 * [[http://www.iua.upf.edu/~dgarcia Can Voki]]
+* [[http://parumi.org Parumi.org]]
 * [[http://www.iua.upf.edu/~dgarcia/Codders Codders]]
 * [[http://www.iua.upf.edu/~dgarcia/KKEP KKEPerians UNLTD]]
 

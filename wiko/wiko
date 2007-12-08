@@ -552,7 +552,7 @@ except :
 if len(dzConfig['dirs']) :
 	generateDownloadZones(dzConfig['dirs'], dzConfig['template'], dzConfig['blacklist'])
 
-#os.system("(cd img; bash ./generateImages.sh)")
+#os.system("(cd img; bash ./generate_figures.py)")
 
 bibfiles = glob.glob("*.bib")
 if len(bibfiles) :

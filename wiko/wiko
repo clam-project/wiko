@@ -405,47 +405,38 @@ for contentFile in glob.glob("*.wiki") :
 
 print "Generating blog..."
 
-from datetime import datetime
-# TODO: Should be a config file with default values
-blog = {
-	'title': "Voki Codder",
-	'editor': "Vokimon",
-	'description': "Code for the masses",
-	'generator': "WiKo",
-	'lastbuilddate': datetime.utcnow().ctime(), #strftime("%c"), # TODO: was 'Thu, 18 Oct 2007 17:13:32 +0000',
-	'homeurl': "http://vokicodder.blogspot.com/",
-	'baseurl': "localhost",
-	'blogid' : "tag:blogger.com,1999:blog-36421488",
-}
-blogEntries = []
-tags=set()
-for contentFile in glob.glob("blog/*.wiki") :
-	entry = HtmlCompiler().process(readUtfSafe(contentFile))
-	entry['name'] = os.path.splitext(os.path.split(contentFile)[-1])[0]
-	entry.setdefault('tags',"")
-	entry['splittedTags']=[tag.strip() for tag in entry["tags"].split(",") if tag!=""]
-	tags=tags.union(entry['splittedTags'])
-	entry['linkedTags']=', '.join([
-		"<a href='blog.tag.%(tag)s.html'>%(tag)s</a>"%{'tag':tag} 
-			for tag in entry['splittedTags']])
-	entry["rsscategories"]="\n".join([
-		"<category domain='http://www.blogger.com/atom/ns#'>%s</category>"%tag 
-			for tag in entry["splittedTags"] ])
-	publishedTime = datetime.strptime(entry['timestamp'],  "%d/%m/%Y %H:%M")
-	updatedTime = datetime.utcfromtimestamp(os.path.getmtime(contentFile))
-	entry['timestamp'] = str(publishedTime)
-	entry["updatedtime"] = updatedTime.isoformat() #  2007-07-21T11:47:11.001-07:00
-	entry["publishedtime"] = publishedTime.strftime("%a, %d %b %Y %T") # was: Fri, 20 Jul 2007 18:10:00 +0000
-	entry["entryid"] = "tag:blogger.com,1999:blog-36421488.post-8207308771074649324" # TODO
-	entry['link'] = "blog.%s.html"%entry["name"]
-	from xml.sax.saxutils import escape
-	entry["encodedContent"] = escape(entry["content"])
-	# fulluri was: http://vokicodder.blogspot.com/2007/07/simplifying-spectral-processing-in-clam.html
-	entry["fulluri"] = blog["baseurl"] + "/" + entry["link"]
-	blogEntries.append(entry)
-blogEntries.sort(key=lambda a: a['timestamp'], reverse=True)
+def readBlogEntries(blog) :
+	blogEntries = []
+	tags=set()
+	for contentFile in glob.glob("blog/*.wiki") :
+		entry = HtmlCompiler().process(readUtfSafe(contentFile))
+		entry['name'] = os.path.splitext(os.path.split(contentFile)[-1])[0]
+		entry.setdefault('tags',"")
+		entry['splittedTags']=[tag.strip() for tag in entry["tags"].split(",") if tag!=""]
+		tags=tags.union(entry['splittedTags'])
+		entry['linkedTags']=', '.join([
+			"<a href='blog.tag.%(tag)s.html'>%(tag)s</a>"%{'tag':tag} 
+				for tag in entry['splittedTags']])
+		entry["rsscategories"]="\n".join([
+			"<category domain='http://www.blogger.com/atom/ns#'>%s</category>"%tag 
+				for tag in entry["splittedTags"] ])
+		publishedTime = datetime.strptime(entry['timestamp'],  "%d/%m/%Y %H:%M")
+		updatedTime = datetime.utcfromtimestamp(os.path.getmtime(contentFile))
+		entry['timestamp'] = str(publishedTime)
+		entry["updatedtime"] = updatedTime.isoformat() #  2007-07-21T11:47:11.001-07:00
+		entry["publishedtime"] = publishedTime.strftime("%a, %d %b %Y %T") # was: Fri, 20 Jul 2007 18:10:00 +0000
+		entry["entryid"] = "tag:blogger.com,1999:blog-36421488.post-8207308771074649324" # TODO
+		entry['link'] = "blog.%s.html"%entry["name"]
+		from xml.sax.saxutils import escape
+		entry["encodedContent"] = escape(entry["content"])
+		# fulluri was: http://vokicodder.blogspot.com/2007/07/simplifying-spectral-processing-in-clam.html
+		entry["fulluri"] = blog["baseurl"] + "/" + entry["link"]
+		blogEntries.append(entry)
+	blogEntries.sort(key=lambda a: a['timestamp'], reverse=True)
+	return blogEntries, tags
 
-if len(blogEntries) != 0 :
+def generateBlog(blog, blogEntries, tags) :
+	if not blogEntries: return
 	tagPages = dict([(tag,[]) for tag in tags])
 	blogEntryScheleton = readUtfSafe("blog/entryScheleton.html")
 	blogScheleton = readUtfSafe("blog/skeleton.html")
@@ -463,7 +454,7 @@ if len(blogEntries) != 0 :
 			tagPages[tag].append(composed)
 		rssItems.append(blogRssEntryScheleton%entry)
 
-	taglist=[(tag,len(entries)) for tag, entries in tagPages.items()]
+	taglist=[(tag,len(entries)) for tag, entries in tagPages.iteritems()]
 	taglist.sort(key=lambda a : a[1],reverse=True)
 	blog['taglist'] = "\n".join([
 		"<li><a href='blog.tag.%s.html'>%s&nbsp;(%i)</a></li>"%(
@@ -479,9 +470,25 @@ if len(blogEntries) != 0 :
 	})
 	file("blog.index.html","w").write(blogScheleton%blog)
 	file("blog.rss","w").write(blogRssScheleton%blog)
-	for tag, tagEntries in tagPages.items() :
+	for tag, tagEntries in tagPages.iteritems() :
 		blog['htmlentries'] = "\n".join(tagEntries)
 		file("blog.tag.%s.html"%tag,"w").write(blogScheleton%blog)
+
+from datetime import datetime
+# TODO: Should be a config file with default values
+blog = {
+	'title': "Voki Codder",
+	'editor': "Vokimon",
+	'description': "Code for the masses",
+	'generator': "WiKo",
+	'lastbuilddate': datetime.utcnow().ctime(), #strftime("%c"), # TODO: was 'Thu, 18 Oct 2007 17:13:32 +0000',
+	'homeurl': "http://vokicodder.blogspot.com/",
+	'baseurl': "localhost",
+	'blogid' : "tag:blogger.com,1999:blog-36421488",
+}
+
+blogEntries, tags = readBlogEntries(blog)
+generateBlog(blog, blogEntries, tags)
 
 
 print "Generating download zones..."
@@ -554,8 +561,9 @@ if len(dzConfig['dirs']) :
 
 #os.system("(cd img; bash ./generate_figures.py)")
 
-bibfiles = glob.glob("*.bib")
-if len(bibfiles) :
+def generateHtmlBibliography(bibfiles) :
+	if not bibfiles : return
+	print "Generating HTML bibliography..."
 	result = []
 	bibfilename = "bibliography.bib.html"
 	entry = re.compile(r"@\w*{([^,]*),")
@@ -576,6 +584,8 @@ if len(bibfiles) :
 		next="",
 		wikiSource='',
 		))
+
+generateHtmlBibliography(glob.glob("*.bib"))
 
 for texSkeleton in texSkeletons :
 	os.system("bibtex %s" % texSkeleton)

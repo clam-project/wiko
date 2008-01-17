@@ -599,13 +599,13 @@ def generateHtmlBibliographyPretty(outputFilename, bibfiles) :
 			if entry: yield entry
 			else: return
 	entries = {}
-	output = open(outputFilename, "w")
+	output = []
 	for filename in bibfiles :
-		file = bibtex.open_file(filename,1)
-		for id, kind, byteOffset, lineOffset, keys in bibIterator(file) :
-			print >> output, "<p><a name='%s' /><b>%s</b> <b>%s</b><p>\n<ul>"%(id,kind,id)
+		bibfile = bibtex.open_file(filename,1)
+		for id, kind, byteOffset, lineOffset, keys in bibIterator(bibfile) :
+			output += ["<p><a name='%s' /><b>%s</b> <b>%s</b><p><ul>"%(id,kind,id)]
 			for key, value in keys.iteritems() :
-				expanded = bibtex.expand(file, value, -1)
+				expanded = bibtex.expand(bibfile, value, -1)
 				if len(expanded) is 3 :
 					expanded = tuple(list(expanded)+[None])
 				elif len(expanded) is 6 : # year
@@ -613,8 +613,17 @@ def generateHtmlBibliographyPretty(outputFilename, bibfiles) :
 				elif len(expanded) is not 4 : print key, expanded; continue
 				foo, bar, text, content = expanded
 				if not text : continue
-				print >> output, "<li><b>%s:</b> %s" % (key, text)
-			print >> output, "</ul>\n"
+				output += ["<li><b>%s:</b> %s</li>" % (key, text)]
+			output += [ "</ul>" ]
+	file(outputFilename, "w").write(skeleton%dict(
+		content="\n".join(output),
+		title="Bibliography",
+		author="",
+		revision="",
+		prev="",
+		next="",
+		wikiSource='',
+		))
 	return entries
 
 generateHtmlBibliography("bibliography.bib.html", glob.glob("*.bib"))

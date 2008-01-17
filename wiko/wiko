@@ -561,9 +561,14 @@ if len(dzConfig['dirs']) :
 
 #os.system("(cd img; bash ./generate_figures.py)")
 
-def generateHtmlBibliography(bibfiles) :
+def generateHtmlBibliography(outputFilename, bibfiles) :
 	if not bibfiles : return
 	print "Generating HTML bibliography..."
+	try: import _bibtex as bibtex
+	except: return generateHtmlBibliographyRaw(outputFilename, bibfiles)
+	return generateHtmlBibliographyPretty(outputFilename, bibfiles)
+
+def generateHtmlBibliographyRaw(outputFilename, bibfiles) :
 	result = []
 	bibfilename = "bibliography.bib.html"
 	entry = re.compile(r"@\w*{([^,]*),")
@@ -575,7 +580,7 @@ def generateHtmlBibliography(bibfiles) :
 				result += ["<a id='%s' />\n"%id]
 			result.append(line)
 	# TODO: Is it needed to have a 
-	bibfileout=file(bibfilename, "w").write(skeleton%dict(
+	file(bibfilename, "w").write(skeleton%dict(
 		content="<pre>"+"".join(result)+"</pre>",
 		title="Bibliography",
 		author="",
@@ -584,8 +589,35 @@ def generateHtmlBibliography(bibfiles) :
 		next="",
 		wikiSource='',
 		))
+	return {} # no hoverable bibliography
 
-generateHtmlBibliography(glob.glob("*.bib"))
+def generateHtmlBibliographyPretty(outputFilename, bibfiles) :
+	import _bibtex as bibtex
+	def bibIterator( file ) :
+		while True :
+			entry = bibtex.next(file)
+			if entry: yield entry
+			else: return
+	entries = {}
+	output = open(outputFilename, "w")
+	for filename in bibfiles :
+		file = bibtex.open_file(filename,1)
+		for id, kind, byteOffset, lineOffset, keys in bibIterator(file) :
+			print >> output, "<p><a name='%s' /><b>%s</b> <b>%s</b><p>\n<ul>"%(id,kind,id)
+			for key, value in keys.iteritems() :
+				expanded = bibtex.expand(file, value, -1)
+				if len(expanded) is 3 :
+					expanded = tuple(list(expanded)+[None])
+				elif len(expanded) is 6 : # year
+					expanded = expanded[0:-2]
+				elif len(expanded) is not 4 : print key, expanded; continue
+				foo, bar, text, content = expanded
+				if not text : continue
+				print >> output, "<li><b>%s:</b> %s" % (key, text)
+			print >> output, "</ul>\n"
+	return entries
+
+generateHtmlBibliography("bibliography.bib.html", glob.glob("*.bib"))
 
 for texSkeleton in texSkeletons :
 	os.system("bibtex %s" % texSkeleton)

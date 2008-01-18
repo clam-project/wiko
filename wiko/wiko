@@ -153,6 +153,7 @@ a.bibref:hover span.tooltip
 	border: 1px solid #0cf;
 	background-color:#cff;
 	color:#000;
+	opacity: 0.9;
 }
 a.bibref:hover span.tooltip *
 {

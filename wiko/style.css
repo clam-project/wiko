@@ -189,4 +189,71 @@ ul.menu {
 	background-color: yellow;
 }
 
+.bibref
+{
+    position: relative; /*this is the key*/
+    z-index:24;
+}
+
+a.bibref span.tooltip
+{
+    display: none;
+}
+
+a.bibref:hover
+{
+    z-index:25;
+	text-decoration: none;
+}
+
+a.bibref:hover span.tooltip
+{
+	display: block;
+	position: absolute;
+	text-align: left;
+	text-decoration: none;
+	white-space: normal;
+	padding: 1ex 1em;
+	width: 20em;
+	top: 1em;
+	left: 1em;
+	margin: auto;
+	font-weight: normal;
+	border: 1px solid #0cf;
+	background-color:#cff;
+	color:#000;
+}
+a.bibref:hover span.tooltip *
+{
+	text-decoration: none;
+}
+
+a.bibref span.tooltip span.bibrefauthor
+{
+	display: block;
+	font-weight: bold;
+    color: green;
+}
+
+a.bibref span.tooltip span.bibreftitle
+{
+	display: block;
+	color: #922;
+	font-weight: bold;
+    font-style: italic;
+}
+
+a.bibref:hover span.tooltip:before
+{
+	float: right;
+	content: url(stock_book_open.png);
+}
+/*
+a.bibref:hover span.tooltip
+{
+	background-image: url(stock_book_open.png);
+	background-repeat: no-repeat;
+	background-position: 5px 1ex;
+}
+*/
 

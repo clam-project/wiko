@@ -470,8 +470,10 @@ def generateBlog(blog, blogEntries, tags) :
 	})
 	file("blog.index.html","w").write(blogScheleton%blog)
 	file("blog.rss","w").write(blogRssScheleton%blog)
+	tagNotice = """<div class='blog_tagnotice'>Showing only entries labeled as <b>%s</b>.
+<a href='blog.index.html'>Show all entries</a></div>"""
 	for tag, tagEntries in tagPages.iteritems() :
-		blog['htmlentries'] = "\n".join(tagEntries)
+		blog['htmlentries'] = "\n".join([tagNotice%tag]+tagEntries)
 		file("blog.tag.%s.html"%tag,"w").write(blogScheleton%blog)
 
 from datetime import datetime

@@ -89,7 +89,7 @@ li  = re.compile(r"^([*#]+)(.*)")
 pre = re.compile(r"^[ \t](.*)")
 var = re.compile(r"^@([^:]*): (.*)")
 fig = re.compile(r"^Figure:[\s]*([^\s]+)[\s]*([^\s]+)(.*)");
-todo = re.compile(r"^TODO:[\s]*(.*)");
+todo = re.compile(r"^TODO:[\s]*(.+)");
 label = re.compile(r"^Label:[\s]*([^\s]+)");
 div = re.compile(r"^([a-zA-Z0-9]+):$")
 
@@ -98,13 +98,17 @@ divMarkersLatex = {
 	'Keywords' : ('\\begin{keywords}', '\\end{keywords}'),
 	'Equation' : ('\\begin{equation}', '\\end{equation}'),
 	'Math' : ('\\[', '\\]'),
+#TODO: add new keys in html here
 }
 
 divMarkersHtml = {
 	'Abstract' : ('<div class="abstract"><b>Abstract:</b>', '</div>'),
 	'Keywords' : ('<div class="keywords"><b>Keywords:</b>', '</div>'),
 	'Equation' : ('<div class="equation"><b>Equation:</b>', '</div>'),
-	'Math' :     ('<div class="equation"><b>Equation:</b>', '</div>'),
+	'Math'     : ('<div class="equation"><b>Equation:</b>', '</div>'),
+	'TODO'     : ('<div class="todo"><b>TODO:</b>', '</div>'),
+	'Comment'  : ('<div class="comment"><b>Comment:</b>', '</div>'),
+	'Definition'  : ('<div class="definition"><b>Definition:</b>', '</div>'),
 }
 
 defaultSkeleton = """
@@ -456,6 +460,9 @@ def needsRebuild(target, source) :
 def generateHtmlBibliography(outputFilename, bibfiles) :
 	if not bibfiles : return
 	print "Generating HTML bibliography..."
+
+	return generateHtmlBibliographyRaw(outputFilename, bibfiles)
+	#PAU i get errors (missing comma)
 	try: import _bibtex as bibtex
 	except: return generateHtmlBibliographyRaw(outputFilename, bibfiles)
 	return generateHtmlBibliographyPretty(outputFilename, bibfiles)

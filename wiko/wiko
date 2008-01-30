@@ -109,6 +109,10 @@ divMarkersHtml = {
 	'TODO'     : ('<div class="todo"><b>TODO:</b>', '</div>'),
 	'Comment'  : ('<div class="comment"><b>Comment:</b>', '</div>'),
 	'Definition'  : ('<div class="definition"><b>Definition:</b>', '</div>'),
+	'Lemma'  : ('<div class="lemma"><b>Lemma:</b>', '</div>'),
+	'Proof'  : ('<div class="proof"><b>Proof:</b>', '</div>'),
+	'Theorem'  : ('<div class="theorem"><b>Theorem:</b>', '</div>'),
+	'Corollary'  : ('<div class="corollary"><b>Corollary:</b>', '</div>'),
 }
 
 defaultSkeleton = """

@@ -1,0 +1,270 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+    "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" >
+<head>
+<title>Wiki page generator test</title>
+<link rel='stylesheet' href='style.css' type='text/css'/>
+<!-- Autor: David García Garzón -->
+</head>
+<body>
+<div id="sidebar">
+<p id="sitelogo"><a href="index.html"><img src="wikologo.png" alt="[WiKo Logo]" /></a></p>
+<p id="sitenavhead">Site Navigation:</p>
+<ul id="sitenav" class="navlist">
+<li><a href='index.html'>Home</a></li>
+<li><a href='usage.html'>Usage</a></li>
+<li><a href='examples.html'>Examples</a></li>
+<li><a href='screenshots.html'>Screenshots</a></li>
+<li><a href='download.html'>Download</a></li>
+<li><a href='http://sourceforge.net/projects/wiko'>SourceForge</a></li>
+<li><a href='https://lists.sourceforge.net/lists/listinfo/wiko-community'>Mailinglist</a></li>
+</ul>
+<p id="sitenavhead">Sibling Projects:</p>
+<ul id="sitenav" class="navlist">
+<li><a href='http://clam.iua.upf.edu'>CLAM</a></li>
+<li><a href='http://sourceforge.net/projects/testfarm/'>TestFarm</a></li>
+<li><a href='http://sourceforge.net/projects/efficiencyguard'>Efficiency Guardian</a></li>
+<li><a href='http://sourceforge.net/projects/minicppunit'>MiniCppUnit</a></li>
+</ul>
+<p id="sitenavhead">:::</p>
+<ul id="sitenav" class="navlist">
+<li><a href='Sample.wiki' alt="Downloads the wiki source of this page">Wiki Source for this page</a></li>
+</ul>
+</div>
+<div id='content'>
+<h1>Wiki page generator test</h1>
+
+<h1 id='toc_1'>Wiki generator tests</h1>
+
+<h2 id='toc_2'>Paragraph test</h2>
+<p>
+This is a simple test for the web/article generator.
+It takes wiki pages and produces HTML and LaTeX output.
+It also takes a content folder with html fragments and
+embeds them on a scheletton.
+The idea is to have the benefits of a wiki syntax
+but maintain the files on a SVN server and editing
+them using your favorite editor (vim?) instead of
+the web interface.
+</p>
+
+<p>
+Paragraph are separated by an empty line.
+Like the one before.
+</p>
+
+<h2 id='toc_3'>Lists tests</h2>
+
+<ol>
+	<li> first</li>
+	<li> second</li>
+</ol>
+
+<ol>
+	<li> new first</li>
+</ol>
+
+<ol>
+	<li> parent 1</li>
+	<ol>
+		<li> child 1</li>
+		<li> child 2</li>
+		<ol>
+			<li> subchild 1</li>
+		</ol>
+		<li> child 3</li>
+	</ol>
+	<li> parent 2</li>
+</ol>
+
+
+<p>
+Paragraph touching the itemization
+</p>
+<ul>
+	<li> item</li>
+	<ol>
+		<li> inner numerated</li>
+		<ul>
+			<ol>
+				<ul>
+					<ol>
+						<li> Complex subitemization</li>
+					</ol>
+				</ul>
+			</ol>
+			<ul>
+				<ul>
+					<ol>
+						<li> Should go back to the common one</li>
+					</ol>
+				</ul>
+			</ul>
+		</ul>
+	</ol>
+</ul>
+<p>
+Paragraph touching the itemization
+</p>
+
+<h2 id='toc_4'>Inline substitutions</h2>
+
+<p>
+Normal <em>emphasis</em> Normal. <em>Another emphasis</em> Normal
+Normal <em>em'phasis</em> Normal. <em>Another emphasis</em> Normal.
+Normal <b>bold</b> Normal. <b>Another bold</b> Normal.
+Normal <b>bold <em>emphasis</em> more bold. don't </b> Normal. <b>Another bold</b> Normal.
+Normal <em>emphasis <b>bold don't</b> more emphasis</em> Normal. <b>Another bold</b> Normal.
+</p>
+
+<h2 id='toc_5'>Linking</h2>
+
+<p>
+<a href='link.html'>a local link</a>
+<a href='link.html'>local link without alias</a>
+<a href='link.html'>one</a> and <a href='link.html'>other</a> local link in the same line.
+</p>
+
+<h2 id='toc_6'>Citations</h2>
+
+<p>
+Cites are resolved using BibTeX files found in the same directory.
+In LaTeX it works as a regular cite in latex.
+In HTML a tooltip apears with the bibliographic information.
+This work can be found in <a class='bibref' href='bibliography.bib.html#lee87'>[Error lee87]<span class='tooltip'>No bibliography file found.</span></a>. And also in <a class='bibref' href='bibliography.bib.html#www-CLAM'>[Error www-CLAM]<span class='tooltip'>No bibliography file found.</span></a>.
+</p>
+
+<h2 id='toc_7'>Special paragraphs</h2>
+
+<p>
+<pre>
+Three curly braces bounds a text to be preformatted 
+</pre>
+</p>
+
+<pre>
+Placing space or tabulators
+creates a cite.
+</pre>
+
+
+<div class="abstract"><b>Abstract:</b>
+Some special paragraphs can be defined by preceding them by a
+colon ended keyword such as 'Abstract:'
+</div>
+
+<div class="keywords"><b>Keywords:</b>
+And the Keywords: special paragraph
+</div>
+
+ <span class='todo'>TODO: This is a pending task</span> 
+
+<div class="definition"><b>Definition:</b>
+A wiki compiler is a program that takes a text file containing wiki like
+syntax and outputs some publishing format.
+</div>
+
+Colollary:
+<p>
+WiKo is a wiki compiler.
+</p>
+
+<div class="proof"><b>Proof:</b>
+This is a proof
+</div>
+
+<div class="lemma"><b>Lemma:</b>
+Simple is better
+</div>
+
+
+<h2 id='toc_8'>Toc generation</h2>
+
+<h3 id='toc_9'>Third level</h3>
+
+<h4 id='toc_10'>Fourth level</h4>
+
+<p>
+Headers generate labels.
+They can be refered from a Table of Content.
+This is the place holder for a Table of Content
+</p>
+
+<p>
+<h2>Index</h2>
+<div class='toc'>
+<ul>
+<li><a href='#toc_1'>Wiki generator tests</a></li>
+<ul>
+<li><a href='#toc_2'>Paragraph test</a></li>
+<li><a href='#toc_3'>Lists tests</a></li>
+<li><a href='#toc_4'>Inline substitutions</a></li>
+<li><a href='#toc_5'>Linking</a></li>
+<li><a href='#toc_6'>Citations</a></li>
+<li><a href='#toc_7'>Special paragraphs</a></li>
+<li><a href='#toc_8'>Toc generation</a></li>
+<ul>
+<li><a href='#toc_9'>Third level</a></li>
+<ul>
+<li><a href='#toc_10'>Fourth level</a></li>
+</ul>
+</ul>
+<li><a href='#toc_11'>Figures and formulas</a></li>
+</ul>
+</ul>
+</div>
+</p>
+
+<p>
+The index header doesn't appear on the ToC.
+The ToC in LaTeX output is ignored.
+</p>
+
+<h2 id='toc_11'>Figures and formulas</h2>
+ <a name='#OtherLabel'></a>
+
+<p>
+Full featured figures can be generated by using the 'Figure:' special word
+</p>
+<div class='figure' id='MyLabel'><img src='wikologo.png' alt='MyLabel'/><br />
+This is the caption text.
+Til the next empty line.
+</div>
+
+<p>
+Formulas can be inserted <img src='http://www.forkosh.dreamhost.com/mimetex.cgi?x+1' /> inline.
+</p>
+
+<p>
+You can use the Math environment to place non-inline formulas:
+</p>
+<div class='equation'><div><img src='http://www.forkosh.dreamhost.com/mimetex.cgi?\Large{
+a\over{b-c}
+}' /></div>
+
+<p>
+Or use the Equation environment to get numbered equations:
+</p>
+<div class='equation'><div><img src='http://www.forkosh.dreamhost.com/mimetex.cgi?\Large{
+a\over{b-c}
+}' /></div></div>
+
+<p>
+<img src='http://www.forkosh.dreamhost.com/mimetex.cgi?r_iO_i=r_jI_j' />
+</p>
+
+<p>
+Were <img src='http://www.forkosh.dreamhost.com/mimetex.cgi?r_i' /> and <img src='http://www.forkosh.dreamhost.com/mimetex.cgi?r_j' /> are the number of times that node i and node j will be fired during a period. The vector <img src='http://www.forkosh.dreamhost.com/mimetex.cgi?\vec{r}' /> gives the number of repetitions for each node.
+</p>
+
+
+
+
+
+
+</div>
+<div id="footer" style="position: fixed; top: 90%;">
+</div>
+</body>
+</html>

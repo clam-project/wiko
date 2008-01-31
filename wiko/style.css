@@ -258,3 +258,19 @@ a.bibref:hover span.tooltip
 }
 */
 
+.equation
+{
+	width: 100%;
+}
+.equation div
+{
+	text-align: center;
+	width:100%;
+}
+.equation b
+{
+	text-align: left;
+}
+
+
+

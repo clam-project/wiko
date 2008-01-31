@@ -211,8 +211,8 @@ class BloggerImportWizard (QWizard) :
 	def __init__(self, parent=None) :
 		QWizard.__init__(self)
 		self.setWindowTitle("Blogger.com to WiKo")
-		self.setPixmap(self.LogoPixmap, QPixmap("blogger_logo_small.png"))
-		self.setPixmap(self.WatermarkPixmap, QPixmap("wikologo.png"))
+#		self.setPixmap(self.LogoPixmap, QPixmap("blogger_logo_small.png"))
+		self.setPixmap(self.WatermarkPixmap, QPixmap("web/wikologo.png"))
 		self.blogId = None
 		self.service = None
 		self.targetDir = ""

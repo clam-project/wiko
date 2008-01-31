@@ -57,7 +57,7 @@ inlineHtmlSubstitutions = [  # the order is important
 	(r"\[(http://\S+)\s([^\]]+)\]", r"<a href='\1'>\2</a>"),
 	(r"\[(http://\S+)\]", r"<a href='\1'>\1</a>"),
 	(r"@cite:([-+_a-zA-Z0-9]*)", htmlBibliographyText),
-	(r"`([^`]+)`", r"<img src=http://www.forkosh.dreamhost.com/mimetex.cgi?\1 />"),
+	(r"`([^`]+)`", r"<img src='http://www.forkosh.dreamhost.com/mimetex.cgi?\1' />"),
 	(r"{{{", r"<pre>"),
 	(r"}}}", r"</pre>"),
 	(r"^@toc\s*$", r"%(toc)s"),
@@ -104,8 +104,8 @@ divMarkersLatex = {
 divMarkersHtml = {
 	'Abstract' : ('<div class="abstract"><b>Abstract:</b>', '</div>'),
 	'Keywords' : ('<div class="keywords"><b>Keywords:</b>', '</div>'),
-	'Equation' : ('<div class="equation"><b>Equation:</b>', '</div>'),
-	'Math'     : ('<div class="equation"><b>Equation:</b>', '</div>'),
+	'Equation' : ("<div class='equation'><div><img src='http://www.forkosh.dreamhost.com/mimetex.cgi?\Large{", "}' /></div></div>"),
+	'Math'     : ("<div class='equation'><div><img src='http://www.forkosh.dreamhost.com/mimetex.cgi?\\Large{", "}' /></div>"),
 	'TODO'     : ('<div class="todo"><b>TODO:</b>', '</div>'),
 	'Comment'  : ('<div class="comment"><b>Comment:</b>', '</div>'),
 	'Definition'  : ('<div class="definition"><b>Definition:</b>', '</div>'),
@@ -121,7 +121,7 @@ defaultSkeleton = """
     "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" >
 
-<!-- USING DEFAULT WIKO SKELETON. skeleton.hml NOT FOUND -->
+<!-- USING DEFAULT WIKO SKELETON. skeleton.html NOT FOUND -->
 
 <head>
 <title>%(title)s</title>

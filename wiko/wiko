@@ -26,6 +26,9 @@ def htmlBibliographyText(match) :
 	except KeyError:
 		print "Bibliography id not found:", id
 		return r"<a class='bibref' href='bibliography.bib.html#%(id)s'>[%(id)s]</a>"%context
+	except TypeError:
+		print "No bibliography files found:", id
+		return r"<a class='bibref' href='bibliography.bib.html#%(id)s'>[Error %(id)s]<span class='tooltip'>No bibliography file found.</span></a>"%context
 	result = [
 		"<a class='bibref' href='bibliography.bib.html#%(id)s' target='bibliography'>[%(id)s]",
 		"<span class='tooltip'>",
@@ -104,7 +107,7 @@ divMarkersLatex = {
 divMarkersHtml = {
 	'Abstract' : ('<div class="abstract"><b>Abstract:</b>', '</div>'),
 	'Keywords' : ('<div class="keywords"><b>Keywords:</b>', '</div>'),
-	'Equation' : ("<div class='equation'><div><img src='http://www.forkosh.dreamhost.com/mimetex.cgi?\Large{", "}' /></div></div>"),
+	'Equation' : ("<div class='equation'><div><img src='http://www.forkosh.dreamhost.com/mimetex.cgi?\\Large{", "}' /></div></div>"),
 	'Math'     : ("<div class='equation'><div><img src='http://www.forkosh.dreamhost.com/mimetex.cgi?\\Large{", "}' /></div>"),
 	'TODO'     : ('<div class="todo"><b>TODO:</b>', '</div>'),
 	'Comment'  : ('<div class="comment"><b>Comment:</b>', '</div>'),

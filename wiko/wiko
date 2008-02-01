@@ -14,10 +14,29 @@ import glob
 import os.path
 import re
 import sys
+import subprocess
+import urllib
 
 enableLaTeX = True
 enableHtml = True
 forceRebuild = True
+
+mimetexAvailable = os.system("mimtex 2>&1 > /dev/null") is 0
+
+def formulaUri(latexContent) :
+	if not mimetexAvailable :
+		return "http://www.forkosh.dreamhost.com/mimetex.cgi?"+latexContent
+	mimetex = subprocess.Popen(["mimetex","-d",latexContent], stdout=subprocess.PIPE)
+	import base64
+	url = "data:image/png;base64,"+ base64.b64encode(mimetex.stdout.read())
+	print url
+	return url
+
+print formulaUri("a+b")
+
+def htmlInlineFormula(match) :
+	formula = match.group(1)
+	return '<img class="inlineFormula" src="%s" alt="%s" />'%(formulaUri(formula), formula)
 
 def htmlBibliographyText(match) :
 	id = match.group(1)
@@ -25,7 +44,7 @@ def htmlBibliographyText(match) :
 	try: context.update(bibEntries[id])
 	except KeyError:
 		print "Bibliography id not found:", id
-		return r"<a class='bibref' href='bibliography.bib.html#%(id)s'>[%(id)s]</a>"%context
+		return r"<a class='bibref' href='bibliography.bib.html#%(id)s'>[Error %(id)s]</a>"%context
 	except TypeError:
 		print "No bibliography files found:", id
 		return r"<a class='bibref' href='bibliography.bib.html#%(id)s'>[Error %(id)s]<span class='tooltip'>No bibliography file found.</span></a>"%context
@@ -59,8 +78,8 @@ inlineHtmlSubstitutions = [  # the order is important
 	(r"\[\[(\S+)\]\]", r"<a href='\1'>\1</a>"),
 	(r"\[(http://\S+)\s([^\]]+)\]", r"<a href='\1'>\2</a>"),
 	(r"\[(http://\S+)\]", r"<a href='\1'>\1</a>"),
-	(r"@cite:([-+_a-zA-Z0-9]*)", htmlBibliographyText),
-	(r"`([^`]+)`", r"<img src='http://www.forkosh.dreamhost.com/mimetex.cgi?\1' />"),
+	(r"@cite:([-+_a-zA-Z0-9]+)", htmlBibliographyText),
+	(r"`([^`]+)`", htmlInlineFormula),
 	(r"{{{", r"<pre>"),
 	(r"}}}", r"</pre>"),
 	(r"^@toc\s*$", r"%(toc)s"),
@@ -107,8 +126,8 @@ divMarkersLatex = {
 divMarkersHtml = {
 	'Abstract' : ('<div class="abstract"><b>Abstract:</b>', '</div>'),
 	'Keywords' : ('<div class="keywords"><b>Keywords:</b>', '</div>'),
-	'Equation' : ("<div class='equation'><div><img src='http://www.forkosh.dreamhost.com/mimetex.cgi?\\Large{", "}' /></div></div>"),
-	'Math'     : ("<div class='equation'><div><img src='http://www.forkosh.dreamhost.com/mimetex.cgi?\\Large{", "}' /></div>"),
+	'Equation' : ("<div class='equation'><img src='http://www.forkosh.dreamhost.com/mimetex.cgi?\\Large{", "}' /><!--<span class='eqnumber'>(123)</span>--></div>"),
+	'Math'     : ("<div class='equation'><img src='http://www.forkosh.dreamhost.com/mimetex.cgi?\\Large{", "}' /></div>"),
 	'TODO'     : ('<div class="todo"><b>TODO:</b>', '</div>'),
 	'Comment'  : ('<div class="comment"><b>Comment:</b>', '</div>'),
 	'Definition'  : ('<div class="definition"><b>Definition:</b>', '</div>'),

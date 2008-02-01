@@ -62,7 +62,6 @@ Like the one before.
 	<li> parent 2</li>
 </ol>
 
-
 <p>
 Paragraph touching the itemization
 </p>
@@ -94,11 +93,23 @@ Paragraph touching the itemization
 
 <h2 id='toc_4'>Special paragraphs</h2>
 
+<blockquote>
+Placing spaces at the begining of the line indicates
+that you are in a quote.
+</blockquote>
+
 <pre>
-Placing space or tabulators
-creates a preformatted environment
-	The first space is removed but the rest are kept
+You can place preformated code by enclosing it in
+three curly braces.
+	Tabs and new lines are preserved.
 </pre>
+
+<code>
+<div class="code"><pre><span class="k">for</span> <span class="nx">a</span> <span class="k">in</span> <span class="nx">list</span><span class="o">:</span>
+	<span class="nx">print</span> <span class="nx">a</span>
+</pre></div>
+
+</code>
 
 <div class="abstract"><b>Abstract:</b>
 Some special paragraphs can be defined by preceding them by a
@@ -111,6 +122,9 @@ And the Keywords: special paragraph
 
  <span class='todo'>TODO: This is a pending task</span> 
 
+<blockquote>
+
+</blockquote>
 <h2 id='toc_5'>Toc generation</h2>
 
 <h3 id='toc_6'>Third level</h3>
@@ -163,13 +177,11 @@ Til the next empty line.
 </div>
 
 <div class='equation'><img src=
-
-'data:image/png;base64,'
+'http://www.forkosh.dreamhost.com/mimetex.cgi?\Large{a\over{b}}'
  /></div>
 
 <div class='equation'><img src=
-
-'data:image/png;base64,'
+'http://www.forkosh.dreamhost.com/mimetex.cgi?\Large{a\over{b}}'
  /><!--<span class='eqnumber'>(123)</span>--></div>
 
 
@@ -197,16 +209,16 @@ Normal <em>emphasis <b>bold don't</b> more emphasis</em> Normal. <b>Another bold
 
 
 <p>
-This work can be found in <a class='bibref' href='bibliography.bib.html#lee87'>[Error lee87]</a>. And also in <a class='bibref' href='bibliography.bib.html#www-CLAM' target='bibliography'>[www-CLAM]<span class='tooltip'><span class='bibreftitle'>Clam website.</span> <span class='bibrefurl'>http://www.iua.upf.es/mtg/clam.</span> </span></a>.
+This work can be found in <a class='bibref' href='bibliography.bib.html#lee87'>[Error lee87]<span class='tooltip'>BibTeX key not found.</span></a></a>. And also in <a class='bibref' href='bibliography.bib.html#www-CLAM'>[Error www-CLAM]<span class='tooltip'>BibTeX key not found.</span></a></a>.
 </p>
 
 
 <p>
-<img class="inlineFormula" src="data:image/png;base64," alt="r_iO_i=r_jI_j" />
+<img class="inlineFormula" src="http://www.forkosh.dreamhost.com/mimetex.cgi?r_iO_i=r_jI_j" alt="r_iO_i=r_jI_j" />
 </p>
 
 <p>
-Were <img class="inlineFormula" src="data:image/png;base64," alt="r_i" /> and <img class="inlineFormula" src="data:image/png;base64," alt="r_j" /> are the number of times that node i and node j will be fired during a period. The vector <img class="inlineFormula" src="data:image/png;base64," alt="\vec{r}" /> gives the number of repetitions for each node.
+Were <img class="inlineFormula" src="http://www.forkosh.dreamhost.com/mimetex.cgi?r_i" alt="r_i" /> and <img class="inlineFormula" src="http://www.forkosh.dreamhost.com/mimetex.cgi?r_j" alt="r_j" /> are the number of times that node i and node j will be fired during a period. The vector <img class="inlineFormula" src="http://www.forkosh.dreamhost.com/mimetex.cgi?\vec{r}" alt="\vec{r}" /> gives the number of repetitions for each node.
 </p>
 
 

@@ -20,9 +20,9 @@ import urllib
 enableLaTeX = True
 enableHtml = True
 forceRebuild = True
-embeddedFormulas = True
+embeddedFormulas = False
 
-mimetexAvailable = os.system("mimetex 2>&1 > /dev/null") is 0
+mimetexAvailable = os.system("mimeex 2>&1 > /dev/null") is 0
 
 formulaIdGen = (a for a in range(0,30000) )
 equationIdGen = (a for a in range(0,30000) )
@@ -410,9 +410,11 @@ class LaTeXCompiler(WikiCompiler) :
 			tag = "itemize" if levelToAdd is "*" else "enumerate"
 			self.result.append("%s\\begin{%s}"%("\t"*len(self.itemLevel),tag))
 			self.itemLevel += levelToAdd
-		if self.processor : line = self.processor(line)
-		else : line = self.substituteInlines(line)	
-		self.result.append(line)
+		if self.processor :
+			self.processor(line)
+		else :
+			line = self.substituteInlines(line)	
+			self.result.append(line)
 
 
 class HtmlCompiler(WikiCompiler) :
@@ -514,9 +516,11 @@ class HtmlCompiler(WikiCompiler) :
 			tag = "ul" if levelToAdd is "*" else "ol"
 			self.result.append("%s<%s>"%("\t"*len(self.itemLevel),tag))
 			self.itemLevel += levelToAdd
-		if self.processor : line = self.processor(line)
-		else: line = self.substituteInlines(line)	
-		self.result.append(line)
+		if self.processor :
+			self.processor(line)
+		else :
+			line = self.substituteInlines(line)	
+			self.result.append(line)
 
 skeletonFileName = "skeleton.html"
 try: skeleton = readUtfSafe(skeletonFileName)

@@ -16,7 +16,7 @@ but maintain the files on a SVN server and editing
 them using your favorite editor (vim?) instead of
 the web interface.
 
-Paragraph are separated by an empty line.
+Paragraphs are separated by an empty line.
 Like the one before.
 
 == Lists tests ==
@@ -38,7 +38,7 @@ Paragraph touching the itemization
 * item
 *# inner numerated
 *#*#*# Complex subitemization
-*#***# Should go back to the common one
+*#***# Should go back to the common one and start counting
 Paragraph touching the itemization
 
 == Inline substitutions ==

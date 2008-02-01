@@ -251,15 +251,6 @@ a.bibref:hover span.tooltip:before
 	float: right;
 	content: url(stock_book_open.png);
 }
-/*
-a.bibref:hover span.tooltip
-{
-	background-image: url(stock_book_open.png);
-	background-repeat: no-repeat;
-	background-position: 5px 1ex;
-}
-*/
-
 .equation
 {
 	width: 100%;

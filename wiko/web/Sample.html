@@ -50,7 +50,7 @@ the web interface.
 </p>
 
 <p>
-Paragraph are separated by an empty line.
+Paragraphs are separated by an empty line.
 Like the one before.
 </p>
 
@@ -97,7 +97,7 @@ Paragraph touching the itemization
 			<ul>
 				<ul>
 					<ol>
-						<li> Should go back to the common one</li>
+						<li> Should go back to the common one and start counting</li>
 					</ol>
 				</ul>
 			</ul>
@@ -132,7 +132,7 @@ Normal <em>emphasis <b>bold don't</b> more emphasis</em> Normal. <b>Another bold
 Cites are resolved using BibTeX files found in the same directory.
 In LaTeX it works as a regular cite in latex.
 In HTML a tooltip apears with the bibliographic information.
-This work can be found in <a class='bibref' href='bibliography.bib.html#lee87'>[Error lee87]<span class='tooltip'>No bibliography file found.</span></a>. And also in <a class='bibref' href='bibliography.bib.html#www-CLAM'>[Error www-CLAM]<span class='tooltip'>No bibliography file found.</span></a>.
+This work can be found in <a class='bibref' href='bibliography.bib.html#lee87'>[Error lee87]</a>. And also in <a class='bibref' href='bibliography.bib.html#www-CLAM' target='bibliography'>[www-CLAM]<span class='tooltip'><span class='bibreftitle'>Clam website.</span> <span class='bibrefurl'>http://www.iua.upf.es/mtg/clam.</span> </span></a>.
 </p>
 
 <h2 id='toc_7'>Special paragraphs</h2>
@@ -238,20 +238,23 @@ Formulas can be inserted <img class="inlineFormula" src="http://www.forkosh.drea
 <p>
 You can use the Math environment to place non-inline formulas:
 </p>
-<div class='equation'><img src='http://www.forkosh.dreamhost.com/mimetex.cgi?\Large{
-a\over{b-c}
-}' /></div>
+<div class='equation'><img src=
+
+'http://www.forkosh.dreamhost.com/mimetex.cgi?\Large{a\over{b-c}}'
+ /></div>
 
 <p>
 Or use the Equation environment to get numbered equations:
 </p>
-<div class='equation'><img src='http://www.forkosh.dreamhost.com/mimetex.cgi?\Large{
-a\over{b-c}
-}' /><!--<span class='eqnumber'>(123)</span>--></div>
+<div class='equation'><img src=
 
-<div class='equation'><img src='http://www.forkosh.dreamhost.com/mimetex.cgi?\Large{
-a\over{b-c}
-}' /><!--<span class='eqnumber'>(123)</span>--></div>
+'http://www.forkosh.dreamhost.com/mimetex.cgi?\Large{a\over{b-c}}'
+ /><!--<span class='eqnumber'>(123)</span>--></div>
+
+<div class='equation'><img src=
+
+'http://www.forkosh.dreamhost.com/mimetex.cgi?\Large{a\over{b-c}}'
+ /><!--<span class='eqnumber'>(123)</span>--></div>
 
 <p>
 <img class="inlineFormula" src="http://www.forkosh.dreamhost.com/mimetex.cgi?r_iO_i=r_jI_j" alt="r_iO_i=r_jI_j" />

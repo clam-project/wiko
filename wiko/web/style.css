@@ -256,19 +256,21 @@ a.bibref:hover span.tooltip
 }
 */
 
-.equation
+div.equation
 {
-	width: 100%;
-}
-.equation div
-{
+	padding: 1ex;
+	margin: 4pt auto; 
 	text-align: center;
-	width:100%;
+	border: solid 1pt #EEE;
 }
-.equation b
+.equation .eqnumber
 {
-	text-align: left;
+	float: right;
 }
 
+img.inlineFormula
+{
+	vertical-align: middle;
+}
 
 

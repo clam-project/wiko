@@ -85,7 +85,7 @@ Definition:
 A wiki compiler is a program that takes a text file containing wiki like
 syntax and outputs some publishing format.
 
-Colollary:
+Corollary:
 WiKo is a wiki compiler.
 
 Proof:
@@ -128,9 +128,12 @@ Or use the Equation environment to get numbered equations:
 Equation:
 a\over{b-c}
 
+Equation:
+a\over{b-c}
+
 `r_iO_i=r_jI_j`
 
-Were `r_i` and `r_j` are the number of times that node i and node j will be fired during a period. The vector `\vec{r}` gives the number of repetitions for each node.
+Were `r_i` and `r_j` are the number `\vec{a} \over{b}` of times that node i and node j will be fired during a period. The vector `\vec{r}` gives the number of repetitions for each node.
 
 
 

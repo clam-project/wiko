@@ -165,10 +165,9 @@ A wiki compiler is a program that takes a text file containing wiki like
 syntax and outputs some publishing format.
 </div>
 
-Colollary:
-<p>
+<div class="corollary"><b>Corollary:</b>
 WiKo is a wiki compiler.
-</p>
+</div>
 
 <div class="proof"><b>Proof:</b>
 This is a proof
@@ -233,29 +232,33 @@ Til the next empty line.
 </div>
 
 <p>
-Formulas can be inserted <img src='http://www.forkosh.dreamhost.com/mimetex.cgi?x+1' /> inline.
+Formulas can be inserted <img class="inlineFormula" src="http://www.forkosh.dreamhost.com/mimetex.cgi?x+1" alt="x+1" /> inline.
 </p>
 
 <p>
 You can use the Math environment to place non-inline formulas:
 </p>
-<div class='equation'><div><img src='http://www.forkosh.dreamhost.com/mimetex.cgi?\Large{
+<div class='equation'><img src='http://www.forkosh.dreamhost.com/mimetex.cgi?\Large{
 a\over{b-c}
 }' /></div>
 
 <p>
 Or use the Equation environment to get numbered equations:
 </p>
-<div class='equation'><div><img src='http://www.forkosh.dreamhost.com/mimetex.cgi?\Large{
+<div class='equation'><img src='http://www.forkosh.dreamhost.com/mimetex.cgi?\Large{
 a\over{b-c}
-}' /></div></div>
+}' /><!--<span class='eqnumber'>(123)</span>--></div>
+
+<div class='equation'><img src='http://www.forkosh.dreamhost.com/mimetex.cgi?\Large{
+a\over{b-c}
+}' /><!--<span class='eqnumber'>(123)</span>--></div>
 
 <p>
-<img src='http://www.forkosh.dreamhost.com/mimetex.cgi?r_iO_i=r_jI_j' />
+<img class="inlineFormula" src="http://www.forkosh.dreamhost.com/mimetex.cgi?r_iO_i=r_jI_j" alt="r_iO_i=r_jI_j" />
 </p>
 
 <p>
-Were <img src='http://www.forkosh.dreamhost.com/mimetex.cgi?r_i' /> and <img src='http://www.forkosh.dreamhost.com/mimetex.cgi?r_j' /> are the number of times that node i and node j will be fired during a period. The vector <img src='http://www.forkosh.dreamhost.com/mimetex.cgi?\vec{r}' /> gives the number of repetitions for each node.
+Were <img class="inlineFormula" src="http://www.forkosh.dreamhost.com/mimetex.cgi?r_i" alt="r_i" /> and <img class="inlineFormula" src="http://www.forkosh.dreamhost.com/mimetex.cgi?r_j" alt="r_j" /> are the number <img class="inlineFormula" src="http://www.forkosh.dreamhost.com/mimetex.cgi?\vec{a} \over{b}" alt="\vec{a} \over{b}" /> of times that node i and node j will be fired during a period. The vector <img class="inlineFormula" src="http://www.forkosh.dreamhost.com/mimetex.cgi?\vec{r}" alt="\vec{r}" /> gives the number of repetitions for each node.
 </p>
 
 

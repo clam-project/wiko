@@ -16,16 +16,18 @@ import re
 import sys
 import subprocess
 import urllib
+import codecs
 
 enableLaTeX = True
 enableHtml = True
 forceRebuild = True
 embeddedFormulas = False
 
-mimetexAvailable = os.system("mimeex 2>&1 > /dev/null") is 0
+mimetexAvailable = os.system("mimtex 2>&1 > /dev/null") is 0
 
 formulaIdGen = (a for a in range(0,30000) )
 equationIdGen = (a for a in range(0,30000) )
+
 
 def formulaUri(latexContent) :
 	if not mimetexAvailable :
@@ -46,8 +48,17 @@ def formulaUri(latexContent) :
 	gif.close()
 	return gifname
 
-class HtmlFormulaProcessor :
+class HtmlVerbatimProcessor :
 	def __init__(self) :
+		self.content=[]
+	def __call__(self, line) :
+		if line is None:
+			return "\n".join(self.content)
+		self.content.append(line)
+		return ""
+
+class HtmlFormulaProcessor :
+	def __init__(self, match) :
 		self.content=[]
 	def __call__(self, line) :
 		if line is None:
@@ -55,17 +66,45 @@ class HtmlFormulaProcessor :
 		self.content.append(line.strip())
 		return ""
 
+class HtmlCodeProcessor :
+	def __init__(self, match) :
+		self.content=[]
+		self.language=match.group(1) or "javascript"
+	def __call__(self, line) :
+		if line is not None:
+			self.content.append(line)
+			return ""
+		from pygments import highlight
+		from pygments.lexers import get_lexer_by_name
+		from pygments.formatters import HtmlFormatter
+		file("style_code.css",'w').write(HtmlFormatter().get_style_defs('.code'))
+
+		lexer = get_lexer_by_name(self.language, stripall=True)
+		formatter = HtmlFormatter(linenos=False, cssclass="code")
+		return highlight("\n".join(self.content), lexer, formatter)
+
+class LaTeXCodeProcessor :
+	def __init__(self, match) :
+		self.language=match.group(1) or "javascript"
+		self.content=[]
+	def __call__(self, line) :
+		if line is not None:
+			self.content.append(line)
+			return
+		return "\n".join(self.content)
+
 def htmlInlineFormula(match) :
 	formula = match.group(1)
 	return '<img class="inlineFormula" src="%s" alt="%s" />'%(formulaUri(formula), formula)
 
 def htmlBibliographyText(match) :
+	print "writing bibliography"
 	id = match.group(1)
 	context = dict(id=id)
 	try: context.update(bibEntries[id])
 	except KeyError:
 		print "Bibliography id not found:", id
-		return r"<a class='bibref' href='bibliography.bib.html#%(id)s'>[Error %(id)s]</a>"%context
+		return r"<a class='bibref' href='bibliography.bib.html#%(id)s'>[Error %(id)s]<span class='tooltip'>BibTeX key not found.</span></a></a>"%context
 	except TypeError:
 		print "No bibliography files found:", id
 		return r"<a class='bibref' href='bibliography.bib.html#%(id)s'>[Error %(id)s]<span class='tooltip'>No bibliography file found.</span></a>"%context
@@ -88,8 +127,9 @@ def htmlBibliographyText(match) :
 			"month",
 			"year",
 			"url",
-		] if field in context.keys() ]
+		] if unicode(field,'utf8') in context.keys() ]
 	result.append("</span></a>")
+	print result
 	return "".join(result)%context
 
 inlineHtmlSubstitutions = [  # the order is important
@@ -101,17 +141,19 @@ inlineHtmlSubstitutions = [  # the order is important
 	(r"\[(http://\S+)\]", r"<a href='\1'>\1</a>"),
 	(r"@cite:([-+_a-zA-Z0-9]+)", htmlBibliographyText),
 	(r"`([^`]+)`", htmlInlineFormula),
-	(r"{{{", r"<pre>"),
-	(r"}}}", r"</pre>"),
+#	(r"{{{", r"<pre>"),
+#	(r"}}}", r"</pre>"),
 	(r"^@toc\s*$", r"%(toc)s"),
 ]
 inlineLatexSubstitutions = [  # the order is important
 	(r"'''(([^']|'[^']|''[^'])*)'''", r"{\\bf \1}"),
 	(r"''(([^']|'[^'])*)''", r"{\\em \1}"),
-	(r"\[\[(\S+)\s(.+)\]\]", r"\2\\footnote{\\url{\1}}"),
+	(r"\[\[(\S+)\s([^\]]+)\]\]", r"\2\\footnote{\\url{\1}}"),
 	(r"\[\[(\S+)\]\]", r"\\url{\1}"),
 	(r"@cite:([-+_a-zA-Z0-9]*)", r"\cite{\1}"),
 	(r"`([^`]+)`", r"$\1$"),
+#	(r"{{{", ur"\\begin{verbatim}"),
+#	(r"}}}", ur"\end{verbatim}"),
 ]
 
 header = re.compile(r"^(=+)([*]?)\s*([^=]+?)\s*\1\s*$")
@@ -129,27 +171,30 @@ headersLatex = [
 ]
 
 li  = re.compile(r"^([*#]+)(.*)")
-pre = re.compile(r"^[ \t](.*)")
+quote = re.compile(r"^[ \t](.*)")
 var = re.compile(r"^@([^:]*): (.*)")
 fig = re.compile(r"^Figure:[\s]*([^\s]+)[\s]*([^\s]+)(.*)");
 todo = re.compile(r"^TODO:[\s]*(.+)");
+anno = re.compile(r"^:([^\s]+):[\s]*(.*)");
+code = re.compile(r"^Code:[\s]*([^\s]+)?");
 label = re.compile(r"^Label:[\s]*([^\s]+)");
 div = re.compile(r"^([a-zA-Z0-9]+):$")
+pre = re.compile(r"^{{{[\s]*([^\s])*")
 
 divMarkersLatex = {
 	'Abstract' : ('\\begin{abstract}', '\\end{abstract}'),
 	'Keywords' : ('\\begin{keywords}', '\\end{keywords}'),
 	'Equation' : ('\\begin{equation}', '\\end{equation}'),
 	'Math' : ('\\[', '\\]'),
-#TODO: add new keys in html here
+	#TODO: add new keys added in html
 }
 
 divMarkersHtml = {
 	'Abstract' : ('<div class="abstract"><b>Abstract:</b>', '</div>'),
 	'Keywords' : ('<div class="keywords"><b>Keywords:</b>', '</div>'),
 	'Equation' : ("<div class='equation'><img src=", " /><!--<span class='eqnumber'>(123)</span>--></div>", HtmlFormulaProcessor),
-	'Math' : ("<div class='equation'><img src=", " /></div>", HtmlFormulaProcessor),
-	'TODO'     : ('<div class="todo"><b>TODO:</b>', '</div>'),
+	'Math'     : ("<div class='equation'><img src=", " /></div>", HtmlFormulaProcessor),
+#	'TODO'     : ('<div class="todo"><b>TODO:</b>', '</div>'),
 	'Comment'  : ('<div class="comment"><b>Comment:</b>', '</div>'),
 	'Definition'  : ('<div class="definition"><b>Definition:</b>', '</div>'),
 	'Lemma'    : ('<div class="lemma"><b>Lemma:</b>', '</div>'),
@@ -158,7 +203,7 @@ divMarkersHtml = {
 	'Corollary': ('<div class="corollary"><b>Corollary:</b>', '</div>'),
 }
 
-defaultSkeleton = """
+defaultSkeleton = u"""
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
     "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
@@ -170,25 +215,56 @@ defaultSkeleton = """
 <title>%(title)s</title>
 <meta name="author" content="%(author)s">
 <alink rel='stylesheet' href='style.css' type='text/css'/>
+<link rel='stylesheet' href='style_code.css' type='text/css'/>
 <style type='text/css'>
-.bibref
-{
-    position: relative; /*this is the key*/
-    z-index:24;
+
+.figure {
+	border: solid 1pt grey;
+	display: block;
+	text-align: center;
+}
+.rightfigure {
+	border: solid 1pt grey;
+	float: right;
+	margin-left: 3em;
+}
+.abstract {
+	padding:2em;
+}
+.todo {
+/*	display: none;*/
+	color: red;
+	background-color: yellow;
+	padding: 3pt;
 }
 
-a.bibref span.tooltip
+.bibref
+{
+	/* Needed for the tooltip */
+    position: relative;
+    z-index:0;
+}
+.anno
+{
+	/* Needed for the tooltip */
+    position: relative;
+    z-index:0;
+	cursor: pointer;
+}
+.bibref:hover
+{
+	z-index:25;
+}
+.anno:hover
+{
+	z-index:25;
+}
+
+span.tooltip
 {
     display: none;
 }
-
-a.bibref:hover
-{
-    z-index:25;
-	text-decoration: none;
-}
-
-a.bibref:hover span.tooltip
+:hover > span.tooltip
 {
 	display: block;
 	position: absolute;
@@ -201,24 +277,16 @@ a.bibref:hover span.tooltip
 	left: 1em;
 	margin: auto;
 	font-weight: normal;
-	border: 1px solid #0cf;
-	background-color:#cff;
-	color:#000;
 	opacity: 0.9;
 }
-a.bibref:hover span.tooltip *
-{
-	text-decoration: none;
-}
-
-a.bibref span.tooltip span.bibrefauthor
+.bibref span.bibrefauthor
 {
 	display: block;
 	font-weight: bold;
     color: green;
 }
 
-a.bibref span.tooltip span.bibreftitle
+.bibref span.bibreftitle
 {
 	display: block;
 	color: #922;
@@ -226,19 +294,44 @@ a.bibref span.tooltip span.bibreftitle
     font-style: italic;
 }
 
-a.bibref:hover span.tooltip:before
+.bibref:hover > span.tooltip:before
 {
-	display: marker;
 	float: right;
-	/* content: url(stock_book_open.png);*/
+	content: url('stock_book_open.png');
 	content: url('data:image/png;base64,
 iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAABmJLR0QA/wD/AP+gvaeTAAAEzUlEQVR42qWWXWgUVxTHfzOT3dnNZvOdDaaGaNG11aiFqG2tkRr6IdiaUCiBiggtFFuFUjQ+VCjSQh9KKS2t9KEfVrAtFRT0oamhjS2FWI2tJjHRGI1JzIe72U2yM9nNzu7O3D54N8QQobYHDhdmmPO7/3PuPWdgYdPq6+ufAUSOyy2Ap4BCwA2o/E/Ttm/f/qyvoFgcPnJc/NF2YQIQQBAoBlyA8l+Dq8AaX0GxeO+Tb0QsFhPdV6+JXH+hAHYBSwDff1WhAmuKyheLDz77VkxOTYn+/n7R3d0tvjxy7IpUsRYofRAV6py1Or+kvGP/wfd5Y2cDkfFxIpEIpmmyemVwVV5BCUA1kCdr8a8BKlBdWrGkY0/Tu9beXS8xOjLC5OQkHo+HdDqNK0dj95t7WoFjgB/wAjnyW2UBvwewqrwq2LFn3zvGgd079FAohOM4pFIpMpkMtm1j2za1T9Qs9ReVZVUUSCW5EpZ1j1SXkwWpQOeu1/eG3nr15fxwKIRlWdi2jeM42LaN1+vFMAzMRNK945XGcE1NzffADSAKmEBc+gBwANgg4S5AUbfU7+Txx1b6Muk0lmURiUTuCWzbNlYqnRgJRUsbXnwhcPHiRYQQC3nZ01vqXgPqgDKpTtMGejsPzbgDYw3PbSo0TZO0BKmqSjwex+Vy0Xc7HC3Kcxc0NNQriUQCw5wmnkgQjydIpTMAhMPjAhR/c/NPW4AfgBkgqQKbRwb7qo6eaDYDgQBut3s2/z6fj8HhO2OZGSOwYf06BUD3eMjPz591XddRUBgaGlR+be8GiM09BCrQ8/fZU/x27vKEoijYto2maUxPT2Oa04Y5Y3nKigvUYDCIZVlEo1EMw8AwDCzLQtNUQuNhzl/qEW2tP6vAp0AGsAGhAkmgLjQyWPXdqZbpyspKNE3D7XbTe2v4pltJFzY2NgKg6zolJSXouj7rjm3T1vYnw6Eok6FhgEuy+EnAVoEU0NX+ywla2y5FVfXu3RsYHLrqdSlrN23cqNzNcRjDMEhZ1mzwHE1laOg2UTPJV4c/VjLpVBNgyDQlAUeVUmaAuonwaNXXx0/HKioqrMikUVT50CI1GAwCEAgE0HWdpEyTqiikUhl6rt/gfEcvscgd5PGdlApSgJMDOFkV55p/pKh00cST1cvMpZWL1mzbtg3LsrAsC0cI/H4/LpcLkQeKqhCKRJicTnLy6OcATXLnMSAh6yBy5I2eVXG980LrydPKWL7Pw/Nbt+LPy0PXdQBisRiapuHxenFsh5v9g5z5vZ2EOZXd/ZTcfVo2RzQJEHKNTYRuHwg8usnd0dWtPbx8hUhaaSVmxsn1ulFVFZ/Ph6qqdPdc40rfAB8d2o/j2E3ALeCOhKTmA+ba6b6OtvKSsvIlLS0t7s6+YS509Ymx8IS4MTQqpoyE4vXq9PTepP1yl2g7e0YBvgBCQESmx84Gm99yXbJblkqvAlYAW5avXr+5el0tLrfuLKtaTEYI8eHBvRqwD/gLGALCMtXO/QCKhOTKhpXtkD45zR4BaqvX1dbFzRi3ejvfBq4Ao1KBkS3u/QDZZ5q86jkS6JGwXAnLlZ04CUzIzmpkj+b8YPez7PDIDiXXHJgu36VlzmcWCs4D/B3Mh2UnmSML6iwUHOAfyqIygtirwoUAAAAASUVORK5CYII=');
 }
-.equation
+
+.bibref:hover span.tooltip
+{
+	border: 1px solid #9cf;
+	background-color:#cff;
+	color:#000;
+}
+
+.anno:hover span.tooltip
+{
+	border: 1px solid #cf0;
+	background-color:#ff9;
+	color:#000;
+}
+
+.anno:hover
+{
+	text-decoration: none;
+}
+
+.bibref:hover
+{
+	text-decoration: none;
+}
+
+div.equation
 {
 	padding: 1ex;
 	margin: 4pt auto; 
 	text-align: center;
+	border: solid 1pt #EEE;
 }
 .equation .eqnumber
 {
@@ -261,14 +354,11 @@ img.inlineFormula
 
 def stripUtfMarker(content) :
 	import codecs
-	if content.startswith( codecs.BOM_UTF8 ):
-		encoded = unicode(content,"utf8")
-		stripped = encoded.lstrip( unicode( codecs.BOM_UTF8, "utf8" ) )
-		return stripped.encode("utf8")
-	return content
+	return content.replace( unicode(codecs.BOM_UTF8,"utf8"), "")
 
 def readUtfSafe(filename) :
-	return stripUtfMarker(file(filename).read())
+	print "Reading",filename
+	return stripUtfMarker(codecs.open(filename,'r','utf8').read())
 
 class WikiCompiler :
 
@@ -280,13 +370,20 @@ class WikiCompiler :
 			line = compiledPattern.sub(substitution, line)
 		return line
 
-
-	def openBlock(self,opening,closing, processorClass=None):
+	def openDiv(self, markers, divMatch):
+		divType = divMatch.group(1)
+		try : divDef = list(markers[divType])
+		except : return False
+		if len(divDef) == 3 :
+			divDef[2] = divDef[2](divMatch)
+		self.openBlock(*divDef)
+		return True
+	def openBlock(self,opening,closing, processor=None):
 		self.closeAnyOpen()
 		self.result.append(opening)
 		self.closing=closing	
-		if processorClass :
-			self.processor=processorClass()
+		if processor :
+			self.processor=processor
 	def closeAnyOpen(self) :
 		if self.closing == "" : return
 		if self.processor : self.result.append(self.processor(None))
@@ -328,32 +425,41 @@ class LaTeXCompiler(WikiCompiler) :
 	def processLine(self, line) :
 		newItemLevel = ""
 		liMatch = li.match(line)
-		preMatch = pre.match(line)
+		quoteMatch = quote.match(line)
 		headerMatch = header.match(line)
 		varMatch = var.match(line)
 		figMatch = fig.match(line)
 		todoMatch = todo.match(line)
+		annoMatch = anno.match(line)
+		codeMatch = code.match(line)
 		labelMatch = label.match(line)
 		divMatch = div.match(line)
+		preMatch = pre.match(line)
 		if liMatch :
 			self.closeAnyOpen()
 			newItemLevel = liMatch.group(1)
 			line = "%s\item %s" %("\t"*len(newItemLevel), liMatch.group(2) )
 		while len(newItemLevel) < len(self.itemLevel) or  \
 				self.itemLevel != newItemLevel[0:len(self.itemLevel)]:
-#			print "pop '", self.itemLevel, "','", newItemLevel, "'"
-			tag = "itemize" if self.itemLevel[-1] is "*" else "enumerate"
+#			print "pop '"+self.itemLevel+"','"+newItemLevel+"'"
+			tag = "itemize" if self.itemLevel[-1] == "*" else "enumerate"
 			self.result.append("%s\\end{%s}"%("\t"*(len(self.itemLevel)-1),tag))
 			self.itemLevel=self.itemLevel[0:-1]
-		if line=="" :
+		if self.closing == r"\end{verbatim}" and line == "}}}" :
 			self.closeAnyOpen()
-		elif preMatch:
-			if self.closing != "\\end{quote}" :
-				self.openBlock("\\begin{quote}", "\\end{quote}")
-			line=line[1:] # remove the pre indicator space
+			return
+		elif line=="" :
+			self.closeAnyOpen()
+		elif self.processor : 
+			self.processor(line)
+			return
 		elif varMatch :
 			self.vars[varMatch.group(1)] = varMatch.group(2)
 			return
+		elif quoteMatch:
+			if self.closing != "\\end{quotation}" :
+				self.openBlock("\\begin{quotation}", "\\end{quotation}")
+			line=line[1:] # remove the quotation indicator space
 		elif figMatch :
 			self.closeAnyOpen()
 			flags = [ flag.strip() for flag in figMatch.group(3).split() if flag.strip() ]
@@ -379,8 +485,26 @@ class LaTeXCompiler(WikiCompiler) :
 				)
 
 			return
+		elif codeMatch :
+			self.closeAnyOpen()
+			self.openBlock(
+				r"\begin{lstlisting}",
+				r"\end{lstlisting}",
+				LaTeXCodeProcessor(codeMatch))
+			return
+		elif preMatch :
+			self.closeAnyOpen()
+			self.openBlock(
+				r"\begin{verbatim}",
+				r"\end{verbatim}",
+				HtmlVerbatimProcessor())
+			return
 		elif todoMatch :
 			line="\\marginpar{\\footnotesize TODO: %s}"%todoMatch.group(1)
+		elif annoMatch :
+			annotator = annoMatch.group(1)
+			text = annoMatch.group(2)
+			line="\\marginpar{\\footnotesize %s: %s}"%(annotator,text)
 		elif labelMatch :
 			line="\label{%s}"%labelMatch.group(1)
 		elif headerMatch :
@@ -395,19 +519,15 @@ class LaTeXCompiler(WikiCompiler) :
 			}
 		elif not liMatch : 
 			if divMatch :
-				divType = divMatch.group(1)
-				try :
-					divDef = divMarkersLatex[divType]
-					self.openBlock(*divDef)
+				if self.openDiv(divMarkersLatex, divMatch) :
 					return
-				except: 
-					print "Not supported block class '%s'" % divType
+				print "Not supported block class '%s'" % divMatch.group(1)
 		# Equilibrate the item level
 		while len(self.itemLevel) != len(newItemLevel) :
 			self.closeAnyOpen()
-#			print "push '", self.itemLevel, "','", newItemLevel, "'"
+#			print "push '"+self.itemLevel+"','"+newItemLevel+"'"
 			levelToAdd = newItemLevel[len(self.itemLevel)]
-			tag = "itemize" if levelToAdd is "*" else "enumerate"
+			tag = "itemize" if levelToAdd == "*" else "enumerate"
 			self.result.append("%s\\begin{%s}"%("\t"*len(self.itemLevel),tag))
 			self.itemLevel += levelToAdd
 		if self.processor :
@@ -447,33 +567,42 @@ class HtmlCompiler(WikiCompiler) :
 	def processLine(self, line) :
 		newItemLevel = ""
 		liMatch = li.match(line)
-		preMatch = pre.match(line)
+		quoteMatch = quote.match(line)
 		headerMatch = header.match(line)
 		varMatch = var.match(line)
 		figMatch = fig.match(line)
 		todoMatch = todo.match(line)
+		annoMatch = anno.match(line)
 		labelMatch = label.match(line)
+		codeMatch = code.match(line)
 		divMatch = div.match(line)
+		preMatch = pre.match(line)
 		if liMatch :
 			self.closeAnyOpen()
 			newItemLevel = liMatch.group(1)
 			line = "%s<li>%s</li>" %("\t"*len(newItemLevel), liMatch.group(2) )
 		while len(newItemLevel) < len(self.itemLevel) or  \
 				self.itemLevel != newItemLevel[0:len(self.itemLevel)]:
-#			print "pop '", self.itemLevel, "','", newItemLevel, "'"
-			tag = "ul" if self.itemLevel[-1] is "*" else "ol"
+#			print "pop '"+self.itemLevel+"','"+newItemLevel+"' "+self.itemLevel[-1]
+			tag = "ul" if self.itemLevel[-1] == "*" else "ol"
 			self.result.append("%s</%s>"%("\t"*(len(self.itemLevel)-1),tag))
 			self.itemLevel=self.itemLevel[0:-1]
-		if line=="" :
+		if self.closing == "</pre>" and line == "}}}" :
 			self.closeAnyOpen()
-		elif preMatch:
-			if self.closing != "</pre>" :
-				self.openBlock("<pre>","</pre>")
-			line=line[1:] # remove the pre indicator space
+			return
+		elif line=="" :
+			self.closeAnyOpen()
+		elif self.processor : 
+			self.processor(line)
+			return
 		elif varMatch :
 			self.vars[varMatch.group(1)] = varMatch.group(2)
 			print "Var '%s': %s"%(varMatch.group(1),varMatch.group(2))
 			return
+		elif quoteMatch:
+			if self.closing != "</blockquote>" :
+				self.openBlock("<blockquote>","</blockquote>")
+			line=line[1:] # remove the quoting indicator space
 		elif figMatch :
 			self.closeAnyOpen()
 			self.openBlock(
@@ -483,8 +612,27 @@ class HtmlCompiler(WikiCompiler) :
 						},
 				"</div>")
 			return
+		elif codeMatch :
+			self.closeAnyOpen()
+			self.openBlock(
+				"<code>",
+				"</code>",
+				HtmlCodeProcessor(codeMatch))
+			return
+		elif preMatch :
+			self.closeAnyOpen()
+			self.openBlock(
+				"<pre>",
+				"</pre>",
+				HtmlVerbatimProcessor())
+			return
 		elif todoMatch :
 			line=" <span class='todo'>TODO: %s</span> "%todoMatch.group(1)
+		elif annoMatch :
+			annotator = annoMatch.group(1)
+			text = annoMatch.group(2)
+			line=(" <a class='anno'><img alt='[Ann:%s]' src='stock_notes.png' />"+ 
+				"<span class='tooltip'><b>%s:</b> %s</span></a> ")%(annotator,annotator,text)
 		elif labelMatch :
 			line=" <a name='#%s'></a>"%labelMatch.group(1)
 		elif headerMatch :
@@ -499,21 +647,17 @@ class HtmlCompiler(WikiCompiler) :
 			}
 		elif not liMatch : 
 			if divMatch :
-				divType = divMatch.group(1)
-				try :
-					divDef = divMarkersHtml[divType]
-					self.openBlock(*divDef)
+				if self.openDiv(divMarkersHtml, divMatch) :
 					return
-				except: 
-					print "Not supported block class '%s'" % divType
+				print "Not supported block class '%s'" % divMatch.group(1)
 			elif self.closing == "" :
 				self.openBlock("<p>","</p>")
 		# Equilibrate the item level
 		while len(self.itemLevel) != len(newItemLevel) :
 			self.closeAnyOpen()
-#			print "push '", self.itemLevel, "','", newItemLevel, "'"
+#			print "push '"+self.itemLevel+"','"+newItemLevel+"'"
 			levelToAdd = newItemLevel[len(self.itemLevel)]
-			tag = "ul" if levelToAdd is "*" else "ol"
+			tag = "ul" if levelToAdd == u"*" else "ol"
 			self.result.append("%s<%s>"%("\t"*len(self.itemLevel),tag))
 			self.itemLevel += levelToAdd
 		if self.processor :
@@ -546,14 +690,14 @@ def generateHtmlBibliographyRaw(outputFilename, bibfiles) :
 	bibfilename = "bibliography.bib.html"
 	entry = re.compile(r"@\w*{([^,]*),")
 	for bibfile in bibfiles :
-		for line in file(bibfile) :
+		for line in codecs.open(bibfile,'r','utf8') :
 			m = entry.search(line)
 			if m and not 'comment' in line:
 				id = m.group(1).strip()
 				result += ["<a id='%s' />\n"%id]
 			result.append(line)
 	# TODO: Is it needed to have a 
-	file(bibfilename, "w").write(skeleton%dict(
+	codecs.open(bibfilename, "w",'utf8').write(skeleton%dict(
 		content="<pre>"+"".join(result)+"</pre>",
 		title="Bibliography",
 		author="",
@@ -576,7 +720,7 @@ def generateHtmlBibliographyPretty(outputFilename, bibfiles) :
 	for filename in bibfiles :
 		bibfile = bibtex.open_file(filename,1)
 		for id, kind, byteOffset, lineOffset, keys in bibIterator(bibfile) :
-			output += ["<p><a name='%s'></a><b>%s</b> <b>%s</b></p><ul>"%(id,kind,id)]
+			output += [u"<p><a name='%s'></a><b>%s</b> <b>%s</b></p><ul>"%(id,kind,id)]
 			entryDict = {}
 			for key, value in keys.iteritems() :
 				expanded = bibtex.expand(bibfile, value, -1)
@@ -587,20 +731,21 @@ def generateHtmlBibliographyPretty(outputFilename, bibfiles) :
 				elif len(expanded) is not 4 : print "Warning: unknown bibliography tuple:", id, key, expanded; continue
 				foo, bar, text, content = expanded
 				if not text : continue
-				output += ["<li><b>%s:</b> %s</li>" % (key, text)]
+				text = unicode(text,'utf8')
+				output += [u"<li><b>%s:</b> %s</li>" % (key, text)]
 				entryDict[key]=text
 			entryDict["kind"] = kind
 			entries[id] = entryDict
 			output += [ "</ul>" ]
-	file(outputFilename, "w").write(skeleton%dict(
-		content="\n".join(output),
-		title="Bibliography",
-		author="",
-		revision="",
-		prev="",
-		next="",
-		wikiSource='',
-		))
+	codecs.open(outputFilename, "w", 'utf8').write(skeleton%dict(
+        content="\n".join(output),
+        title="Bibliography",
+        author="",
+        revision="",
+        prev="",
+        next="",
+        wikiSource='',
+        ))
 	return entries
 
 # Generate bibliography
@@ -641,11 +786,11 @@ for contentFile in glob.glob("*.wiki") :
 		print "Generating", target, "from", contentFile, "..."
 		htmlResult = HtmlCompiler(bibEntries).process(content)
 		htmlResult['wikiSource']=contentFile;
-		file(target,"w").write(skeleton%htmlResult)
+		codecs.open(target,"w",'utf8').write(skeleton%htmlResult)
 	if enableLaTeX and len(texSkeletons):
 		print "Generating", targetTex, "from", contentFile, "..."
 		texResult = LaTeXCompiler().process(content)
-		file(targetTex,"w").write(texResult['content'])
+		codecs.open(targetTex,"w",'utf8').write(texResult['content'])
 
 
 print "Generating blog..."

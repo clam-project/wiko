@@ -4,6 +4,7 @@
 == Usage Examples ==
 
 This page compiles some available materials that use WiKo.
+For an example of the wiki syntax take a look at the [[Sample.html WiKo sample page]].
 
 === Thesis ===
 
@@ -11,7 +12,7 @@ This page compiles some available materials that use WiKo.
 * [[http://ocata48123.upf.es/~parumi/masterThesis-dgarcia/ Pau's PhD thesis]] (in progress)
 
 === Web sites ===
-* [[http://wiko.sourceforge.net WiKo site]] (yes! this site!)
+* [[http://wiko.sourceforge.net WiKo site]] yes! this site! on the side bar of each page you have a link to the wiki source
 * [[http://www.iua.upf.edu/~dgarcia Can Voki]]
 * [[http://parumi.org Parumi.org]]
 * [[http://www.iua.upf.edu/~dgarcia/Codders Codders]]

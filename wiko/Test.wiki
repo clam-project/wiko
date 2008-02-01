@@ -33,7 +33,6 @@ Like the one before.
 ## child 3
 # parent 2
 
-
 Paragraph touching the itemization
 * item
 *# inner numerated
@@ -43,9 +42,18 @@ Paragraph touching the itemization
 
 == Special paragraphs ==
 
- Placing space or tabulators
- creates a preformatted environment
- 	The first space is removed but the rest are kept
+ Placing spaces at the begining of the line indicates
+ that you are in a quote.
+
+{{{
+You can place preformated code by enclosing it in
+three curly braces.
+	Tabs and new lines are preserved.
+}}}
+
+Code:
+for a in list:
+	print a
 
 Abstract:
 Some special paragraphs can be defined by preceding them by a
@@ -56,6 +64,7 @@ And the Keywords: special paragraph
 
 TODO: This is a pending task
 
+ 
 == Toc generation ==
 
 === Third level ===

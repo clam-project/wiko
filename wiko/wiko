@@ -486,9 +486,6 @@ def needsRebuild(target, source) :
 def generateHtmlBibliography(outputFilename, bibfiles) :
 	if not bibfiles : return
 	print "Generating HTML bibliography..."
-
-	return generateHtmlBibliographyRaw(outputFilename, bibfiles)
-	#PAU i get errors (missing comma)
 	try: import _bibtex as bibtex
 	except: return generateHtmlBibliographyRaw(outputFilename, bibfiles)
 	return generateHtmlBibliographyPretty(outputFilename, bibfiles)

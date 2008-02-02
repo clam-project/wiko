@@ -73,7 +73,7 @@ WiKo generate directory listings which integrates on the web page look and feel.
 
 You should create a file named ''downloadZones.wiko'' on the working directory
 just like that:
-{{{
+Code: python
  {
 	'dirs' : [
 		("WiKo files", "download/"),
@@ -85,7 +85,7 @@ just like that:
 	],
 	'skeletonFile' : "scheleton.html"
  }
-}}}
+
 
 ''dirs'' is a list of python tuples containing titles and paths for the download zones.
 The ''blacklist'' contains the files which should be ignored when generating the file index.
@@ -101,8 +101,9 @@ might be wrong.
 By using the wiki format you can also use variables to be inserted
 on the skeleton.
 You should introduce a line like this in the .wiki file.
- @variableName: value to use
-
+{{{
+@variableName: value to use
+}}}
 and then using the tag '''%%(variableName)s''' wherever you want to use it on the skeleton.
 
 === Inserting an html table of content ===
@@ -144,9 +145,9 @@ put under the version control just those files that are not generated.
 Subversion allows you to include on the file information on the revision
 number and the last modification date and author.
 
-{{{
+Code: bash
 svn propset svn:keywords "Revision Date Author" aFile.wiki
-}}}
+
 
 then you can insert in the wiki file text like this:
 {{{
@@ -180,13 +181,13 @@ Given that:
 * ''svn+ssh://svnuser@mysvnserver.com/home/svn/myproject/web'' is your svn repository
 
 You should issue the following commands on your server:
-{{{
+Code: bash
 cd /var/www/
 ssh-keygen       # and then, return, return, return, return...
 ssh-copy-id svnuser@mysvnserver.com
 svn co svn+ssh://svnuser@mysvnserver.com/home/svn/myproject/web myweb
 (crontab -l ; echo '5,15,25,35,45,55 * * * * (cd /var/www/myweb && svn up && ./wiko) 2>&1 | cat > /var/www/myweb/err') | crontab -
-}}}
+
 
 
 

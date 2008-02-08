@@ -18,19 +18,21 @@ import subprocess
 import urllib
 import codecs
 
-enableLaTeX = True
-enableHtml = True
-forceRebuild = True
-embeddedFormulas = False
+enableLaTeX = '--nolatex' not in sys.argv
+enableHtml = '--nohtml' not in sys.argv
+forceRebuild = '--force' in sys.argv
+embeddedFormulas = '--embed-formulas' in sys.argv
 
-mimetexAvailable = os.system("mimtex 2>&1 > /dev/null") is 0
+mimetexAvailable = os.system("mimetex 2>&1 > /dev/null") is 0
+useRemoteFormulas = not mimetexAvailable or '--remote-formulas' in sys.argv
+print "useRemoteFormulas:", useRemoteFormulas
 
 formulaIdGen = (a for a in range(0,30000) )
 equationIdGen = (a for a in range(0,30000) )
 
 
 def formulaUri(latexContent) :
-	if not mimetexAvailable :
+	if useRemoteFormulas :
 		return "http://www.forkosh.dreamhost.com/mimetex.cgi?"+latexContent
 	mimetex = subprocess.Popen(["mimetex","-d",latexContent], stdout=subprocess.PIPE)
 	imageContent=mimetex.stdout.read()

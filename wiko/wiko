@@ -64,7 +64,7 @@ class HtmlFormulaProcessor :
 		self.content=[]
 	def __call__(self, line) :
 		if line is None:
-			return "'"+formulaUri("\Large{"+"".join(self.content)+"}")+"'"
+			return '"'+formulaUri("\Large{"+"".join(self.content)+"}")+'"'
 		self.content.append(line.strip())
 		return ""
 
@@ -587,6 +587,19 @@ class HtmlCompiler(WikiCompiler) :
 		codeMatch = code.match(line)
 		divMatch = div.match(line)
 		preMatch = pre.match(line)
+		if self.closing == "</pre>" and line == "}}}" :
+			self.closeAnyOpen()
+			return
+		elif line=="" :
+			self.closeAnyOpen()
+			return
+		elif self.processor : 
+			self.processor(line)
+			return
+		elif varMatch :
+			self.vars[varMatch.group(1)] = varMatch.group(2)
+			print "Var '%s': %s"%(varMatch.group(1),varMatch.group(2))
+			return
 		if liMatch :
 			self.closeAnyOpen()
 			newItemLevel = liMatch.group(1)
@@ -597,19 +610,7 @@ class HtmlCompiler(WikiCompiler) :
 			tag = "ul" if self.itemLevel[-1] == "*" else "ol"
 			self.result.append("%s</%s>"%("\t"*(len(self.itemLevel)-1),tag))
 			self.itemLevel=self.itemLevel[0:-1]
-		if self.closing == "</pre>" and line == "}}}" :
-			self.closeAnyOpen()
-			return
-		elif line=="" :
-			self.closeAnyOpen()
-		elif self.processor : 
-			self.processor(line)
-			return
-		elif varMatch :
-			self.vars[varMatch.group(1)] = varMatch.group(2)
-			print "Var '%s': %s"%(varMatch.group(1),varMatch.group(2))
-			return
-		elif quoteMatch:
+		if quoteMatch:
 			if self.closing != "</blockquote>" :
 				self.openBlock("<blockquote>","</blockquote>")
 			line=line[1:] # remove the quoting indicator space

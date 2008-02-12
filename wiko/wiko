@@ -76,9 +76,13 @@ class HtmlCodeProcessor :
 		if line is not None:
 			self.content.append(line)
 			return ""
-		from pygments import highlight
-		from pygments.lexers import get_lexer_by_name
-		from pygments.formatters import HtmlFormatter
+		try :
+			from pygments import highlight
+			from pygments.lexers import get_lexer_by_name
+			from pygments.formatters import HtmlFormatter
+		except:
+			print >> sys.stderr, "Warning: Pygments package not available. Generating code without syntax highlighting."
+			return "\n".join(self.content)
 		file("style_code.css",'w').write(HtmlFormatter().get_style_defs('.code'))
 
 		lexer = get_lexer_by_name(self.language, stripall=True)

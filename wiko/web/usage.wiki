@@ -41,7 +41,7 @@ WiKo can also generate PDF through LaTeX. LaTeX document skeletons are a bit dif
 * WiKo will consider document skeleton any .tex file in the working directory that both contains the '''\documentclass''' directive '''and''' its basename does not match with any of the .wiki files.
 
 An example of a working directory:
-* document.tex (document skeleton that will be compiled. It contains '''\documentclass''' and '''\input(chapter1)''' )
+* document.tex (document skeleton that will be compiled. It contains '''\documentclass''' and '''\input{chapter1}''' )
 * chapter1.tex (generated)
 * chapter1.wiki (source)
 

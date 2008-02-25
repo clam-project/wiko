@@ -36,12 +36,18 @@ It renders into [[Sample.html this html file]].
 
 === Generating PDF (LaTeX) from wiki files ===
 
-If WiKo finds a .tex file on the working directory which base file name
-does not match with any of the .wiki files it considers that such file
-is the LaTeX skeleton and it will generate .tex files for any .wiki
-file in the working directory.
+WiKo can also generate PDF through LaTeX. LaTeX document skeletons are a bit different from html ones:
+* In a document skeletons the user must include the generated file using the normal LaTeX facilities: '''\input{file}''' (and not with '''%%(content)s''' as in the html case)
+* WiKo will consider document skeleton any .tex file in the working directory that both contains the '''\documentclass''' directive '''and''' its basename does not match with any of the .wiki files.
 
-Then it will execute pdflatex and bibtex for the LaTeX skeleton.
+An example of a working directory:
+* document.tex (document skeleton that will be compiled. It contains '''\documentclass''' and '''\input(chapter1)''' )
+* chapter1.tex (generated)
+* chapter1.wiki (source)
+
+Then WiKo will execute pdflatex and bibtex for the LaTeX skeleton.
+
+
 
 <!-- [[wikosample-article.zip Sample WiKo project for a PDF article]] -->
 

@@ -388,6 +388,10 @@ def readUtfSafe(filename) :
 	print "Reading",filename
 	return stripUtfMarker(codecs.open(filename,'r','utf8').read())
 
+skeletonFileName = "skeleton.html"
+try: skeleton = readUtfSafe(skeletonFileName)
+except: skeleton = defaultSkeleton
+
 class WikiCompiler :
 
 	def compileInlines(self, inlines) :
@@ -695,10 +699,6 @@ class HtmlCompiler(WikiCompiler) :
 			line = self.substituteInlines(line)	
 			self.result.append(line)
 
-skeletonFileName = "skeleton.html"
-try: skeleton = readUtfSafe(skeletonFileName)
-except: skeleton = defaultSkeleton
-
 def needsRebuild(target, source) :
 	if forceRebuild: return True
 	if not os.path.exists(target) : return True
@@ -839,17 +839,21 @@ def readBlogEntries(blog) :
 		entry["rsscategories"]="\n".join([
 			"<category domain='http://www.blogger.com/atom/ns#'>%s</category>"%tag 
 				for tag in entry["splittedTags"] ])
-		publishedTime = datetime.strptime(entry['timestamp'],  "%d/%m/%Y %H:%M")
+		try :
+			publishedTime = datetime.strptime(entry['timestamp'], "%d/%m/%Y %H:%M")
+		except KeyError :
+			publishedTime = datetime.strptime(entry['published'], "%a, %d %b %Y %Z")
 		updatedTime = datetime.utcfromtimestamp(os.path.getmtime(contentFile))
 		entry['timestamp'] = str(publishedTime)
 		entry["updatedtime"] = updatedTime.isoformat() #  2007-07-21T11:47:11.001-07:00
-		entry["publishedtime"] = publishedTime.strftime("%a, %d %b %Y %T") # was: Fri, 20 Jul 2007 18:10:00 +0000
+		entry["publishedtime"] = publishedTime.strftime("%a, %d %b %Y %Z") # was: Fri, 20 Jul 2007 18:10:00 +0000
+		print entry["publishedtime"]
 		entry["entryid"] = "tag:blogger.com,1999:blog-36421488.post-8207308771074649324" # TODO
 		entry['link'] = "blog.%s.html"%entry["name"]
 		from xml.sax.saxutils import escape
 		entry["encodedContent"] = escape(entry["content"])
 		# fulluri was: http://vokicodder.blogspot.com/2007/07/simplifying-spectral-processing-in-clam.html
-		entry["fulluri"] = blog["baseurl"] + "/" + entry["link"]
+		entry["fulluri"] = blog.baseurl + "/" + entry["link"]
 		blogEntries.append(entry)
 	blogEntries.sort(key=lambda a: a['timestamp'], reverse=True)
 	return blogEntries, tags
@@ -875,41 +879,38 @@ def generateBlog(blog, blogEntries, tags) :
 
 	taglist=[(tag,len(entries)) for tag, entries in tagPages.iteritems()]
 	taglist.sort(key=lambda a : a[1],reverse=True)
-	blog['taglist'] = "\n".join([
+	blog.taglist = "\n".join([
 		"<li><a href='blog.tag.%s.html'>%s&nbsp;(%i)</a></li>"%(
 			tag,tag,nitems) for tag,nitems in taglist])
 	for entry in blogEntries :
-		blog['htmlentries'] = blogEntryScheleton % entry
-		file(entry['link'],"w").write(blogScheleton % blog)
+		blog.htmlentries = blogEntryScheleton % entry
+		file(entry['link'],"w").write(blogScheleton % blog.__dict__)
 		
 
-	blog.update({
-		'htmlentries': "\n".join(htmlentries),
-		'rssitems': "\n".join(rssItems),
-	})
-	file("blog.index.html","w").write(blogScheleton%blog)
-	file("blog.rss","w").write(blogRssScheleton%blog)
+	blog.htmlentries = "\n".join(htmlentries),
+	blog.rssitems = "\n".join(rssItems),
+	file("blog.index.html","w").write(blogScheleton%blog.__dict__)
+	file("blog.rss","w").write(blogRssScheleton%blog.__dict__)
 	tagNotice = """<div class='blog_tagnotice'>Showing only entries labeled as <b>%s</b>.
 <a href='blog.index.html'>Show all entries</a></div>"""
 	for tag, tagEntries in tagPages.iteritems() :
-		blog['htmlentries'] = "\n".join([tagNotice%tag]+tagEntries)
-		file("blog.tag.%s.html"%tag,"w").write(blogScheleton%blog)
+		blog.htmlentries = "\n".join([tagNotice%tag]+tagEntries)
+		file("blog.tag.%s.html"%tag,"w").write(blogScheleton%blog.__dict__)
 
 from datetime import datetime
 # TODO: Should be a config file with default values
-blog = {
-	'title': "Voki Codder",
-	'editor': "Vokimon",
-	'description': "Code for the masses",
-	'generator': "WiKo",
-	'lastbuilddate': datetime.utcnow().ctime(), #strftime("%c"), # TODO: was 'Thu, 18 Oct 2007 17:13:32 +0000',
-	'homeurl': "http://vokicodder.blogspot.com/",
-	'baseurl': "localhost",
-	'blogid' : "tag:blogger.com,1999:blog-36421488",
-}
+class blogConfig :
+	title = "Voki Codder"
+	editor = "Vokimon"
+	description = "Code for the masses"
+	generator = "WiKo"
+	lastbuilddate = datetime.utcnow().ctime() #strftime("%c"), # TODO: was 'Thu, 18 Oct 2007 17:13:32 +0000',
+	homeurl = "http://vokicodder.blogspot.com/"
+	baseurl = "localhost"
+	blogid = "tag:blogger.com,1999:blog-36421488"
 
-blogEntries, tags = readBlogEntries(blog)
-generateBlog(blog, blogEntries, tags)
+blogEntries, tags = readBlogEntries(blogConfig)
+generateBlog(blogConfig, blogEntries, tags)
 
 
 print "Generating download zones..."

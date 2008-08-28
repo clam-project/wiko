@@ -887,8 +887,8 @@ def generateBlog(blog, blogEntries, tags) :
 		file(entry['link'],"w").write(blogScheleton % blog.__dict__)
 		
 
-	blog.htmlentries = "\n".join(htmlentries),
-	blog.rssitems = "\n".join(rssItems),
+	blog.htmlentries = "\n".join(htmlentries)
+	blog.rssitems = "\n".join(rssItems)
 	file("blog.index.html","w").write(blogScheleton%blog.__dict__)
 	file("blog.rss","w").write(blogRssScheleton%blog.__dict__)
 	tagNotice = """<div class='blog_tagnotice'>Showing only entries labeled as <b>%s</b>.

@@ -461,13 +461,15 @@ def loadOrDefault(filename, defaultContent) :
 	except: return defaultContent
 
 def writeUtf8(filename, content) :
-	import codecs
+	import codecs, os
 	print "Generating",filename
-	uplevels=len(filename.split("/")) -1
-	basepath='../'*uplevels
+	path = filename.split("/")[:-1]
+	for i in range(len(path)) :
+		try : os.mkdir("/".join(path[:i+1]))
+		except: pass
+	basepath='../'*len(path)
 	content=content.replace('<!--base-->','<base href="%s" />'%basepath)
 	codecs.open(filename, "w",'utf8').write(content)
-
 
 skeletonFileName = "skeleton.html"
 skeleton = loadOrDefault(skeletonFileName, defaultSkeleton)

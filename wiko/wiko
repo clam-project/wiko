@@ -28,9 +28,8 @@ if mimetexAvailable: print "Using mimetex locally to generate formulas"
 useRemoteFormulas = not mimetexAvailable or '--remote-formulas' in sys.argv
 print "useRemoteFormulas:", useRemoteFormulas
 
-formulaIdGen = (a for a in range(0,30000) )
-equationIdGen = (a for a in range(0,30000) )
-
+def formulaIdGen(): a=0; yield a; a+=1
+def equationIdGen(): a=0; yield a; a+=1
 
 def formulaUri(latexContent) :
 	if useRemoteFormulas :

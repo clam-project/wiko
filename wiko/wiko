@@ -465,7 +465,6 @@ def writeUtf8(filename, content) :
 	print "Generating",filename
 	uplevels=len(filename.split("/")) -1
 	basepath='../'*uplevels
-	print filename, basepath
 	content=content.replace('<!--base-->','<base href="%s" />'%basepath)
 	codecs.open(filename, "w",'utf8').write(content)
 

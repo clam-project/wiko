@@ -241,34 +241,46 @@ class BloggerImportWizard (QWizard) :
 	def dump(self, stepped=False) :
 		if stepped :
 			yield "Fetching blog %s"%self.blogId
-		feed = self.service.GetFeed('/feeds/%s/posts/default' % self.blogId )
-		print "Generator:", feed.generator.text
-		print "Category:", [category.text for category in feed.category]
-		print "Contributor:", [contributor.text for contributor in feed.contributor]
-		print "Id:", feed.id.text
-		if stepped : yield "Title: " + (feed.title and feed.title.text)
-		if stepped and feed.subtitle: yield "Subtitle: " + feed.subtitle.text
-		print "Link:", [(link.href, dir(link)) for link in feed.link]
-		print "Updated:", feed.updated.text
-		import string
+
+		# TODO: The 'next' link indicates that there are more entries to fetch
+		feed = self.service.GetFeed('/feeds/%s/posts/default/' % self.blogId )
+
+		import codecs, datetime
 		import os.path
+		configfilename = os.path.join(self.targetDir,"blog.config")
+		blogconfig=codecs.open(configfilename,'w','utf-8')
+		links = dict([(link.rel, link.href) for link in feed.link])
+		if stepped : yield "Title: '%s' Subtitle: '%s'" % ( feed.title.text, feed.subtitle.text)
+		print >> blogconfig, "blogid = '%s'" % feed.id.text
+		print >> blogconfig, "title = '%s'" % feed.title.text
+		print >> blogconfig, "description = '%s' " % feed.subtitle.text
+		print >> blogconfig, "generator = '%s'" % feed.generator.text # TODO: blogger2wiko?
+		print >> blogconfig, "editor = '%s'" % ', '.join([author.name.text for author in feed.author])
+		print >> blogconfig, "editorEmail = '%s'" % ', '.join([author.email.text for author in feed.author])
+		print >> blogconfig, "editorUri = '%s'" % ', '.join([author.uri.text for author in feed.author])
+		print >> blogconfig, "blogtags = '%s'" % ', '.join([category.text for category in feed.category])
+		print >> blogconfig, "contributor = '%s'" % ', '.join([contributor.name.text for contributor in feed.contributor])
+		print >> blogconfig, "homeurl = '%s'" % links['alternate']
+		print >> blogconfig, "updated = '%s'" % feed.updated.text
+		print "\n".join(str(link) for link in feed.link)
+		blogconfig.close()
+		import string
 		for entry in feed.entry:
 			title = entry.title.text or "No title"
 			id = entry.id.text.split("-")[-1]
-			filename = "blog-"+id+"-"+title.title().translate(string.maketrans("",""),"! ,./:?")
+			filename = "blog-"+id+"-"+title.title().translate(string.maketrans(" ","-"),"! ,./:?")
 			filename += ".wiki" # if entry.content.type is not "html" else ".html"
 			fullfilename = os.path.join(self.targetDir,filename)
 			if stepped: yield "Generating " + filename
-			import codecs, datetime
 			blogfile=codecs.open(fullfilename,'w','utf-8')
 			print >> blogfile, "@id:", id
 			
 			print >> blogfile, "@author:", (", ".join([author.name.text for author in entry.author]))
-#			print >> blogfile, "@email:", (", ".join([author.email.text for author in entry.author if author.email]))
+#			print >> blogfile, "@authoremail:", (", ".join([author.email.text for author in entry.author if author.email]))
 #			print >> blogfile, "@authoruri:", (", ".join([author.uri.href for author in entry.author if author.uri]))
 #			print >> blogfile, "@contributor:", (", ".join([contrib.name.text for contrib in entry.contributor]))
 #			print >> blogfile, "@source:", entry.source and entry.source.text
-			print >> blogfile, "@title: " + entry.title.text
+			print >> blogfile, "@title: " + title
 			print >> blogfile, "@updated:", datetime.datetime.strptime(entry.updated.text[:19], "%Y-%m-%dT%H:%M:%S").strftime("%Y-%m-%d %H:%M:%S")
 			print >> blogfile, "@published:", datetime.datetime.strptime(entry.published.text[:19], "%Y-%m-%dT%H:%M:%S").strftime("%Y-%m-%d %H:%M:%S")
 			print >> blogfile, "@tags:", (", ".join([category.term for category in entry.category]))
@@ -327,15 +339,6 @@ class BloggerImportWizard (QWizard) :
 		feed_url+= "" if postId is None else '/' + postId
 		feed_url+='/comments/default'
 		feed = self.service.Get(feed_url)
-		for entry in feed.entry :
-			print "Comment Id:", entry.id.text.split("-")[-1]
-			print "Title:", entry.title.text
-			print "Author uri:", entry.author[0].uri.text
-			print "Author name:", entry.author[0].name.text
-			print "Author email:", entry.author[0].email.text
-#			print "Link", entry.link[0].__dict__
-			print "InReplyOf:", entry.extension_elements[0].attributes['ref'].split("-")[-1]
-		print feed
 		return [ dict(
 			id = entry.id.text.split("-")[-1],
 			title = entry.title.text,

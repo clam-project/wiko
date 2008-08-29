@@ -277,7 +277,23 @@ class BloggerImportWizard (QWizard) :
 			print >> blogfile, content
 #			self.getComments(entry.id.text.split("-")[-1])
 #			print dir(entry)
-		print self.getComments()
+		for comment in self.getComments() :
+			commentfilename = "blog/comment-%(id)s"%comment
+			commentfile=codecs.open(commentfilename,'w','utf-8')
+			for key in [
+				'id',
+				"inreplyto",
+				"title",
+				"published",
+				"updated",
+				"author",
+				"authoruri",
+				"authoremail",
+				] :
+				print >> commentfile, "@%s:"%key, comment[key]
+			print >> commentfile
+			print >> commentfile, comment['content']
+
 	def wikify(self, content) :
 		if useTidy:
 			# TODO: This crashes (core dump!) for some files
@@ -311,12 +327,26 @@ class BloggerImportWizard (QWizard) :
 		feed_url+= "" if postId is None else '/' + postId
 		feed_url+='/comments/default'
 		feed = self.service.Get(feed_url)
+		for entry in feed.entry :
+			print "Comment Id:", entry.id.text.split("-")[-1]
+			print "Title:", entry.title.text
+			print "Author uri:", entry.author[0].uri.text
+			print "Author name:", entry.author[0].name.text
+			print "Author email:", entry.author[0].email.text
+#			print "Link", entry.link[0].__dict__
+			print "InReplyOf:", entry.extension_elements[0].attributes['ref'].split("-")[-1]
+		print feed
 		return [ dict(
 			id = entry.id.text.split("-")[-1],
 			title = entry.title.text,
+			published = entry.published.text,
 			updated = entry.updated.text,
 			content = self.wikify(entry.content.text),
-			author = ",".join([author.name.text for author in entry.author])
+			# If more extensions are added this might fail, should take the one with 'tag'=='in-reply-to'
+			inreplyto = entry.extension_elements[0].attributes['ref'],
+			author = ",".join([author.name.text for author in entry.author]),
+			authoremail = ",".join([author.email.text for author in entry.author]),
+			authoruri = ",".join([author.uri.text for author in entry.author]),
 			) for entry in feed.entry ]
 
 def main():

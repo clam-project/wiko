@@ -241,6 +241,7 @@ defaultSkeleton = u"""
 
 <head>
 <title>%(title)s</title>
+<!--base-->
 <meta name="author" content="%(author)s">
 <alink rel='stylesheet' href='style.css' type='text/css'/>
 <link rel='stylesheet' href='style_code.css' type='text/css'/>
@@ -386,6 +387,8 @@ defaultBlogSkeleton = u"""\
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" >
 <head>
 <title>%(title)s</title>
+<!--base-->
+<link rel='stylesheet' href='style.css' type='text/css'/>
 <link rel='stylesheet' href='style_code.css' type='text/css'/>
 <!-- TODO: Style sheets -->
 </head>
@@ -460,6 +463,10 @@ def loadOrDefault(filename, defaultContent) :
 def writeUtf8(filename, content) :
 	import codecs
 	print "Generating",filename
+	uplevels=len(filename.split("/")) -1
+	basepath='../'*uplevels
+	print filename, basepath
+	content=content.replace('<!--base-->','<base href="%s" />'%basepath)
 	codecs.open(filename, "w",'utf8').write(content)
 
 

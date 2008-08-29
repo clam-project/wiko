@@ -295,6 +295,9 @@ class BloggerImportWizard (QWizard) :
 			(r"<a\s+href\s*=\s*'([^']+)'>([^<]+)\s*<\s*/\s*a\s*>", r"[[\1 \2]]"),
 			(r'<br />', "\n"),
 			('<p>', "\n\n"),
+			('</p>', ""),
+#			('<pre>', "Code:\n"),
+#			('</pre>', ""),
 			('%', '%%'),
 		]
 		substitutions = [(re.compile(old), new) for old, new in substitutions]

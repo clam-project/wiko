@@ -387,6 +387,7 @@ defaultBlogSkeleton = u"""\
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" >
 <head>
 <title>%(title)s</title>
+<link rel='stylesheet' href='style_code.css' type='text/css'/>
 <!-- TODO: Style sheets -->
 </head>
 <body>
@@ -401,6 +402,7 @@ defaultBlogSkeleton = u"""\
 </body>
 </html>
 """
+
 defaultBlogEntrySkeleton = u"""\
 <h2><a href="%(link)s">%(title)s</a></h2>
 <h3>Posted by %(author)s on %(publishedtime)s</h3>

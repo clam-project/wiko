@@ -380,16 +380,7 @@ img.inlineFormula
 </html>
 """
 
-defaultBlogEntrySkeleton = """\
-<h2><a href="%(link)s">%(title)s</a></h2>
-<h3>Posted by %(author)s on %(timestamp)s</h3>
-<p><b>Tags:</b>  %(linkedTags)s</p>
-<div>
-%(content)s
-</div>
-"""
-
-defaultBlogSkeleton = """\
+defaultBlogSkeleton = u"""\
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
     "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
@@ -410,15 +401,24 @@ defaultBlogSkeleton = """\
 </body>
 </html>
 """
+defaultBlogEntrySkeleton = u"""\
+<h2><a href="%(link)s">%(title)s</a></h2>
+<h3>Posted by %(author)s on %(publishedtime)s</h3>
+<p><b>Tags:</b>  %(linkedTags)s</p>
+<div>
+%(content)s
+</div>
+"""
 
-defaultRssSkeleton = """\
+
+defaultRssSkeleton = u"""\
 <?xml version='1.0' encoding='UTF-8'?>
 <rss xmlns:atom='http://www.w3.org/2005/Atom' xmlns:openSearch='http://a9.com/-/spec/opensearchrss/1.0/' version='2.0'>
 <channel>
 <atom:id>%(blogid)s</atom:id>
 <lastBuildDate>%(lastbuilddate)s</lastBuildDate>
 <title>%(title)s</title>
-<description>%(description)s<description/>
+<description>%(description)s</description>
 <link>%(homeurl)s</link>
 <managingEditor>%(editor)s</managingEditor>
 <generator>%(generator)s</generator>
@@ -430,11 +430,11 @@ defaultRssSkeleton = """\
 </rss>
 """
 
-defaultRssEntrySkeleton = """\
+defaultRssEntrySkeleton = u"""\
 <item>
 <guid isPermaLink='false'>$(entryid)s</guid>
-<pubDate>%(publishedtime)s</pubDate>
-<atom:updated>%(updatedtime)s</atom:updated>
+<pubDate>%(publishediso)s</pubDate>
+<atom:updated>%(updatediso)s</atom:updated>
 %(rsscategories)s
 <title>%(title)s</title>
 <description>%(encodedContent)s</description>
@@ -915,16 +915,20 @@ def readBlogEntries(blog) :
 		try:
 			publishedTime = datetime.strptime(entry['published'], "%Y-%m-%d %H:%M:%S")
 		except KeyError :
-			publishedTime = datetime.utcnow()
+			try :
+				datetime.strptime( os.path.basename(contentFile)[:16], "%Y-%m-%d-%H-%M")
+			except ValueError :
+				print >> sys.stderr, "Warning: Cannot deduce publication date for '%s', using current time."%contentFile
+				publishedTime = datetime.utcnow()
 		try :
 			updatedTime = datetime.strptime(entry['updated'], "%Y-%m-%d %H:%M:%S")
 		except KeyError :
 			updatedTime = datetime.utcfromtimestamp(os.path.getmtime(contentFile))
 
-		entry['timestamp'] = str(publishedTime)
-		entry["updatedtime"] = updatedTime.isoformat() #  2007-07-21T11:47:11.001-07:00
-		entry["publishedtime"] = publishedTime.strftime("%a, %d %b %Y %Z") # was: Fri, 20 Jul 2007 18:10:00 +0000
-		print entry["publishedtime"]
+		entry["publishedtime"] = str(publishedTime)
+		entry["updatedtime"] = str(updatedTime)
+		entry["publishediso"] = publishedTime.isoformat()
+		entry["updatediso"] = updatedTime.isoformat()
 		entry["entryid"] = "tag:blogger.com,1999:blog-36421488.post-8207308771074649324" # TODO
 		entry['link'] = "blog.%s.html"%entry["name"]
 		from xml.sax.saxutils import escape
@@ -932,7 +936,7 @@ def readBlogEntries(blog) :
 		# fulluri was: http://vokicodder.blogspot.com/2007/07/simplifying-spectral-processing-in-clam.html
 		entry["fulluri"] = blog.baseurl + "/" + entry["link"]
 		blogEntries.append(entry)
-	blogEntries.sort(key=lambda a: a['timestamp'], reverse=True)
+	blogEntries.sort(key=lambda a: a['publishediso'], reverse=True)
 	return blogEntries, tags
 
 def generateBlog(blog, blogEntries, tags) :
@@ -945,7 +949,7 @@ def generateBlog(blog, blogEntries, tags) :
 	htmlentries = []
 	rssItems = []
 	for entry in blogEntries :
-		print entry['timestamp'], entry['name'] , "|" , entry['title'] , "[" + entry["tags"]+']'
+		print entry['publishediso'], entry['name'] , "|" , entry['title'] , "[" + entry["tags"]+']'
 	for entry in blogEntries :
 		targetBlog = entry['link']
 		composed = blogEntryScheleton%entry

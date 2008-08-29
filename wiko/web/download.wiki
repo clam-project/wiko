@@ -33,15 +33,14 @@ You may find also useful some of the helper scripts:
 
 WiKo depends on python and in a number of packages which are optional but
 enhance a lot WiKo capabilities:
-
-python-pygments: to get syntax highlighting in code snipets within your html documents
-python-bibtex: to get pretty formated bibliography in html documents
-python-imaging: to get the thumbnails on the galleries
-mimetex: to generate the formulas without depending on external resources
+* python-pygments: to get syntax highlighting in code snipets within your html documents
+* python-bibtex: to get pretty formated bibliography in html documents
+* python-imaging: to get the thumbnails on the galleries
+* mimetex: to generate the formulas without depending on external resources
 
 to run the blogger2wiko wizard:
-python-qt4 
-python-gdata
-python-tidy
+* python-qt4 
+* python-gdata
+* python-tidy
 
 

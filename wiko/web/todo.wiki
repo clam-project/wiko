@@ -1,0 +1,40 @@
+﻿@title: Wiko, the Wiki Compiler: Development tasks
+@author: David Garcia and Pau Arumi
+
+== Development tasks == 
+
+=== Blog comments ===
+
+* Set a convention for blog and comments filenames so that wiki can relate them easily
+* Load the comments and include them on the full blog entries
+* Include the number of comments as entry metadata
+* Think on a way for appending new comments
+
+=== Blogger integration ===
+
+* Upload a new blog entry into blogger
+* Obtain the assigned id and published time and modify the wiko entry
+* Update a given blog entry into blogger
+
+=== Documentation ===
+
+* Build an explained @var list
+* Html content sample
+* Wiki content sample
+* PDF LaTeX sample
+* Blog sample
+* Other samples??
+
+
+=== Refactorings ===
+
+* Configuration files
+* Command line options
+
+
+
+
+
+
+
+

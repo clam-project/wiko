@@ -471,9 +471,6 @@ def writeUtf8(filename, content) :
 	content=content.replace('<!--base-->','<base href="%s" />'%basepath)
 	codecs.open(filename, "w",'utf8').write(content)
 
-skeletonFileName = "skeleton.html"
-skeleton = loadOrDefault(skeletonFileName, defaultSkeleton)
-
 class WikiCompiler :
 
 	def compileInlines(self, inlines) :
@@ -859,6 +856,10 @@ def generateHtmlBibliographyPretty(outputFilename, bibfiles) :
         ))
 	return entries
 
+
+skeletonFileName = "skeleton.html"
+skeleton = loadOrDefault(skeletonFileName, defaultSkeleton)
+
 # Generate bibliography
 bibEntries = generateHtmlBibliography("bibliography.bib.html", glob.glob("*.bib"))
 
@@ -990,14 +991,20 @@ def generateBlog(blog, blogEntries, tags) :
 from datetime import datetime
 # TODO: Should be a config file with default values
 class blogConfig :
-	title = "Voki Codder"
-	editor = "Vokimon"
-	description = "Code for the masses"
+	title = "Your title here"
+	blogid = "tag:blogger.com,1999:blog-36421488"
+	editor = "You"
+	description = "Your blog description here"
 	generator = "WiKo"
 	lastbuilddate = datetime.utcnow().ctime() #strftime("%c"), # TODO: was 'Thu, 18 Oct 2007 17:13:32 +0000',
-	homeurl = "http://vokicodder.blogspot.com/"
+	homeurl = "http://yourblog.blogspot.com/" # The home page for the blog
 	baseurl = "localhost"
-	blogid = "tag:blogger.com,1999:blog-36421488"
+
+	for configfile in ["blog/blog.config"] :
+		if not os.access(configfile,os.R_OK) : continue
+		execfile(configfile)
+
+	
 
 blogEntries, tags = readBlogEntries(blogConfig)
 generateBlog(blogConfig, blogEntries, tags)

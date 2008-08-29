@@ -259,7 +259,7 @@ class BloggerImportWizard (QWizard) :
 			filename += ".wiki" # if entry.content.type is not "html" else ".html"
 			fullfilename = os.path.join(self.targetDir,filename)
 			if stepped: yield "Generating " + filename
-			import codecs
+			import codecs, datetime
 			blogfile=codecs.open(fullfilename,'w','utf-8')
 			print >> blogfile, "@id:", id
 			
@@ -269,9 +269,9 @@ class BloggerImportWizard (QWizard) :
 #			print >> blogfile, "@contributor:", (", ".join([contrib.name.text for contrib in entry.contributor]))
 #			print >> blogfile, "@source:", entry.source and entry.source.text
 			print >> blogfile, "@title: " + entry.title.text
-			print >> blogfile, "@updated:", entry.updated.text
-			print >> blogfile, "@published:", entry.published.text
-			print >> blogfile, "@category:", (", ".join([category.term for category in entry.category]))
+			print >> blogfile, "@updated:", datetime.datetime.strptime(entry.updated.text[:19], "%Y-%m-%dT%H:%M:%S").strftime("%Y-%m-%d %H:%M:%S")
+			print >> blogfile, "@published:", datetime.datetime.strptime(entry.published.text[:19], "%Y-%m-%dT%H:%M:%S").strftime("%Y-%m-%d %H:%M:%S")
+			print >> blogfile, "@tags:", (", ".join([category.term for category in entry.category]))
 			print >> blogfile
 			content = self.wikify(entry.content.text)
 			print >> blogfile, content
@@ -295,6 +295,7 @@ class BloggerImportWizard (QWizard) :
 			(r"<a\s+href\s*=\s*'([^']+)'>([^<]+)\s*<\s*/\s*a\s*>", r"[[\1 \2]]"),
 			(r'<br />', "\n"),
 			('<p>', "\n\n"),
+			('%', '%%'),
 		]
 		substitutions = [(re.compile(old), new) for old, new in substitutions]
 		for old, new in substitutions :

@@ -380,17 +380,90 @@ img.inlineFormula
 </html>
 """
 
+defaultBlogEntrySkeleton = """\
+<h2><a href="%(link)s">%(title)s</a></h2>
+<h3>Posted by %(author)s on %(timestamp)s</h3>
+<p><b>Tags:</b>  %(linkedTags)s</p>
+<div>
+%(content)s
+</div>
+"""
+
+defaultBlogSkeleton = """\
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+    "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" >
+<head>
+<title>%(title)s</title>
+<!-- TODO: Style sheets -->
+</head>
+<body>
+<div class='head'><a href="%(homeurl)s"><img alt="%(title)s by %(editor)s" src="banner.png" /></a></div>
+<ul class='menu'>
+%(taglist)s
+</ul>
+<div class='body'>
+%(htmlentries)s
+</div>
+
+</body>
+</html>
+"""
+
+defaultRssSkeleton = """\
+<?xml version='1.0' encoding='UTF-8'?>
+<rss xmlns:atom='http://www.w3.org/2005/Atom' xmlns:openSearch='http://a9.com/-/spec/opensearchrss/1.0/' version='2.0'>
+<channel>
+<atom:id>%(blogid)s</atom:id>
+<lastBuildDate>%(lastbuilddate)s</lastBuildDate>
+<title>%(title)s</title>
+<description>%(description)s<description/>
+<link>%(homeurl)s</link>
+<managingEditor>%(editor)s</managingEditor>
+<generator>%(generator)s</generator>
+<openSearch:totalResults>16</openSearch:totalResults>
+<openSearch:startIndex>1</openSearch:startIndex>
+<openSearch:itemsPerPage>25</openSearch:itemsPerPage>
+%(rssitems)s
+</channel>
+</rss>
+"""
+
+defaultRssEntrySkeleton = """\
+<item>
+<guid isPermaLink='false'>$(entryid)s</guid>
+<pubDate>%(publishedtime)s</pubDate>
+<atom:updated>%(updatedtime)s</atom:updated>
+%(rsscategories)s
+<title>%(title)s</title>
+<description>%(encodedContent)s</description>
+<link>%(fulluri)s</link>
+<author>%(author)s</author>
+</item>
+"""
+
+
 def stripUtfMarker(content) :
 	import codecs
 	return content.replace( unicode(codecs.BOM_UTF8,"utf8"), "")
 
-def readUtfSafe(filename) :
+def readUtf8(filename) :
 	print "Reading",filename
 	return stripUtfMarker(codecs.open(filename,'r','utf8').read())
 
+def loadOrDefault(filename, defaultContent) :
+	try: return readUtf8(filename)
+	except: return defaultContent
+
+def writeUtf8(filename, content) :
+	import codecs
+	print "Generating",filename
+	codecs.open(filename, "w",'utf8').write(content)
+
+
 skeletonFileName = "skeleton.html"
-try: skeleton = readUtfSafe(skeletonFileName)
-except: skeleton = defaultSkeleton
+skeleton = loadOrDefault(skeletonFileName, defaultSkeleton)
 
 class WikiCompiler :
 
@@ -726,7 +799,7 @@ def generateHtmlBibliographyRaw(outputFilename, bibfiles) :
 				result += ["<a id='%s' />\n"%id]
 			result.append(line)
 	# TODO: Is it needed to have a 
-	codecs.open(bibfilename, "w",'utf8').write(skeleton%dict(
+	writeUtf8(bibfilename, skeleton%dict(
 		content="<pre>"+"".join(result)+"</pre>",
 		title="Bibliography",
 		author="",
@@ -766,7 +839,7 @@ def generateHtmlBibliographyPretty(outputFilename, bibfiles) :
 			entryDict["kind"] = kind
 			entries[id] = entryDict
 			output += [ "</ul>" ]
-	codecs.open(outputFilename, "w", 'utf8').write(skeleton%dict(
+	writeUtf8(outputFilename, skeleton%dict(
         content="\n".join(output),
         title="Bibliography",
         author="",
@@ -787,8 +860,8 @@ for contentFile in glob.glob("content/*.html") :
 		print target, "is up to date."
 		continue
 	print "Generating", target, "from", contentFile, "..."
-	content = readUtfSafe(contentFile)
-	file(target,"w").write(skeleton%{'title':'', 'author':'','content':content})
+	content = readUtf8(contentFile)
+	writeUtf8(target, skeleton%{'title':'', 'author':'','content':content})
 
 # Generate LaTeX and HTML from wiki files
 
@@ -800,7 +873,7 @@ texSkeletons = fileNamesBasesForExtension("tex") - fileNamesBasesForExtension("w
 # ...and contain \documentclass directive
 texSkeletons = [ texSkeleton 
 		for texSkeleton in texSkeletons
-		if file(texSkeleton+".tex").read().find(r"\documentclass") != -1
+		if readUtf8(texSkeleton+".tex").find(r"\documentclass") != -1
 	]
 
 for contentFile in glob.glob("*.wiki") :
@@ -810,16 +883,16 @@ for contentFile in glob.glob("*.wiki") :
 	if not needsRebuild(target, contentFile) :
 		print target, "is up to date."
 		continue
-	content = readUtfSafe(contentFile)
+	content = readUtf8(contentFile)
 	if enableHtml :
 		print "Generating", target, "from", contentFile, "..."
 		htmlResult = HtmlCompiler(bibEntries).process(content)
 		htmlResult['wikiSource']=contentFile;
-		codecs.open(target,"w",'utf8').write(skeleton%htmlResult)
+		writeUtf8(target, skeleton%htmlResult)
 	if enableLaTeX and len(texSkeletons):
 		print "Generating", targetTex, "from", contentFile, "..."
 		texResult = LaTeXCompiler().process(content)
-		codecs.open(targetTex,"w",'utf8').write(texResult['content'])
+		writeUtf8(targetTex, texResult['content'])
 
 
 print "Generating blog..."
@@ -828,7 +901,7 @@ def readBlogEntries(blog) :
 	blogEntries = []
 	tags=set()
 	for contentFile in glob.glob("blog/*.wiki") :
-		entry = HtmlCompiler(bibEntries).process(readUtfSafe(contentFile))
+		entry = HtmlCompiler(bibEntries).process(readUtf8(contentFile))
 		entry['name'] = os.path.splitext(os.path.split(contentFile)[-1])[0]
 		entry.setdefault('tags',"")
 		entry['splittedTags']=[tag.strip() for tag in entry["tags"].split(",") if tag!=""]
@@ -839,11 +912,15 @@ def readBlogEntries(blog) :
 		entry["rsscategories"]="\n".join([
 			"<category domain='http://www.blogger.com/atom/ns#'>%s</category>"%tag 
 				for tag in entry["splittedTags"] ])
-		try :
-			publishedTime = datetime.strptime(entry['timestamp'], "%d/%m/%Y %H:%M")
+		try:
+			publishedTime = datetime.strptime(entry['published'], "%Y-%m-%d %H:%M:%S")
 		except KeyError :
-			publishedTime = datetime.strptime(entry['published'], "%a, %d %b %Y %Z")
-		updatedTime = datetime.utcfromtimestamp(os.path.getmtime(contentFile))
+			publishedTime = datetime.utcnow()
+		try :
+			updatedTime = datetime.strptime(entry['updated'], "%Y-%m-%d %H:%M:%S")
+		except KeyError :
+			updatedTime = datetime.utcfromtimestamp(os.path.getmtime(contentFile))
+
 		entry['timestamp'] = str(publishedTime)
 		entry["updatedtime"] = updatedTime.isoformat() #  2007-07-21T11:47:11.001-07:00
 		entry["publishedtime"] = publishedTime.strftime("%a, %d %b %Y %Z") # was: Fri, 20 Jul 2007 18:10:00 +0000
@@ -861,10 +938,10 @@ def readBlogEntries(blog) :
 def generateBlog(blog, blogEntries, tags) :
 	if not blogEntries: return
 	tagPages = dict([(tag,[]) for tag in tags])
-	blogEntryScheleton = readUtfSafe("blog/entryScheleton.html")
-	blogScheleton = readUtfSafe("blog/skeleton.html")
-	blogRssEntryScheleton = readUtfSafe("blog/rssEntryScheleton.rss")
-	blogRssScheleton = readUtfSafe("blog/rssScheleton.rss")
+	blogEntryScheleton = loadOrDefault("blog/entryScheleton.html", defaultBlogEntrySkeleton)
+	blogScheleton = loadOrDefault("blog/skeleton.html", defaultBlogSkeleton)
+	blogRssEntryScheleton = loadOrDefault("blog/rssEntryScheleton.rss", defaultRssEntrySkeleton)
+	blogRssScheleton = loadOrDefault("blog/rssScheleton.rss", defaultRssSkeleton)
 	htmlentries = []
 	rssItems = []
 	for entry in blogEntries :
@@ -884,18 +961,18 @@ def generateBlog(blog, blogEntries, tags) :
 			tag,tag,nitems) for tag,nitems in taglist])
 	for entry in blogEntries :
 		blog.htmlentries = blogEntryScheleton % entry
-		file(entry['link'],"w").write(blogScheleton % blog.__dict__)
+		writeUtf8(entry['link'],blogScheleton % blog.__dict__)
 		
 
 	blog.htmlentries = "\n".join(htmlentries)
 	blog.rssitems = "\n".join(rssItems)
-	file("blog.index.html","w").write(blogScheleton%blog.__dict__)
-	file("blog.rss","w").write(blogRssScheleton%blog.__dict__)
+	writeUtf8("blog.index.html", blogScheleton%blog.__dict__)
+	writeUtf8("blog.rss", blogRssScheleton%blog.__dict__)
 	tagNotice = """<div class='blog_tagnotice'>Showing only entries labeled as <b>%s</b>.
 <a href='blog.index.html'>Show all entries</a></div>"""
 	for tag, tagEntries in tagPages.iteritems() :
 		blog.htmlentries = "\n".join([tagNotice%tag]+tagEntries)
-		file("blog.tag.%s.html"%tag,"w").write(blogScheleton%blog.__dict__)
+		writeUtf8("blog.tag.%s.html"%tag,blogScheleton%blog.__dict__)
 
 from datetime import datetime
 # TODO: Should be a config file with default values
@@ -936,7 +1013,7 @@ def humanReadableTime(filename) :
 
 def generateDownloadZones(dirs, skeletonFilename, blacklist) :
 	lineTemplate = "<tr><td style='width:100%%'><a href='%(filename)s'>%(filename)s</a></td><td>%(size)s</td><td>%(date)s</td></tr>"
-	skeleton = readUtfSafe(skeletonFilename)
+	skeleton = readUtf8(skeletonFilename)
 	for title, dirname in dirs:
 		dirname = os.path.expanduser(dirname)
 		if not os.access(dirname, os.X_OK):
@@ -963,7 +1040,7 @@ def generateDownloadZones(dirs, skeletonFilename, blacklist) :
 			'author':'generated',
 			'wikiSource':''
 		}
-		open(os.path.join(dirname,"index.html"),"w").write(index)
+		writeUtf8(os.path.join(dirname,"index.html"),index)
 
 dzConfig = {
 	'dirs' : [],

@@ -912,12 +912,12 @@ def readBlogEntries(blog) :
 	tags=set()
 	for contentFile in glob.glob("blog/*.wiki") :
 		entry = HtmlCompiler(bibEntries).process(readUtf8(contentFile))
-		entry['name'] = os.path.splitext(os.path.split(contentFile)[-1])[0]
+		entry['name'] = os.path.splitext(os.path.basename(contentFile))[0]
 		entry.setdefault('tags',"")
 		entry['splittedTags']=[tag.strip() for tag in entry["tags"].split(",") if tag!=""]
 		tags=tags.union(entry['splittedTags'])
 		entry['linkedTags']=', '.join([
-			"<a href='blog.tag.%(tag)s.html'>%(tag)s</a>"%{'tag':tag} 
+			"<a href='blog/tag/%(tag)s.html'>%(tag)s</a>"%{'tag':tag} 
 				for tag in entry['splittedTags']])
 		entry["rsscategories"]="\n".join([
 			"<category domain='http://www.blogger.com/atom/ns#'>%s</category>"%tag 
@@ -926,7 +926,7 @@ def readBlogEntries(blog) :
 			publishedTime = datetime.strptime(entry['published'], "%Y-%m-%d %H:%M:%S")
 		except KeyError :
 			try :
-				datetime.strptime( os.path.basename(contentFile)[:16], "%Y-%m-%d-%H-%M")
+				publishedTime = datetime.strptime( os.path.basename(contentFile)[:16], "%Y-%m-%d-%H-%M")
 			except ValueError :
 				print >> sys.stderr, "Warning: Cannot deduce publication date for '%s', using current time."%contentFile
 				publishedTime = datetime.utcnow()
@@ -939,8 +939,8 @@ def readBlogEntries(blog) :
 		entry["updatedtime"] = str(updatedTime)
 		entry["publishediso"] = publishedTime.isoformat()
 		entry["updatediso"] = updatedTime.isoformat()
-		entry["entryid"] = "tag:blogger.com,1999:blog-36421488.post-8207308771074649324" # TODO
-		entry['link'] = "blog.%s.html"%entry["name"]
+		entry["entryid"] = "tag:blogger.com,1999:blog-%s.post-%s"%(blog['blogid'],entry['id'])
+		entry['link'] = "blog/%02i/%02i/%s.html"%(publishedTime.year-2000,publishedTime.month,entry["name"])
 		from xml.sax.saxutils import escape
 		entry["encodedContent"] = escape(entry["content"])
 		# fulluri was: http://vokicodder.blogspot.com/2007/07/simplifying-spectral-processing-in-clam.html
@@ -971,7 +971,7 @@ def generateBlog(blog, blogEntries, tags) :
 	taglist=[(tag,len(entries)) for tag, entries in tagPages.iteritems()]
 	taglist.sort(key=lambda a : a[1],reverse=True)
 	blog.taglist = "\n".join([
-		"<li><a href='blog.tag.%s.html'>%s&nbsp;(%i)</a></li>"%(
+		"<li><a href='blog/tag/%s.html'>%s&nbsp;(%i)</a></li>"%(
 			tag,tag,nitems) for tag,nitems in taglist])
 	for entry in blogEntries :
 		blog.htmlentries = blogEntryScheleton % entry
@@ -980,13 +980,13 @@ def generateBlog(blog, blogEntries, tags) :
 
 	blog.htmlentries = "\n".join(htmlentries)
 	blog.rssitems = "\n".join(rssItems)
-	writeUtf8("blog.index.html", blogScheleton%blog.__dict__)
-	writeUtf8("blog.rss", blogRssScheleton%blog.__dict__)
+	writeUtf8("blog/index.html", blogScheleton%blog.__dict__)
+	writeUtf8("blog/feed.rss", blogRssScheleton%blog.__dict__)
 	tagNotice = """<div class='blog_tagnotice'>Showing only entries labeled as <b>%s</b>.
-<a href='blog.index.html'>Show all entries</a></div>"""
+<a href='blog/index.html'>Show all entries</a></div>"""
 	for tag, tagEntries in tagPages.iteritems() :
 		blog.htmlentries = "\n".join([tagNotice%tag]+tagEntries)
-		writeUtf8("blog.tag.%s.html"%tag,blogScheleton%blog.__dict__)
+		writeUtf8("blog/tag/%s.html"%tag,blogScheleton%blog.__dict__)
 
 from datetime import datetime
 # TODO: Should be a config file with default values
@@ -996,15 +996,14 @@ class blogConfig :
 	editor = "You"
 	description = "Your blog description here"
 	generator = "WiKo"
-	lastbuilddate = datetime.utcnow().ctime() #strftime("%c"), # TODO: was 'Thu, 18 Oct 2007 17:13:32 +0000',
-	homeurl = "http://yourblog.blogspot.com/" # The home page for the blog
-	baseurl = "localhost"
+	lastbuilddate = datetime.utcnow().ctime()
+	baseurl = "http://yourblog.blogspot.com/" # The base url for the blog pages to access them remotely (rss)
+	homeurl = "http://yourblog.blogspot.com/home.html" # The home page for the blog
 
 	for configfile in ["blog/blog.config"] :
 		if not os.access(configfile,os.R_OK) : continue
 		execfile(configfile)
 
-	
 
 blogEntries, tags = readBlogEntries(blogConfig)
 generateBlog(blogConfig, blogEntries, tags)

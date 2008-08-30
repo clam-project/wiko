@@ -910,7 +910,7 @@ print "Generating blog..."
 def readBlogEntries(blog) :
 	blogEntries = []
 	tags=set()
-	for contentFile in glob.glob("blog/*.wiki") :
+	for contentFile in glob.glob(u"blog/*.wiki") :
 		entry = HtmlCompiler(bibEntries).process(readUtf8(contentFile))
 		entry['name'] = os.path.splitext(os.path.basename(contentFile))[0]
 		entry.setdefault('tags',"")
@@ -939,8 +939,8 @@ def readBlogEntries(blog) :
 		entry["updatedtime"] = str(updatedTime)
 		entry["publishediso"] = publishedTime.isoformat()
 		entry["updatediso"] = updatedTime.isoformat()
-		entry["entryid"] = "tag:blogger.com,1999:blog-%s.post-%s"%(blog['blogid'],entry['id'])
-		entry['link'] = "blog/%02i/%02i/%s.html"%(publishedTime.year-2000,publishedTime.month,entry["name"])
+		entry["entryid"] = "tag:blogger.com,1999:blog-%s.post-%s"%(blog.blogid,entry['id'])
+		entry['link'] = u"blog/%02i/%02i/%s.html"%(publishedTime.year-2000,publishedTime.month,entry["name"])
 		from xml.sax.saxutils import escape
 		entry["encodedContent"] = escape(entry["content"])
 		# fulluri was: http://vokicodder.blogspot.com/2007/07/simplifying-spectral-processing-in-clam.html

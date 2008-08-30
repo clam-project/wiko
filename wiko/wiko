@@ -419,14 +419,16 @@ defaultBlogSkeleton = u"""\
 <!-- TODO: Style sheets -->
 </head>
 <body>
-<div class='head'>
-<p><a href="%(homeurl)s">%(title)s</a></p>
-<p>%(description)s by %(editor)s</p>
-</div>
+<div id='sidebar'>
 <ul class='menu'>
 %(taglist)s
 </ul>
-<div class='body'>
+</div>
+<div id='content'>
+<div class='head'>
+<h1><a href="%(indexpage)s">%(title)s</a></h1>
+<p>%(description)s by %(editor)s</p>
+</div>
 %(htmlentries)s
 </div>
 
@@ -949,6 +951,10 @@ print "Generating blog..."
 def readBlogEntries(blog) :
 	blogEntries = []
 	tags=set()
+	blog.comments=[
+		HtmlCompiler(bibEntries).process(readUtf8(commentFile))
+			for commentFile in glob.glob(u"blog/*.comment")
+	]
 	for contentFile in glob.glob(u"blog/*.wiki") :
 		entry = HtmlCompiler(bibEntries).process(readUtf8(contentFile))
 		entry['name'] = os.path.splitext(os.path.basename(contentFile))[0]
@@ -984,9 +990,10 @@ def readBlogEntries(blog) :
 		entry["encodedContent"] = escape(entry["content"])
 		# fulluri was: http://vokicodder.blogspot.com/2007/07/simplifying-spectral-processing-in-clam.html
 		entry["fulluri"] = blog.baseurl + "/" + entry["link"]
-		entry["comments"]=[]
-		for commentFile in glob.glob(u"blog/*%s*.comment"%entry['id']) :
-			entry["comments"].append(HtmlCompiler(bibEntries).process(readUtf8(commentFile)))
+		entry["comments"]=[
+			comment for comment in blog.comments
+			if comment['inreplyto'] == entry['id'] 
+			]
 		entry["comments"].sort(key=lambda a: a['published'])
 		entry["ncomments"] = len(entry["comments"])
 		blogEntries.append(entry)
@@ -996,6 +1003,7 @@ def readBlogEntries(blog) :
 def generateBlog(blog, blogEntries, tags) :
 	if not blogEntries: return
 	tagPages = dict([(tag,[]) for tag in tags])
+	blog.indexpage = 'blog/index.html'
 	blogCommentScheleton = loadOrDefault("blog/commentScheleton.html", defaultBlogCommentSkeleton)
 	blogEntryScheleton = loadOrDefault("blog/entryScheleton.html", defaultBlogEntrySkeleton)
 	blogScheleton = loadOrDefault("blog/skeleton.html", defaultBlogSkeleton)
@@ -1030,12 +1038,12 @@ def generateBlog(blog, blogEntries, tags) :
 
 	blog.htmlentries = "\n".join(htmlentries)
 	blog.rssitems = "\n".join(rssItems)
-	writeUtf8("blog/index.html", blogScheleton%blog.__dict__)
+	writeUtf8(blog.indexpage, blogScheleton%blog.__dict__)
 	writeUtf8("blog/feed.rss", blogRssScheleton%blog.__dict__)
 	tagNotice = """<div class='blog_tagnotice'>Showing only entries labeled as <b>%s</b>.
-<a href='blog/index.html'>Show all entries</a></div>"""
+<a href='%s'>Show all entries</a></div>"""
 	for tag, tagEntries in tagPages.iteritems() :
-		blog.htmlentries = "\n".join([tagNotice%tag]+tagEntries)
+		blog.htmlentries = "\n".join([tagNotice%(tag,blog.indexpage)]+tagEntries)
 		writeUtf8("blog/tag/%s.html"%tag,blogScheleton%blog.__dict__)
 
 from datetime import datetime

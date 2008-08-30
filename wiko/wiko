@@ -231,22 +231,7 @@ divMarkersHtml = {
 	'Corollary': ('<div class="corollary"><b>Corollary:</b>', '</div>'),
 }
 
-defaultSkeleton = u"""
-<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
-    "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" >
-
-<!-- USING DEFAULT WIKO SKELETON. skeleton.html NOT FOUND -->
-
-<head>
-<title>%(title)s</title>
-<!--base-->
-<meta name="author" content="%(author)s">
-<alink rel='stylesheet' href='style.css' type='text/css'/>
-<link rel='stylesheet' href='style_code.css' type='text/css'/>
-<style type='text/css'>
-
+defaultStyleSheet = u"""
 .figure {
 	border: solid 1pt grey;
 	display: block;
@@ -371,6 +356,44 @@ img.inlineFormula
 	vertical-align: middle;
 }
 
+.menu li
+{
+	display: inline;
+}
+.menu li.cloud0 { font-size:60%%;}
+.menu li.cloud1 { font-size:70%%;}
+.menu li.cloud2 { font-size:80%%;}
+.menu li.cloud3 { font-size:90%%;}
+.menu li.cloud4 { font-size:100%%;}
+.menu li.cloud5 { font-size:105%%;}
+.menu li.cloud6 { font-size:110%%;}
+.menu li.cloud7 { font-size:120%%;}
+.menu li.cloud8 { font-size:130%%;}
+.menu li.cloud9 { font-size:140%%;}
+.menu li.cloud10 { font-size:150%%;}
+.menu
+{
+	padding: inherit;
+	text-align: justify;
+}
+"""
+
+defaultSkeleton = u"""
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+    "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" >
+
+<!-- USING DEFAULT WIKO SKELETON. skeleton.html NOT FOUND -->
+
+<head>
+<title>%(title)s</title>
+<!--base-->
+<meta name="author" content="%(author)s">
+<alink rel='stylesheet' href='style.css' type='text/css'/>
+<link rel='stylesheet' href='style_code.css' type='text/css'/>
+<style type='text/css'>
+"""+defaultStyleSheet +"""
 </style>
 </head>
 <body>
@@ -388,12 +411,18 @@ defaultBlogSkeleton = u"""\
 <head>
 <title>%(title)s</title>
 <!--base-->
+<style type='text/css'>
+"""+defaultStyleSheet +"""
+</style>
 <link rel='stylesheet' href='style.css' type='text/css'/>
 <link rel='stylesheet' href='style_code.css' type='text/css'/>
 <!-- TODO: Style sheets -->
 </head>
 <body>
-<div class='head'><a href="%(homeurl)s"><img alt="%(title)s by %(editor)s" src="banner.png" /></a></div>
+<div class='head'>
+<p><a href="%(homeurl)s">%(title)s</a></p>
+<p>%(description)s by %(editor)s</p>
+</div>
 <ul class='menu'>
 %(taglist)s
 </ul>
@@ -985,10 +1014,12 @@ def generateBlog(blog, blogEntries, tags) :
 		rssItems.append(blogRssEntryScheleton%entry)
 
 	taglist=[(tag,len(entries)) for tag, entries in tagPages.iteritems()]
-	taglist.sort(key=lambda a : a[1],reverse=True)
+#	taglist.sort(key=lambda a : a[1],reverse=True)
+	minTagItems = min(nitems for tag,nitems in taglist)-1
+	maxTagItems = max(nitems for tag,nitems in taglist)
 	blog.taglist = "\n".join([
-		"<li><a href='blog/tag/%s.html'>%s&nbsp;(%i)</a></li>"%(
-			tag,tag,nitems) for tag,nitems in taglist])
+		"<li class='cloud%s'><a href='blog/tag/%s.html'>%s(%i)</a></li>"%(
+			(nitems-minTagItems)*10/maxTagItems,tag,tag,nitems) for tag,nitems in taglist])
 	for entry in blogEntries :
 		blog.htmlentries = "".join(
 			[(blogEntryScheleton % entry)] +

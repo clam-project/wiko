@@ -243,7 +243,7 @@ class BloggerImportWizard (QWizard) :
 			yield "Fetching blog %s"%self.blogId
 
 		# TODO: The 'next' link indicates that there are more entries to fetch
-		feed = self.service.GetFeed('/feeds/%s/posts/default/' % self.blogId )
+		feed = self.service.GetFeed('/feeds/%s/posts/default' % self.blogId )
 
 		import codecs, datetime
 		import os.path
@@ -268,7 +268,7 @@ class BloggerImportWizard (QWizard) :
 		for entry in feed.entry:
 			title = entry.title.text or "No title"
 			id = entry.id.text.split("-")[-1]
-			filename = "blog-"+id+"-"+title.title().translate(string.maketrans(" ","-"),"! ,./:?")
+			filename = "blog-%019i"%int(id)+"-"+title.lower().translate(string.maketrans(" ","-"),"!,./:?")
 			filename += ".wiki" # if entry.content.type is not "html" else ".html"
 			fullfilename = os.path.join(self.targetDir,filename)
 			if stepped: yield "Generating " + filename

@@ -23,6 +23,11 @@ enableHtml = '--nohtml' not in sys.argv
 forceRebuild = '--force' in sys.argv
 embeddedFormulas = '--embed-formulas' in sys.argv
 
+# \marginpar{...} is problematic with two columns. for example in acmmm style:
+# use this to use footnotes instead:
+enableLaTeXMarginNotes = '--no-margin-notes' not in sys.argv
+print "margins?", enableLaTeXMarginNotes
+
 mimetexAvailable = os.system("mimetex 2>&1 > /dev/null") == 0
 if mimetexAvailable: print "Using mimetex locally to generate formulas"
 useRemoteFormulas = not mimetexAvailable or '--remote-formulas' in sys.argv
@@ -652,11 +657,17 @@ class LaTeXCompiler(WikiCompiler) :
 				HtmlVerbatimProcessor())
 			return
 		elif todoMatch :
-			line="\\marginpar{\\footnotesize TODO: %s}"%todoMatch.group(1)
+ 			if enableLaTeXMarginNotes :
+				line="\\marginpar{\\footnotesize TODO: %s}"%todoMatch.group(1)
+			else: 
+				line="\\footnote{\\footnotesize TODO: %s}"%todoMatch.group(1)
 		elif annoMatch :
 			annotator = annoMatch.group(1)
 			text = annoMatch.group(2)
-			line="\\marginpar{\\footnotesize %s: %s}"%(annotator,text)
+ 			if enableLaTeXMarginNotes :
+				line="\\marginpar{\\footnotesize %s: %s}"%(annotator,text)
+			else: 
+				line="\\footnote{\\footnotesize %s: %s}"%(annotator,text)
 		elif labelMatch :
 			line="\label{%s}"%labelMatch.group(1)
 		elif headerMatch :

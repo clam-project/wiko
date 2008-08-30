@@ -172,7 +172,7 @@ inlineLatexSubstitutions = [  # the order is important
 	(r"''(([^']|'[^'])*)''", r"{\\em \1}"),
 	(r"\[\[(\S+)\s([^\]]+)\]\]", r"\2\\footnote{\\url{\1}}"),
 	(r"\[\[(\S+)\]\]", r"\\url{\1}"),
-	(r"@cite:([-+_a-zA-Z0-9]*)", r"\proctect\cite{\1}"),
+	(r"@cite:([-+_a-zA-Z0-9]*)", r"\protect\cite{\1}"),
 	(r"`([^`]+)`", r"$\1$"),
 #	(r"{{{", ur"\\begin{verbatim}"),
 #	(r"}}}", ur"\end{verbatim}"),

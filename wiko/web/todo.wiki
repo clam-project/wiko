@@ -10,6 +10,10 @@
 * '''[done]''' Include the number of comments as entry metadata
 * '''[done]''' Blog configuration file
 * Think on a way for appending new comments
+* Limit the legth/age of the frontpage
+* Include pages not in the frontpage in an archive page
+* Archive sidebar
+* Latest entries sidebar
 
 === Blogger integration ===
 

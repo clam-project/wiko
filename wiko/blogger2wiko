@@ -6,6 +6,7 @@ class Config :
 	useTidy = False
 	server = "www.blogger.com"
 	login = "yourname@gmail.com"
+	targetDir = "blogdump/"
 
 	if os.access("blogger2wiko.config", os.R_OK) :
 		execfile("blogger2wiko.config")
@@ -288,9 +289,9 @@ class BloggerImportWizard (QWizard) :
 		blogconfig.close()
 		import string
 		for entry in feed.entry:
-			id = entry.id.text.split("-")[-1]
+			id = int(entry.id.text.split("-")[-1])
 			title = entry.title.text or "No title"
-			filename = "blog-%019i"%int(id)+"-"+self.permaFormTitle(title)+".wiki"
+			filename = "blog-%019i-%s.wiki"%(id, self.permaFormTitle(title))
 			fullfilename = os.path.join(self.targetDir,filename)
 			if stepped: yield "Generating " + filename
 			blogfile=codecs.open(fullfilename,'w','utf-8')
@@ -308,10 +309,9 @@ class BloggerImportWizard (QWizard) :
 			print >> blogfile
 			content = self.wikify(entry.content.text)
 			print >> blogfile, content
-#			self.getComments(entry.id.text.split("-")[-1])
-#			print dir(entry)
+			blogfile.close()
 		for comment in self.getComments() :
-			commentfilename = "blog/comment-%(id)s"%comment
+			commentfilename = "blog/blog-%(inreplyto)019i-%(id)s.comment"%comment
 			commentfile=codecs.open(commentfilename,'w','utf-8')
 			for key in [
 				'id',
@@ -360,7 +360,9 @@ class BloggerImportWizard (QWizard) :
 		feed_url+= "" if postId is None else '/' + postId
 		feed_url+='/comments/default'
 		feed = self.service.Get(feed_url)
-		print "ignoring", len(feed.entry)-len([entry for entry in feed.entry if entry.extension_elements]), "comment that didn't refer the original article"
+		ignoredComments = len(feed.entry)-len([entry for entry in feed.entry if entry.extension_elements])
+		if ignoredComments :
+			print >> sys.stderr, "Warning: ignoring", ignoredComments, "comment(s) that didn't refer the original article"
 		return [ dict(
 			id = entry.id.text.split("-")[-1],
 			title = entry.title.text,
@@ -368,7 +370,7 @@ class BloggerImportWizard (QWizard) :
 			updated = entry.updated.text,
 			content = self.wikify(entry.content.text),
 			# If more extensions are added this might fail, should take the one with 'tag'=='in-reply-to'
-			inreplyto = entry.extension_elements[0].attributes['ref'],
+			inreplyto = int(entry.extension_elements[0].attributes['ref'].split("-")[-1]),
 			author = ",".join([author.name.text for author in entry.author]),
 			authoremail = ",".join([(author.email and author.email.text) or "" for author in entry.author]),
 			authoruri = ",".join([(author.uri and author.uri.text) or "" for author in entry.author]),
@@ -379,7 +381,7 @@ class BloggerImportWizard (QWizard) :
 def main():
 	app=QApplication(sys.argv)
 	wizard = BloggerImportWizard()
-	wizard.targetDir="blogdump/"
+	wizard.targetDir= Config.targetDir
 	if wizard.exec_() != QDialog.Accepted :
 		exit(-1)
 	exit(0)

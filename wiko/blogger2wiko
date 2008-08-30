@@ -1,6 +1,14 @@
 #!/usr/bin/python
 
-useTidy=False
+
+import os
+class Config :
+	useTidy = False
+	server = "www.blogger.com"
+	login = "yourname@gmail.com"
+
+	if os.access("blogger2wiko.config", os.R_OK) :
+		execfile("blogger2wiko.config")
 
 import sys
 try:
@@ -54,8 +62,8 @@ class LoginPage(QWizardPage) :
 		self.registerField("Login", self.login)
 		self.registerField("Password", self.passwd)
 
-		self.server.setText("www.blogger.com")
-		self.login.setText("yourname@gmail.com")
+		self.server.setText(Config.server)
+		self.login.setText(Config.login)
 		self.passwd.setText("")
 		self.setCommitPage(True)
 		self.setButtonText(QWizard.CommitButton, "&Connect")
@@ -238,6 +246,20 @@ class BloggerImportWizard (QWizard) :
 		self.targetPage = self.addPage(DirectoryPage(self))
 		self.runPage = self.addPage(RunPage(self))
 
+	def permaFormTitle(self, title) :
+		filetitle = title.lower().strip()
+		# Turn punctuation into spaces
+		for char in ur"!,()./\:?" :
+			filetitle = filetitle.replace(char, " ")
+		# Simplify spaces (a better function for that?
+		filetitle = filetitle.strip()
+		filetitle = filetitle.replace('  ', ' ')
+		filetitle = filetitle.replace('  ', ' ')
+		filetitle = filetitle.replace('  ', ' ')
+		# Turn any space into hyphen
+		filetitle = filetitle.replace(' ', '-')
+		return filetitle
+
 	def dump(self, stepped=False) :
 		if stepped :
 			yield "Fetching blog %s"%self.blogId
@@ -266,10 +288,9 @@ class BloggerImportWizard (QWizard) :
 		blogconfig.close()
 		import string
 		for entry in feed.entry:
-			title = entry.title.text or "No title"
 			id = entry.id.text.split("-")[-1]
-			filename = "blog-%019i"%int(id)+"-"+title.lower().translate(string.maketrans(" ","-"),"!,./:?")
-			filename += ".wiki" # if entry.content.type is not "html" else ".html"
+			title = entry.title.text or "No title"
+			filename = "blog-%019i"%int(id)+"-"+self.permaFormTitle(title)+".wiki"
 			fullfilename = os.path.join(self.targetDir,filename)
 			if stepped: yield "Generating " + filename
 			blogfile=codecs.open(fullfilename,'w','utf-8')
@@ -307,7 +328,7 @@ class BloggerImportWizard (QWizard) :
 			print >> commentfile, comment['content']
 
 	def wikify(self, content) :
-		if useTidy:
+		if Config.useTidy:
 			# TODO: This crashes (core dump!) for some files
 			import tidy
 			tidyOptions = dict(
@@ -339,6 +360,7 @@ class BloggerImportWizard (QWizard) :
 		feed_url+= "" if postId is None else '/' + postId
 		feed_url+='/comments/default'
 		feed = self.service.Get(feed_url)
+		print "ignoring", len(feed.entry)-len([entry for entry in feed.entry if entry.extension_elements]), "comment that didn't refer the original article"
 		return [ dict(
 			id = entry.id.text.split("-")[-1],
 			title = entry.title.text,
@@ -348,9 +370,11 @@ class BloggerImportWizard (QWizard) :
 			# If more extensions are added this might fail, should take the one with 'tag'=='in-reply-to'
 			inreplyto = entry.extension_elements[0].attributes['ref'],
 			author = ",".join([author.name.text for author in entry.author]),
-			authoremail = ",".join([author.email.text for author in entry.author]),
-			authoruri = ",".join([author.uri.text for author in entry.author]),
-			) for entry in feed.entry ]
+			authoremail = ",".join([(author.email and author.email.text) or "" for author in entry.author]),
+			authoruri = ",".join([(author.uri and author.uri.text) or "" for author in entry.author]),
+			) for entry in feed.entry
+			if entry.extension_elements # should have the in-reply-to element
+			]
 
 def main():
 	app=QApplication(sys.argv)

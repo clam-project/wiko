@@ -412,6 +412,16 @@ defaultBlogEntrySkeleton = u"""\
 <div>
 %(content)s
 </div>
+<a name="comments"></a>
+<p><b><a href='%(link)s#comments'>%(ncomments)s comments</a></b></p>
+"""
+
+defaultBlogCommentSkeleton = u"""\
+<h3>%(title)s</h3>
+<h4>Comment by <a href="%(authoruri)s">%(author)s</a> on %(published)s</h4>
+<div>
+%(content)s
+</div>
 """
 
 
@@ -945,6 +955,11 @@ def readBlogEntries(blog) :
 		entry["encodedContent"] = escape(entry["content"])
 		# fulluri was: http://vokicodder.blogspot.com/2007/07/simplifying-spectral-processing-in-clam.html
 		entry["fulluri"] = blog.baseurl + "/" + entry["link"]
+		entry["comments"]=[]
+		for commentFile in glob.glob(u"blog/*%s*.comment"%entry['id']) :
+			entry["comments"].append(HtmlCompiler(bibEntries).process(readUtf8(commentFile)))
+		entry["comments"].sort(key=lambda a: a['published'])
+		entry["ncomments"] = len(entry["comments"])
 		blogEntries.append(entry)
 	blogEntries.sort(key=lambda a: a['publishediso'], reverse=True)
 	return blogEntries, tags
@@ -952,6 +967,7 @@ def readBlogEntries(blog) :
 def generateBlog(blog, blogEntries, tags) :
 	if not blogEntries: return
 	tagPages = dict([(tag,[]) for tag in tags])
+	blogCommentScheleton = loadOrDefault("blog/commentScheleton.html", defaultBlogCommentSkeleton)
 	blogEntryScheleton = loadOrDefault("blog/entryScheleton.html", defaultBlogEntrySkeleton)
 	blogScheleton = loadOrDefault("blog/skeleton.html", defaultBlogSkeleton)
 	blogRssEntryScheleton = loadOrDefault("blog/rssEntryScheleton.rss", defaultRssEntrySkeleton)
@@ -974,7 +990,10 @@ def generateBlog(blog, blogEntries, tags) :
 		"<li><a href='blog/tag/%s.html'>%s&nbsp;(%i)</a></li>"%(
 			tag,tag,nitems) for tag,nitems in taglist])
 	for entry in blogEntries :
-		blog.htmlentries = blogEntryScheleton % entry
+		blog.htmlentries = "".join(
+			[(blogEntryScheleton % entry)] +
+			[blogCommentScheleton % comment for comment in entry['comments']]
+			)
 		writeUtf8(entry['link'],blogScheleton % blog.__dict__)
 		
 

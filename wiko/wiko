@@ -172,7 +172,7 @@ inlineLatexSubstitutions = [  # the order is important
 	(r"''(([^']|'[^'])*)''", r"{\\em \1}"),
 	(r"\[\[(\S+)\s([^\]]+)\]\]", r"\2\\footnote{\\url{\1}}"),
 	(r"\[\[(\S+)\]\]", r"\\url{\1}"),
-	(r"@cite:([-+_a-zA-Z0-9]*)", r"\cite{\1}"),
+	(r"@cite:([-+_a-zA-Z0-9]*)", r"\proctect\cite{\1}"),
 	(r"`([^`]+)`", r"$\1$"),
 #	(r"{{{", ur"\\begin{verbatim}"),
 #	(r"}}}", ur"\end{verbatim}"),
@@ -190,6 +190,7 @@ headersHtml = [
 	r"<h2 id='toc_%(n)s'>%(title)s</h2>",
 	r"<h3 id='toc_%(n)s'>%(title)s</h3>",
 	r"<h4 id='toc_%(n)s'>%(title)s</h4>",
+	r"<h5 id='toc_%(n)s'>%(title)s</h5>",
 ]
 headersLatex = [
 	r"\chapter{%(title)s}",

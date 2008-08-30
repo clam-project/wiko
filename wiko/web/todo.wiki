@@ -3,15 +3,18 @@
 
 == Development tasks == 
 
-=== Blog comments ===
+=== Blog mode ===
 
-* Set a convention for blog and comments filenames so that wiki can relate them easily
-* Load the comments and include them on the full blog entries
-* Include the number of comments as entry metadata
+* '''[done]''' Set a convention for blog and comments filenames so that wiki can relate them easily
+* '''[done]''' Load the comments and include them on the full blog entries
+* '''[done]''' Include the number of comments as entry metadata
+* '''[done]''' Blog configuration file
 * Think on a way for appending new comments
 
 === Blogger integration ===
 
+* '''[done]''' Export comments in a way wiko can use them
+* Export more than 25 entries or 25 comments
 * Upload a new blog entry into blogger
 * Obtain the assigned id and published time and modify the wiko entry
 * Update a given blog entry into blogger

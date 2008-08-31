@@ -622,24 +622,34 @@ class LaTeXCompiler(WikiCompiler) :
 			self.closeAnyOpen()
 			flags = [ flag.strip() for flag in figMatch.group(3).split() if flag.strip() ]
 			imageFlags = []
+			widechar = ""
 			if "rotated90" in flags :
 				imageFlags.append("angle=90")
-			if "halfSize" in flags:
+				flags.remove("rotated90")
+			if "halfSize" in flags :
 				imageFlags.append("scale=.5")
+				flags.remove("halfSize")
 			else:
 				imageFlags.append("width=4.8in")
+			if "wide" in flags :
+				widechar = "*"
+				flags.remove("wide")
+			imageFlags+=flags
 			sizeSpecifier = "[" + ",".join(imageFlags) + "]"
 			print "flags:", sizeSpecifier
 			self.openBlock(
-				"\\begin{figure*}[htbp]\n"
+				"\\begin{figure%(wide)s}[htbp]\n"
 				"\\begin{center}\\includegraphics%(size)s{%(img)s}\end{center}\n"
 				"\\caption{%%%%"%{
 					'img': figMatch.group(2),
 					'size': sizeSpecifier,
+					'wide':widechar,
 					},
 				"}\n\\label{%(id)s}\n"
-				"\\end{figure*}\n"%{
-					'id':figMatch.group(1)},
+				"\\end{figure%(wide)s}\n"%{
+					'id':figMatch.group(1),
+					'wide':widechar,
+					},
 				)
 
 			return

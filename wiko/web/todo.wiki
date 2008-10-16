@@ -3,6 +3,14 @@
 
 == Development tasks == 
 
+== User requests ==
+
+* Pablo Barrera: 4 digits on entry links (patch available on list)
+* Pablo Barrera: Make the rss feed validatable  http://www.feedvalidator.org/check.cgi?url=
+* Pablo Barrera: moving the h2 tag inside the toc div to be able to control its display (patch on the list)
+* Pablo Barrera: using the [[Image: ]] syntax for inline images
+
+
 === Blog mode ===
 
 * '''[done]''' Set a convention for blog and comments filenames so that wiki can relate them easily
@@ -37,8 +45,6 @@
 
 * Configuration files
 * Command line options
-
-
 
 
 

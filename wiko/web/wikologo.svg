@@ -2,7 +2,7 @@
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 <svg
    xmlns:dc="http://purl.org/dc/elements/1.1/"
-   xmlns:cc="http://web.resource.org/cc/"
+   xmlns:cc="http://creativecommons.org/ns#"
    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
    xmlns:svg="http://www.w3.org/2000/svg"
    xmlns="http://www.w3.org/2000/svg"
@@ -12,15 +12,23 @@
    height="50mm"
    id="svg2160"
    sodipodi:version="0.32"
-   inkscape:version="0.45.1"
+   inkscape:version="0.46"
    sodipodi:docbase="/home/vokimon/CajitasDeArena/clam/docs/wikiformatter/web"
    sodipodi:docname="wikologo.svg"
    inkscape:output_extension="org.inkscape.output.svg.inkscape"
-   inkscape:export-filename="/home/vokimon/CajitasDeArena/wiko/wikologo.png"
+   inkscape:export-filename="/home/vokimon/CajitasDeArena/wiko/web/wikologo.png"
    inkscape:export-xdpi="90"
    inkscape:export-ydpi="90">
   <defs
-     id="defs3" />
+     id="defs3">
+    <inkscape:perspective
+       sodipodi:type="inkscape:persp3d"
+       inkscape:vp_x="0 : 88.58268 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_z="318.89764 : 88.58268 : 1"
+       inkscape:persp3d-origin="159.44882 : 59.05512 : 1"
+       id="perspective15" />
+  </defs>
   <sodipodi:namedview
      id="base"
      pagecolor="#ffffff"
@@ -29,14 +37,15 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="1"
-     inkscape:cx="164.7789"
+     inkscape:cx="140.7789"
      inkscape:cy="59.814216"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
-     inkscape:window-width="1280"
-     inkscape:window-height="954"
+     inkscape:window-width="1022"
+     inkscape:window-height="667"
      inkscape:window-x="0"
-     inkscape:window-y="0" />
+     inkscape:window-y="0"
+     showgrid="false" />
   <metadata
      id="metadata2164">
     <rdf:RDF>
@@ -45,7 +54,35 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <cc:license
+           rdf:resource="http://creativecommons.org/licenses/by-sa/3.0/" />
+        <dc:title>WiKo Logo</dc:title>
+        <dc:creator>
+          <cc:Agent>
+            <dc:title>David Garcia Garzon</dc:title>
+          </cc:Agent>
+        </dc:creator>
+        <dc:subject>
+          <rdf:Bag>
+            <rdf:li>wiko logo wiki blog</rdf:li>
+          </rdf:Bag>
+        </dc:subject>
       </cc:Work>
+      <cc:License
+         rdf:about="http://creativecommons.org/licenses/by-sa/3.0/">
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#Reproduction" />
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#Distribution" />
+        <cc:requires
+           rdf:resource="http://creativecommons.org/ns#Notice" />
+        <cc:requires
+           rdf:resource="http://creativecommons.org/ns#Attribution" />
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#DerivativeWorks" />
+        <cc:requires
+           rdf:resource="http://creativecommons.org/ns#ShareAlike" />
+      </cc:License>
     </rdf:RDF>
   </metadata>
   <g
@@ -53,7 +90,7 @@
      inkscape:groupmode="layer"
      id="layer1">
     <path
-       style="fill:#d38d5f;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0.2858048pt;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       style="fill:#d38d5f;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;stroke-miterlimit:4;stroke-dasharray:none"
        d="M 43.355711,50.498543 C 47.166441,58.834516 60.598669,117.72578 68.125461,130.52389 C 71.459849,139.09804 79.08131,139.09804 82.415697,137.19267 C 87.979847,134.01316 95.753259,114.32829 95.753259,114.32829 C 95.753259,114.32829 101.41889,128.41308 106.23276,131.95291 C 110.758,134.81096 115.36103,135.62004 122.66654,127.66585 C 129.89386,123.15537 149.81801,38.351838 149.81801,38.351838 L 133.62239,35.017449 C 133.62239,35.017449 120.54075,107.73934 116.19463,114.79239 C 114.03623,119.58895 110.81687,126.62508 101.9335,109.58584 C 100.08291,105.15224 99.787064,103.14397 103.37471,90.034875 C 107.36575,84.141025 93.18744,82.29466 89.958661,87.071274 C 85.555817,106.83021 78.808228,120.88551 75.198178,109.4559 C 68.199244,92.437526 58.598633,40.019032 58.598633,40.019032 L 43.355711,50.498543 z "
        id="path3198"
        sodipodi:nodetypes="ccccccccccccccc" />

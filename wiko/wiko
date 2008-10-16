@@ -149,6 +149,8 @@ def htmlBibliographyText(match) :
 	return "".join(result)%context
 
 inlineHtmlSubstitutions = [  # the order is important
+	(r"%%", r"%"),
+	(r"%([^(])", r"%%"),
 	(r"'''(([^']|'[^']|''[^'])*)'''", r"<b>\1</b>"),
 	(r"''(([^']|'[^'])*)''", r"<em>\1</em>"),
 	(r"\[\[(\S+)\s([^\]]+)\]\]", r"<a href='\1'>\2</a>"),
@@ -168,6 +170,8 @@ inlineHtmlSubstitutions = [  # the order is important
 	(r"^EndTheorem\n*$", r"</div>"),
 ]
 inlineLatexSubstitutions = [  # the order is important
+	(r"%%", r"%"),
+	(r"%([^(])", r"%%"),
 	(r"'''(([^']|'[^']|''[^'])*)'''", r"{\\bf \1}"),
 	(r"''(([^']|'[^'])*)''", r"{\\em \1}"),
 	(r"\[\[(\S+)\s([^\]]+)\]\]", r"\2\\footnote{\\url{\1}}"),

@@ -47,7 +47,7 @@ def formulaUri(latexContent) :
 		return url
 	if not os.access("formulas",os.F_OK) :
 		os.mkdir("formulas")
-	id = formulaIdGen.next()
+	id = formulaIdGen().next()
 	gifname = "formulas/eq%06i.gif"%id
 	print "generating",gifname
 	gif = open(gifname,'wb')

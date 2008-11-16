@@ -36,25 +36,6 @@ print "useRemoteFormulas:", useRemoteFormulas
 def formulaIdGen(): a=0; yield a; a+=1
 def equationIdGen(): a=0; yield a; a+=1
 
-def formulaUri(latexContent) :
-	if useRemoteFormulas :
-		return "http://www.forkosh.dreamhost.com/mimetex.cgi?"+latexContent
-	mimetex = subprocess.Popen(["mimetex","-d",latexContent], stdout=subprocess.PIPE)
-	imageContent=mimetex.stdout.read()
-	if embeddedFormulas :
-		import base64
-		url = "data:image/png;base64,"+ base64.b64encode(imageContent)
-		return url
-	if not os.access("formulas",os.F_OK) :
-		os.mkdir("formulas")
-	id = formulaIdGen().next()
-	gifname = "formulas/eq%06i.gif"%id
-	print "generating",gifname
-	gif = open(gifname,'wb')
-	gif.write(imageContent)
-	gif.close()
-	return gifname
-
 class HtmlVerbatimProcessor :
 	def __init__(self) :
 		self.content=[]
@@ -65,11 +46,30 @@ class HtmlVerbatimProcessor :
 		return ""
 
 class HtmlFormulaProcessor :
+	def _formulaUri(self,latexContent) :
+		if useRemoteFormulas :
+			return "http://www.forkosh.dreamhost.com/mimetex.cgi?"+latexContent
+		mimetex = subprocess.Popen(["mimetex","-d",latexContent], stdout=subprocess.PIPE)
+		imageContent=mimetex.stdout.read()
+		if embeddedFormulas :
+			import base64
+			url = "data:image/png;base64,"+ base64.b64encode(imageContent)
+			return url
+		if not os.access("formulas",os.F_OK) :
+			os.mkdir("formulas")
+		id = formulaIdGen().next()
+		gifname = "formulas/eq%06i.gif"%id
+		print "generating",gifname
+		gif = open(gifname,'wb')
+		gif.write(imageContent)
+		gif.close()
+		return gifname
+
 	def __init__(self, match) :
 		self.content=[]
 	def __call__(self, line) :
 		if line is None:
-			return '"'+formulaUri("\Large{"+"".join(self.content)+"}")+'"'
+			return '"'+self._formulaUri("\Large{"+"".join(self.content)+"}")+'"'
 		self.content.append(line.strip())
 		return ""
 
@@ -109,7 +109,7 @@ def htmlInlineFormula(match) :
 	return '<img class="inlineFormula" src="%s" alt="%s" />'%(formulaUri(formula), formula)
 
 def htmlBibliographyText(match) :
-	print "writing bibliography"
+	"""Writes the html code for a citation to a bibliography entry"""
 	id = match.group(1)
 	context = dict(id=id)
 	# bib file not found
@@ -130,21 +130,7 @@ def htmlBibliographyText(match) :
 		"<span class='tooltip'>",
 	]
 	result += [ "<span class='bibref%s'>%%(%s)s.</span> "%(field,field)
-		for field in [
-			"author", 
-			"title",
-			"school",
-			"booktitle",
-			"journal",
-			"number",
-			"pages",
-			"editor",
-			"location",
-			"address",
-			"month",
-			"year",
-			"url",
-		] if unicode(field,'utf8') in context.keys() ]
+		for field in bibfieldsOrder if field in context.keys() ]
 	result.append("</span></a>")
 	return "".join(result)%context
 
@@ -158,6 +144,7 @@ inlineHtmlSubstitutions = [  # the order is important
 	(r"\[(http://\S+)\s([^\]]+)\]", r"<a href='\1'>\2</a>"),
 	(r"\[(http://\S+)\]", r"<a href='\1'>\1</a>"),
 	(r"@cite:([-+_a-zA-Z0-9]+)", htmlBibliographyText),
+	(r"\\ref{([-+_a-zA-Z0-9:]+)}", r"<a href='#\1'>\1</a>"), # TODO: numbered figures?
 	(r"`([^`]+)`", htmlInlineFormula),
 #	(r"{{{", r"<pre>"),
 #	(r"}}}", r"</pre>"),
@@ -498,6 +485,21 @@ defaultRssEntrySkeleton = u"""\
 </item>
 """
 
+bibfieldsOrder = [ unicode(field,'utf8') for field in [
+	"author", 
+	"title",
+	"school",
+	"booktitle",
+	"journal",
+	"number",
+	"pages",
+	"editor",
+	"location",
+	"address",
+	"month",
+	"year",
+	"url",
+	]]
 
 def stripUtfMarker(content) :
 	import codecs
@@ -890,6 +892,7 @@ def generateHtmlBibliographyPretty(outputFilename, bibfiles) :
 			entry = bibtex.next(file)
 			if entry: yield entry
 			else: return
+
 	entries = {}
 	output = []
 	for filename in bibfiles :
@@ -897,6 +900,7 @@ def generateHtmlBibliographyPretty(outputFilename, bibfiles) :
 		for id, kind, byteOffset, lineOffset, keys in bibIterator(bibfile) :
 			output += [u"<p><a name='%s'></a><b>%s</b> <b>%s</b></p><ul>"%(id,kind,id)]
 			entryDict = {}
+
 			for key, value in keys.iteritems() :
 				expanded = bibtex.expand(bibfile, value, -1)
 				if len(expanded) is 3 :
@@ -906,9 +910,11 @@ def generateHtmlBibliographyPretty(outputFilename, bibfiles) :
 				elif len(expanded) is not 4 : print "Warning: unknown bibliography tuple:", id, key, expanded; continue
 				foo, bar, text, content = expanded
 				if not text : continue
-				text = unicode(text,'utf8')
-				output += [u"<li><b>%s:</b> %s</li>" % (key, text)]
-				entryDict[key]=text
+				entryDict[key]=unicode(text,'utf8')
+			thisEntryFields = [ field for field in bibfieldsOrder if field in entryDict.keys()
+				] +	[ field for field in entryDict.keys() if field not in bibfieldsOrder ]
+			output += ["".join(["<li><b>%s:</b> <span class='bibref%s'>%%(%s)s.</span></li>\n"%(field,field,field) for field in thisEntryFields ]) % entryDict]
+		
 			entryDict["kind"] = kind
 			entries[id] = entryDict
 			output += [ "</ul>" ]
@@ -971,7 +977,7 @@ for contentFile in glob.glob("*.wiki") :
 		texResult = LaTeXCompiler().process(content)
 		writeUtf8(targetTex, texResult['content'])
 
-
+# Blogging with WiKo
 print "Generating blog..."
 
 def readBlogEntries(blog) :
@@ -1093,28 +1099,43 @@ blogEntries, tags = readBlogEntries(blogConfig)
 generateBlog(blogConfig, blogEntries, tags)
 
 
+# Download zones: Listing files in a directory integrated in the web site style.
+
 print "Generating download zones..."
 
-def humanReadableSize(filename) :
-	if os.path.isdir(filename) : return ""
-	sufixes = [
-		("P",1<<50),
-		("T",1<<40),
-		("G",1<<30),
-		("M",1<<20),
-		("K",1<<10),
+class dzConfig :
+	dirs = []
+	blacklist = [
+		"index.html",
+		"style.css",
+		"img",
 	]
-	size = os.path.getsize(filename)
-	for suffix, scale in sufixes:
-		if size/scale > 1.1:
-			return "%.2f %sb"%(float(size)/scale, suffix)
-	return str(size)+" b"
-
-def humanReadableTime(filename) :
-	if os.path.isdir(filename) : return ""
-	return str(datetime.fromtimestamp(os.path.getmtime(filename)))
+	template = skeletonFileName
+	if os.access("downloadZones.wiko", os.R_OK) :
+		execfile("downloadZones.wiko")
 
 def generateDownloadZones(dirs, skeletonFilename, blacklist) :
+	if not dirs : return
+
+	def humanReadableSize(filename) :
+		if os.path.isdir(filename) : return ""
+		sufixes = [
+			("P",1<<50),
+			("T",1<<40),
+			("G",1<<30),
+			("M",1<<20),
+			("K",1<<10),
+		]
+		size = os.path.getsize(filename)
+		for suffix, scale in sufixes:
+			if size/scale > 1.1:
+				return "%.2f %sb"%(float(size)/scale, suffix)
+		return str(size)+" b"
+
+	def humanReadableTime(filename) :
+		if os.path.isdir(filename) : return ""
+		return str(datetime.fromtimestamp(os.path.getmtime(filename)))
+
 	lineTemplate = "<tr><td style='width:100%%'><a href='%(filename)s'>%(filename)s</a></td><td>%(size)s</td><td>%(date)s</td></tr>"
 	skeleton = readUtf8(skeletonFilename)
 	for title, dirname in dirs:
@@ -1145,21 +1166,9 @@ def generateDownloadZones(dirs, skeletonFilename, blacklist) :
 		}
 		writeUtf8(os.path.join(dirname,"index.html"),index)
 
-dzConfig = {
-	'dirs' : [],
-	'blacklist' : [
-		"index.html",
-		"style.css",
-		"img",
-	],
-	'template' : skeletonFileName
-}
-try :
-	dzConfig.update(eval(file("downloadZones.wiko").read()))
-except :
-	pass
-if len(dzConfig['dirs']) :
-	generateDownloadZones(dzConfig['dirs'], dzConfig['template'], dzConfig['blacklist'])
+generateDownloadZones(dzConfig.dirs, dzConfig.template, dzConfig.blacklist)
+
+
 
 #os.system("(cd img; bash ./generate_figures.py)")
 

@@ -1,5 +1,11 @@
 #!/usr/bin/python
 
+"""
+WiKo: this script generates a web pages, PDF article or blog
+considering the files found in the local directory.
+See http://www.iua.upf.edu/~dgarcia/wiko/usage.html
+"""
+
 # Bugs: 
 # * @cite:some at end of line, or @cite:some, something.
 # * don't work with iso encoding only utf8
@@ -485,21 +491,21 @@ defaultRssEntrySkeleton = u"""\
 </item>
 """
 
-bibfieldsOrder = [ unicode(field,'utf8') for field in [
-	"author", 
-	"title",
-	"school",
-	"booktitle",
-	"journal",
-	"number",
-	"pages",
-	"editor",
-	"location",
-	"address",
-	"month",
-	"year",
-	"url",
-	]]
+bibfieldsOrder = [
+	u"author", 
+	u"title",
+	u"school",
+	u"booktitle",
+	u"journal",
+	u"number",
+	u"pages",
+	u"editor",
+	u"location",
+	u"address",
+	u"month",
+	u"year",
+	u"url",
+	]
 
 def stripUtfMarker(content) :
 	import codecs

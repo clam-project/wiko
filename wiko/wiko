@@ -954,11 +954,11 @@ for contentFile in glob.glob("content/*.html") :
 
 # Generate LaTeX and HTML from wiki files
 
-def fileNamesBasesForExtension(extension) :
+def baseFileNamesForExtension(extension) :
 	return set([ os.path.splitext(file)[0] for file in glob.glob("*."+extension) ])
 
 # TeX skeletons are not generated from wiki files
-texSkeletons = fileNamesBasesForExtension("tex") - fileNamesBasesForExtension("wiki")
+texSkeletons = baseFileNamesForExtension("tex") - baseFileNamesForExtension("wiki")
 # ...and contain \documentclass directive
 texSkeletons = [ texSkeleton 
 		for texSkeleton in texSkeletons

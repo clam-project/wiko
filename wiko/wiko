@@ -51,7 +51,7 @@ class HtmlVerbatimProcessor :
 		self.content.append(line)
 		return ""
 
-def formulaUri(self,latexContent) :
+def formulaUri(latexContent) :
 	if useRemoteFormulas :
 		return "http://www.forkosh.dreamhost.com/mimetex.cgi?"+latexContent
 	mimetex = subprocess.Popen(["mimetex","-d",latexContent], stdout=subprocess.PIPE)

@@ -32,7 +32,7 @@ embeddedFormulas = '--embed-formulas' in sys.argv
 # \marginpar{...} is problematic with two columns. for example in acmmm style:
 # use this to use footnotes instead:
 enableLaTeXMarginNotes = '--no-margin-notes' not in sys.argv
-print "margins?", enableLaTeXMarginNotes
+print "LaTeX uses notes on margins?", enableLaTeXMarginNotes
 
 mimetexAvailable = os.system("mimetex 2>&1 > /dev/null") == 0
 if mimetexAvailable: print "Using mimetex locally to generate formulas"
@@ -51,31 +51,30 @@ class HtmlVerbatimProcessor :
 		self.content.append(line)
 		return ""
 
+def formulaUri(self,latexContent) :
+	if useRemoteFormulas :
+		return "http://www.forkosh.dreamhost.com/mimetex.cgi?"+latexContent
+	mimetex = subprocess.Popen(["mimetex","-d",latexContent], stdout=subprocess.PIPE)
+	imageContent=mimetex.stdout.read()
+	if embeddedFormulas :
+		import base64
+		url = "data:image/png;base64,"+ base64.b64encode(imageContent)
+		return url
+	if not os.access("formulas",os.F_OK) :
+		os.mkdir("formulas")
+	id = formulaIdGen().next()
+	gifname = "formulas/eq%06i.gif"%id
+	print "generating",gifname
+	gif = open(gifname,'wb')
+	gif.write(imageContent)
+	gif.close()
+	return gifname
 class HtmlFormulaProcessor :
-	def _formulaUri(self,latexContent) :
-		if useRemoteFormulas :
-			return "http://www.forkosh.dreamhost.com/mimetex.cgi?"+latexContent
-		mimetex = subprocess.Popen(["mimetex","-d",latexContent], stdout=subprocess.PIPE)
-		imageContent=mimetex.stdout.read()
-		if embeddedFormulas :
-			import base64
-			url = "data:image/png;base64,"+ base64.b64encode(imageContent)
-			return url
-		if not os.access("formulas",os.F_OK) :
-			os.mkdir("formulas")
-		id = formulaIdGen().next()
-		gifname = "formulas/eq%06i.gif"%id
-		print "generating",gifname
-		gif = open(gifname,'wb')
-		gif.write(imageContent)
-		gif.close()
-		return gifname
-
 	def __init__(self, match) :
 		self.content=[]
 	def __call__(self, line) :
 		if line is None:
-			return '"'+self._formulaUri("\Large{"+"".join(self.content)+"}")+'"'
+			return '"'+formulaUri("\Large{"+"".join(self.content)+"}")+'"'
 		self.content.append(line.strip())
 		return ""
 

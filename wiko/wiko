@@ -878,7 +878,6 @@ def generateHtmlBibliographyRaw(outputFilename, bibfiles) :
 				id = m.group(1).strip()
 				result += ["<a id='%s' />\n"%id]
 			result.append(line)
-	# TODO: Is it needed to have a 
 	writeUtf8(bibfilename, skeleton%dict(
 		content="<pre>"+"".join(result)+"</pre>",
 		title="Bibliography",
@@ -953,16 +952,17 @@ for contentFile in glob.glob("content/*.html") :
 
 # Generate LaTeX and HTML from wiki files
 
-def baseFileNamesForExtension(extension) :
-	return set([ os.path.splitext(file)[0] for file in glob.glob("*."+extension) ])
 
-# TeX skeletons are not generated from wiki files
-texSkeletons = baseFileNamesForExtension("tex") - baseFileNamesForExtension("wiki")
-# ...and contain \documentclass directive
-texSkeletons = [ texSkeleton 
-		for texSkeleton in texSkeletons
-		if readUtf8(texSkeleton+".tex").find(r"\documentclass") != -1
-	]
+def gatherTeXSkeletons() :
+	def baseFileNamesForExtension(extension) :
+		return set([ os.path.splitext(file)[0] for file in glob.glob("*."+extension) ])
+
+	# TeX skeletons are not generated from wiki files
+	nonGeneratedTeX = baseFileNamesForExtension("tex") - baseFileNamesForExtension("wiki")
+	# ...and contain \documentclass directive
+	return [ tex for tex in nonGeneratedTeX if readUtf8(tex+".tex").find(r" \documentclass") != -1 ]
+
+texSkeletons = gatherTeXSkeletons()
 
 for contentFile in glob.glob("*.wiki") :
 	base = os.path.basename(contentFile)
@@ -1172,7 +1172,6 @@ def generateDownloadZones(dirs, skeletonFilename, blacklist) :
 		writeUtf8(os.path.join(dirname,"index.html"),index)
 
 generateDownloadZones(dzConfig.dirs, dzConfig.template, dzConfig.blacklist)
-
 
 
 #os.system("(cd img; bash ./generate_figures.py)")

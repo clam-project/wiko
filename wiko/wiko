@@ -69,6 +69,7 @@ def formulaUri(latexContent) :
 	gif.write(imageContent)
 	gif.close()
 	return gifname
+
 class HtmlFormulaProcessor :
 	def __init__(self, match) :
 		self.content=[]
@@ -199,6 +200,7 @@ li  = re.compile(r"^([*#]+)(.*)")
 quote = re.compile(r"^[ \t](.*)")
 var = re.compile(r"^@([^:]*): (.*)")
 fig = re.compile(r"^Figure:[\s]*([^\s]+)[\s]*([^\s]+)(.*)");
+figs = re.compile(r"^Figures:[\s]*([^\s]+)[\s]*(.*)");
 todo = re.compile(r"^TODO:[\s]*(.+)");
 anno = re.compile(r"^:([^\s]+):[\s]*(.*)");
 code = re.compile(r"^Code:[\s]*([^\s]+)?");
@@ -598,12 +600,14 @@ class LaTeXCompiler(WikiCompiler) :
 		headerMatch = header.match(line)
 		varMatch = var.match(line)
 		figMatch = fig.match(line)
+		figsMatch = figs.match(line)
 		todoMatch = todo.match(line)
 		annoMatch = anno.match(line)
 		codeMatch = code.match(line)
 		labelMatch = label.match(line)
 		divMatch = div.match(line)
 		preMatch = pre.match(line)
+		import string
 		if liMatch :
 			self.closeAnyOpen()
 			newItemLevel = liMatch.group(1)
@@ -617,7 +621,7 @@ class LaTeXCompiler(WikiCompiler) :
 		if self.closing == r"\end{verbatim}" and line == "}}}" :
 			self.closeAnyOpen()
 			return
-		elif line=="" :
+		elif string.strip(line)=="" :
 			self.closeAnyOpen()
 		elif self.processor : 
 			self.processor(line)
@@ -659,6 +663,29 @@ class LaTeXCompiler(WikiCompiler) :
 				"}\n\\label{%(id)s}\n"
 				"\\end{figure%(wide)s}\n"%{
 					'id':figMatch.group(1),
+					'wide':widechar,
+					},
+				)
+
+			return
+		elif figsMatch :
+			self.closeAnyOpen()
+			images = [ flag.strip() for flag in figsMatch.group(2).split() if flag.strip() ]
+			imageFlags = []
+			widechar = ""
+			imageFlags.append("width=4.8in")
+			sizeSpecifier = "[" + ",".join(imageFlags) + "]"
+			print "flags:", sizeSpecifier
+			self.openBlock((
+				"\\begin{figure%(wide)s}[htbp]\n"
+				+ ("".join(["\\begin{center}\\includegraphics%%(size)s{%s}\end{center}\n"%image for image in images]))
+				+ "\\caption{%%%%")%{
+					'size': sizeSpecifier,
+					'wide':widechar,
+					},
+				"}\n\\label{%(id)s}\n"
+				"\\end{figure%(wide)s}\n"%{
+					'id':figsMatch.group(1),
 					'wide':widechar,
 					},
 				)
@@ -756,6 +783,7 @@ class HtmlCompiler(WikiCompiler) :
 		headerMatch = header.match(line)
 		varMatch = var.match(line)
 		figMatch = fig.match(line)
+		figsMatch = figs.match(line)
 		todoMatch = todo.match(line)
 		annoMatch = anno.match(line)
 		labelMatch = label.match(line)
@@ -792,11 +820,21 @@ class HtmlCompiler(WikiCompiler) :
 		elif figMatch :
 			self.closeAnyOpen()
 			self.openBlock(
-				"<div class='figure' id='%(id)s'><img src='%(img)s' alt='%(id)s'/><br />"%{
-						'id':figMatch.group(1),
-						'img': figMatch.group(2),
-						},
-				"</div>")
+				"<div class='figure' id='%(id)s'><img src='%(img)s' alt='%(id)s'/><br />\n"%{
+					'id':figMatch.group(1),
+					'img': figMatch.group(2),
+					},
+				"</div>\n")
+			return
+		elif figsMatch :
+			self.closeAnyOpen()
+			self.openBlock(
+				("<div class='figure' id='%(id)s'>\n"
+				+"".join(["<img src='%s' alt='%%(id)s'/><br />\n"%image for image in figsMatch.group(2).split()]))
+				%{
+					'id':figsMatch.group(1),
+					},
+				"</div>\n")
 			return
 		elif codeMatch :
 			self.closeAnyOpen()

@@ -12,28 +12,28 @@ converters = [
 	(".dia", ".eps", [
 		"dia -e '%(target)s' -t eps-builtin '%(source)s'",
 		]),
-	(".dia", ".png", [
-		"dia -e '%(target)s' -t png '%(source)s'",
-		]),
+#	(".dia", ".png", [
+#		"dia -e '%(target)s' -t png '%(source)s'",
+#		]),
 	(".dot", ".png", [
 		"dot -Tpng '%(source)s' -o '%(target)s'",
 		"dot -Timap '%(source)s' -o '%(basename)s.imap'",
 		]),
-	(".dot", ".eps", [
-		"dot -Tps '%(source)s' -o '%(target)s'",
-		]),
+#	(".dot", ".eps", [
+#		"dot -Tps '%(source)s' -o '%(target)s'",
+#		]),
 	(".eps", ".pdf", [
 		"epstopdf '%(source)s' -o='%(target)s'",
 		]),
-	(".svg", ".pdf", [
-		"inkscape '%(source)s' --without-gui --export-pdf='%(target)s'",
-		]),
+#	(".svg", ".pdf", [
+#		"inkscape '%(source)s' --without-gui --export-pdf='%(target)s'",
+#		]),
 	(".svg", ".eps", [
 		"inkscape '%(source)s' --without-gui --export-eps='%(target)s'",
 		]),
-	(".svg", ".png", [
-		"inkscape '%(source)s' --without-gui --export-png='%(target)s'",
-		]),
+#	(".svg", ".png", [
+#		"inkscape '%(source)s' --without-gui --export-png='%(target)s'",
+#		]),
 ]
 
 def needsRebuild(target, source, forceRebuild=False) :

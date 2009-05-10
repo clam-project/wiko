@@ -582,6 +582,7 @@ class WikiCompiler :
 		for line in content.splitlines() :
 			self.processLine(line)
 		self.processLine("")
+
 		self.vars["content"] = ("\n".join(self.result)) % {
 			'toc': self.buildToc(),
 		}
@@ -992,6 +993,8 @@ for contentFile in glob.glob("content/*.html") :
 
 
 def gatherTeXSkeletons() :
+	if not enableLaTeX :
+		return []
 	def baseFileNamesForExtension(extension) :
 		return set([ os.path.splitext(file)[0] for file in glob.glob("*."+extension) ])
 

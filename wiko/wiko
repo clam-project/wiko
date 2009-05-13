@@ -47,7 +47,7 @@ class HtmlVerbatimProcessor :
 		self.content=[]
 	def __call__(self, line) :
 		if line is None:
-			return "\n".join(self.content)
+			return "\n".join(self.content).replace("%","%%")
 		self.content.append(line)
 		return ""
 

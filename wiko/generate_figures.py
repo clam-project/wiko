@@ -25,11 +25,11 @@ converters = [
 	(".eps", ".pdf", [
 		"epstopdf '%(source)s' -o='%(target)s'",
 		]),
-#	(".svg", ".pdf", [
-#		"inkscape '%(source)s' --without-gui --export-pdf='%(target)s'",
-#		]),
 	(".svg", ".eps", [
 		"inkscape '%(source)s' --without-gui --export-eps='%(target)s'",
+		]),
+	(".svg", ".pdf", [
+		"inkscape '%(source)s' --without-gui --export-pdf='%(target)s'",
 		]),
 #	(".svg", ".png", [
 #		"inkscape '%(source)s' --without-gui --export-png='%(target)s'",

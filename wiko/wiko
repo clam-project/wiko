@@ -864,7 +864,10 @@ class HtmlCompiler(WikiCompiler) :
 			self.closeAnyOpen()
 			title = headerMatch.group(3)
 			level = len(headerMatch.group(1))
-			n=self.addToc(level,title)
+			if level > 1 :
+				n=self.addToc(level,title)
+			else :
+				n="void"
 			line = self.headerPatterns[level-1]%{
 				"title": title,
 				"n": n,

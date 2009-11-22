@@ -39,8 +39,12 @@ if mimetexAvailable: print "Using mimetex locally to generate formulas"
 useRemoteFormulas = not mimetexAvailable or '--remote-formulas' in sys.argv
 print "useRemoteFormulas:", useRemoteFormulas
 
-def formulaIdGen(): a=0; yield a; a+=1
-def equationIdGen(): a=0; yield a; a+=1
+def idGenerator():
+	a=0
+	while True:
+		yield a
+		a+=1
+formulaIdGen=idGenerator()
 
 class HtmlVerbatimProcessor :
 	def __init__(self) :
@@ -62,7 +66,7 @@ def formulaUri(latexContent) :
 		return url
 	if not os.access("formulas",os.F_OK) :
 		os.mkdir("formulas")
-	id = formulaIdGen().next()
+	id = formulaIdGen.next()
 	gifname = "formulas/eq%06i.gif"%id
 	print "generating",gifname
 	gif = open(gifname,'wb')

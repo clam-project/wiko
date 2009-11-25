@@ -237,6 +237,7 @@ divMarkersHtml = {
 	'Proof'    : ('<div class="proof"><b>Proof:</b>', '</div>'),
 	'Theorem'  : ('<div class="theorem"><b>Theorem:</b>', '</div>'),
 	'Corollary': ('<div class="corollary"><b>Corollary:</b>', '</div>'),
+	'Exercici': ('<div class="exercici"><b>Exercici:</b>', '</div>'),
 }
 
 defaultStyleSheet = u"""

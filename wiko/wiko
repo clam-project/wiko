@@ -24,16 +24,17 @@ import subprocess
 import urllib
 import codecs
 
-enableLaTeX = '--nolatex' not in sys.argv
-enableHtml = '--nohtml' not in sys.argv
-forceRebuild = '--force' in sys.argv
-embeddedFormulas = '--embed-formulas' in sys.argv
+class config :
+	enableLaTeX = '--nolatex' not in sys.argv
+	enableHtml = '--nohtml' not in sys.argv
+	forceRebuild = '--force' in sys.argv
+	embeddedFormulas = True #'--embed-formulas' in sys.argv
+	# \marginpar{...} is problematic with two columns. for example in acmmm style:
+	# use this to use footnotes instead:
+	enableLaTeXMarginNotes = '--no-margin-notes' not in sys.argv
+	forceRemoteFormulas = False
 
-# \marginpar{...} is problematic with two columns. for example in acmmm style:
-# use this to use footnotes instead:
-enableLaTeXMarginNotes = '--no-margin-notes' not in sys.argv
-print "LaTeX uses notes on margins?", enableLaTeXMarginNotes
-
+print "LaTeX uses notes on margins?", config.enableLaTeXMarginNotes
 mimetexAvailable = os.system("mimetex 2>&1 > /dev/null") == 0
 if mimetexAvailable: print "Using mimetex locally to generate formulas"
 useRemoteFormulas = not mimetexAvailable or '--remote-formulas' in sys.argv
@@ -60,7 +61,7 @@ def formulaUri(latexContent) :
 		return "http://www.forkosh.dreamhost.com/mimetex.cgi?"+latexContent
 	mimetex = subprocess.Popen(["mimetex","-d",latexContent], stdout=subprocess.PIPE)
 	imageContent=mimetex.stdout.read()
-	if embeddedFormulas :
+	if config.embeddedFormulas :
 		import base64
 		url = "data:image/png;base64,"+ base64.b64encode(imageContent)
 		return url
@@ -712,14 +713,14 @@ class LaTeXCompiler(WikiCompiler) :
 				HtmlVerbatimProcessor())
 			return
 		elif todoMatch :
- 			if enableLaTeXMarginNotes :
+ 			if config.enableLaTeXMarginNotes :
 				line="\\marginpar{\\footnotesize TODO: %s}"%todoMatch.group(1)
 			else: 
 				line="\\footnote{\\footnotesize TODO: %s}"%todoMatch.group(1)
 		elif annoMatch :
 			annotator = annoMatch.group(1)
 			text = annoMatch.group(2)
- 			if enableLaTeXMarginNotes :
+ 			if config.enableLaTeXMarginNotes :
 				line="\\marginpar{\\footnotesize %s: %s}"%(annotator,text)
 			else: 
 				line="\\footnote{\\footnotesize %s: %s}"%(annotator,text)
@@ -900,7 +901,7 @@ class HtmlCompiler(WikiCompiler) :
 			self.result.append(line)
 
 def needsRebuild(target, source) :
-	if forceRebuild: return True
+	if config.forceRebuild: return True
 	if not os.path.exists(target) : return True
 	if os.path.getmtime(target)<os.path.getmtime(source): return True
 	if not os.access(skeletonFileName, os.F_OK) : return False
@@ -1001,7 +1002,7 @@ for contentFile in glob.glob("content/*.html") :
 
 
 def gatherTeXSkeletons() :
-	if not enableLaTeX :
+	if not config.enableLaTeX :
 		return []
 	def baseFileNamesForExtension(extension) :
 		return set([ os.path.splitext(file)[0] for file in glob.glob("*."+extension) ])
@@ -1021,12 +1022,12 @@ for contentFile in glob.glob("*.wiki") :
 		print target, "is up to date."
 		continue
 	content = readUtf8(contentFile)
-	if enableHtml :
+	if config.enableHtml :
 		print "Generating", target, "from", contentFile, "..."
 		htmlResult = HtmlCompiler(bibEntries).process(content)
 		htmlResult['wikiSource']=contentFile;
 		writeUtf8(target, skeleton%htmlResult)
-	if enableLaTeX and len(texSkeletons):
+	if config.enableLaTeX and len(texSkeletons):
 		print "Generating", targetTex, "from", contentFile, "..."
 		texResult = LaTeXCompiler().process(content)
 		writeUtf8(targetTex, texResult['content'])
@@ -1225,7 +1226,7 @@ generateDownloadZones(dzConfig.dirs, dzConfig.template, dzConfig.blacklist)
 
 #os.system("(cd img; bash ./generate_figures.py)")
 
-if enableLaTeX :
+if config.enableLaTeX :
 	for texSkeleton in texSkeletons :
 		os.system("bibtex %s" % texSkeleton)
 		os.system("pdflatex %s" % texSkeleton)

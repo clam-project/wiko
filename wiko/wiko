@@ -27,18 +27,24 @@ import codecs
 class config :
 	enableLaTeX = '--nolatex' not in sys.argv
 	enableHtml = '--nohtml' not in sys.argv
+	# Force rebuild even if sources are not modified
 	forceRebuild = '--force' in sys.argv
+	# Use a remote formula service instead of generating them with mimetex
+	useRemoteFormulas = '--remote-formulas' in sys.argv
+	# embed the formulas in the html instead of generating image files
 	embeddedFormulas = True #'--embed-formulas' in sys.argv
 	# \marginpar{...} is problematic with two columns. for example in acmmm style:
 	# use this to use footnotes instead:
 	enableLaTeXMarginNotes = '--no-margin-notes' not in sys.argv
-	forceRemoteFormulas = False
 
-print "LaTeX uses notes on margins?", config.enableLaTeXMarginNotes
+	if os.access("config.wiko", os.R_OK) :
+		execfile("config.wiko")
+
+
+# if not mimetexAvailable force remote formulas
 mimetexAvailable = os.system("mimetex 2>&1 > /dev/null") == 0
-if mimetexAvailable: print "Using mimetex locally to generate formulas"
-useRemoteFormulas = not mimetexAvailable or '--remote-formulas' in sys.argv
-print "useRemoteFormulas:", useRemoteFormulas
+if not mimetexAvailable : config.useRemoteFormulas = True
+
 
 def idGenerator():
 	a=0
@@ -57,7 +63,7 @@ class HtmlVerbatimProcessor :
 		return ""
 
 def formulaUri(latexContent) :
-	if useRemoteFormulas :
+	if config.useRemoteFormulas :
 		return "http://www.forkosh.dreamhost.com/mimetex.cgi?"+latexContent
 	mimetex = subprocess.Popen(["mimetex","-d",latexContent], stdout=subprocess.PIPE)
 	imageContent=mimetex.stdout.read()

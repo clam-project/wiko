@@ -23,231 +23,152 @@ import sys
 import subprocess
 import urllib
 import codecs
+from datetime import datetime
+import itertools
+
+def warn(message) :
+	print >> sys.stdout,"\033[31mWarning:\033[0m \033[33m%s\033[0m"%message
+
+def die(message, errorCode=-1) :
+	print >> sys.stdout,"\033[31mCritical error:\033[0m \033[33m%s\033[0m"%message
+	sys.exit(errorCode)
+
+def stripUtfMarker(content) :
+	"""Removes any UTF8 BOM marker if present, which causes 
+	problems when composing several utf8 files"""
+	import codecs
+	return content.replace( unicode(codecs.BOM_UTF8,"utf8"), "")
+
+def readUtf8(filename) :
+	"""Returns unicode content of an utf8 file"""
+#	print "\tReading",filename
+	try :
+		unicodeContent = codecs.open(filename,'r','utf8').read()
+	except UnicodeDecodeError, e :
+		die("Bad UTF8 character found in '%s' at position %i.\nContext:\n\"%s\""%(
+			filename, e.start, e.object[max(0,e.start-20):min(len(e.object),e.end+20)] ))
+	return stripUtfMarker(unicodeContent)
+
+def loadOrDefault(filename, defaultContent) :
+	"""Returns the conent of utf8 file named filename if available or defaultContent if not"""
+	if not os.access(filename, os.R_OK) : return defaultContent
+	return readUtf8(filename)
+
+def writeUtf8(filename, content) :
+	"""Writes unicode content as an utf8 file named filename"""
+	import codecs, os
+#	print "\tGenerating",filename
+	path = filename.split("/")[:-1]
+	for i in range(len(path)) :
+		try : os.mkdir("/".join(path[:i+1]))
+		except: pass
+	basepath='../'*len(path)
+	content=content.replace('<!--base-->','<base href="%s" />'%basepath)
+	codecs.open(filename, "w",'utf8').write(content)
+
+def needsRebuild(target, source) :
+	if config.forceRebuild: return True
+	if not os.path.exists(target) : return True
+	if os.path.getmtime(target)<os.path.getmtime(source): return True
+	if not os.access(config.htmlSkeletonFile, os.F_OK) : return False
+	if os.path.getmtime(target)<os.path.getmtime(config.htmlSkeletonFile) : return True
+	return False
 
 class config :
-	enableLaTeX = '--nolatex' not in sys.argv
-	enableHtml = '--nohtml' not in sys.argv
+	enableLaTeX = True
+	enableHtml = True
+	# If false WiKo won't compile the generated tex files
+	compileLaTeX = True
+	# Disable to use plain latex instead pdflatex
+	usePDFLaTeX = True
 	# Force rebuild even if sources are not modified
-	forceRebuild = '--force' in sys.argv
+	forceRebuild = False
 	# Use a remote formula service instead of generating them with mimetex
-	useRemoteFormulas = '--remote-formulas' in sys.argv
+	useRemoteFormulas = False
 	# embed the formulas in the html instead of generating image files
-	embeddedFormulas = True #'--embed-formulas' in sys.argv
+	embeddedFormulas = False
 	# \marginpar{...} is problematic with two columns. for example in acmmm style:
 	# use this to use footnotes instead:
-	enableLaTeXMarginNotes = '--no-margin-notes' not in sys.argv
+	notesOnFoot = False
+	# The html skeleton file, if present will be used as default page skeleton
+	htmlSkeletonFile = "skeleton.html"
+	# Path containing html fragments to insert into the skeleton
+	htmlContentDir = "content/"
+	generateFigures = True
+	figureDirs = ["figs/"]
 
-	if os.access("config.wiko", os.R_OK) :
-		execfile("config.wiko")
+	class downloads :
+		dirs = []
+		blacklist = [
+			"index.html",
+			"style.css",
+			"img",
+		]
+		template = None
+	class bibliography :
+		fieldsOrder = [
+			u"author", 
+			u"title",
+			u"school",
+			u"booktitle",
+			u"journal",
+			u"number",
+			u"pages",
+			u"editor",
+			u"location",
+			u"address",
+			u"month",
+			u"year",
+			u"url",
+			]
 
+	class blog :
+		title = "Your title here"
+		blogid = "tag:blogger.com,1999:blog-36421488"
+		editor = "You"
+		description = "Your blog description here"
+		lastbuilddate = datetime.utcnow().ctime()
+		baseurl = "http://yourblog.blogspot.com/" # The base url for the blog pages to access them remotely (rss)
+		homeurl = "http://yourblog.blogspot.com/home.html" # The home page for the blog
 
-# if not mimetexAvailable force remote formulas
-mimetexAvailable = os.system("mimetex 2>&1 > /dev/null") == 0
-if not mimetexAvailable : config.useRemoteFormulas = True
+		for configfile in ["blog/blog.config"] :
+			if not os.access(configfile,os.R_OK) : continue
+			try :
+				execfile(configfile)
+			except Exception,e :
+				die("Error loading config file '%s'\n%s"%(configfile,e))
 
-
-def idGenerator():
-	a=0
-	while True:
-		yield a
-		a+=1
-formulaIdGen=idGenerator()
-
-class HtmlVerbatimProcessor :
-	def __init__(self) :
-		self.content=[]
-	def __call__(self, line) :
-		if line is None:
-			return "\n".join(self.content).replace("%","%%")
-		self.content.append(line)
-		return ""
-
-def formulaUri(latexContent) :
-	if config.useRemoteFormulas :
-		return "http://www.forkosh.dreamhost.com/mimetex.cgi?"+latexContent
-	mimetex = subprocess.Popen(["mimetex","-d",latexContent], stdout=subprocess.PIPE)
-	imageContent=mimetex.stdout.read()
-	if config.embeddedFormulas :
-		import base64
-		url = "data:image/png;base64,"+ base64.b64encode(imageContent)
-		return url
-	if not os.access("formulas",os.F_OK) :
-		os.mkdir("formulas")
-	id = formulaIdGen.next()
-	gifname = "formulas/eq%06i.gif"%id
-	print "generating",gifname
-	gif = open(gifname,'wb')
-	gif.write(imageContent)
-	gif.close()
-	return gifname
-
-class HtmlFormulaProcessor :
-	def __init__(self, match) :
-		self.content=[]
-	def __call__(self, line) :
-		if line is None:
-			return '"'+formulaUri("\Large{"+"".join(self.content)+"}")+'"'
-		self.content.append(line.strip())
-		return ""
-
-class HtmlCodeProcessor :
-	def __init__(self, match) :
-		self.content=[]
-		self.language=match.group(1) or "javascript"
-	def __call__(self, line) :
-		if line is not None:
-			self.content.append(line)
-			return ""
+	for configfile in ["config.wiko"] :
+		if not os.access(configfile,os.R_OK) : continue
 		try :
-			from pygments import highlight
-			from pygments.lexers import get_lexer_by_name
-			from pygments.formatters import HtmlFormatter
-		except:
-			print >> sys.stderr, "Warning: Pygments package not available. Generating code without syntax highlighting."
-			return "\n".join(self.content)
-		file("style_code.css",'w').write(HtmlFormatter().get_style_defs('.code'))
+			execfile(configfile)
+		except Exception,e :
+			die("Error loading config file '%s'\n%s"%(configfile,e))
 
-		lexer = get_lexer_by_name(self.language, stripall=True)
-		formatter = HtmlFormatter(linenos=False, cssclass="code")
-		return highlight("\n".join(self.content), lexer, formatter)
 
-class LaTeXCodeProcessor :
-	def __init__(self, match) :
-		self.language=match.group(1) or "javascript"
-		self.content=[]
-	def __call__(self, line) :
-		if line is not None:
-			self.content.append(line)
-			return
-		return "\n".join(self.content)
+# Options whose defaults relate to other options
+if config.downloads.template is None : config.downloads.template = config.htmlSkeletonFile
 
-def htmlInlineFormula(match) :
-	formula = match.group(1)
-	return '<img class="inlineFormula" src="%s" alt="%s" />'%(formulaUri(formula), formula)
+# Command line takes precedence
+if '--nolatex' in sys.argv : config.enableLaTeX = False
+if '--latex' in sys.argv : config.enableLaTeX = True
+if '--embed-formulas' in sys.argv : config.embeddedFormulas = True
+if '--no-latex-compile' in sys.argv : config.compileLaTeX = False
+if '--nohtml' in sys.argv : config.enableHtml = False
+if '--html' in sys.argv : config.enableHtml = True
+if '--force' in sys.argv : config.forceRebuild = True
+if '--no-margin-notes' in sys.argv : config.notesOnFoot = True 
+if '--remote-formulas' in sys.argv : config.useRemoteFormulas = True
+if not config.useRemoteFormulas :
+	# if mimetex is not available, the only option is using remote formulas
+	if os.system("mimetex 2>&1 > /dev/null") != 0 : config.useRemoteFormulas = True
 
-def htmlBibliographyText(match) :
-	"""Writes the html code for a citation to a bibliography entry"""
-	id = match.group(1)
-	context = dict(id=id)
-	# bib file not found
-	if bibEntries is None :
-		print "No bibliography files found:", id
-		return r"<a class='bibref' href='bibliography.bib.html#%(id)s'>[Error %(id)s]<span class='tooltip'>No bibliography file found.</span></a>"%context
-	# using raw bibtex formating (bibtex package not available)
-	if len(bibEntries)==0 :
-		return r"<a class='bibref' href='bibliography.bib.html#%(id)s'>[%(id)s]</a>"%context
-
-	if not bibEntries.has_key(id) :
-		print "Bibliography id not found:", id
-		return r"<a class='bibref' href='bibliography.bib.html#%(id)s'>[Error %(id)s]<span class='tooltip'>BibTeX key not found.</span></a>"%context
-	
-	context.update(bibEntries[id])
-	result = [
-		"<a class='bibref' href='bibliography.bib.html#%(id)s' target='bibliography'>[%(id)s]",
-		"<span class='tooltip'>",
-	]
-	result += [ "<span class='bibref%s'>%%(%s)s.</span> "%(field,field)
-		for field in bibfieldsOrder if field in context.keys() ]
-	result.append("</span></a>")
-	return "".join(result)%context
-
-inlineHtmlSubstitutions = [  # the order is important
-	(r"%%", r"%"),
-	(r"%([^(])", r"%%\1"),
-	(r"'''(([^']|'[^']|''[^'])*)'''", r"<b>\1</b>"),
-	(r"''(([^']|'[^'])*)''", r"<em>\1</em>"),
-	(r"\[\[(\S+)\s([^\]]+)\]\]", r"<a href='\1'>\2</a>"),
-	(r"\[\[(\S+)\]\]", r"<a href='\1'>\1</a>"),
-	(r"\[(http[s]?://\S+)\s([^\]]+)\]", r"<a href='\1'>\2</a>"),
-	(r"\[(http[s]?://\S+)\]", r"<a href='\1'>\1</a>"),
-	(r"@cite:([-+_a-zA-Z0-9]+)", htmlBibliographyText),
-	(r"\\ref{([-+_a-zA-Z0-9:]+)}", r"<a href='#\1'>\1</a>"), # TODO: numbered figures?
-	(r"`([^`]+)`", htmlInlineFormula),
-#	(r"{{{", r"<pre>"),
-#	(r"}}}", r"</pre>"),
-	(r"^@toc\s*$", r"%(toc)s"),
-	(r"^BeginProof\n*$", r"<div class='proof'><b>Proof:</b>"),
-	(r"^EndProof\n*$", r"</div>"),
-	(r"^BeginDefinition\n*$", r"<div class='definition'><b>Definition:</b>"),
-	(r"^EndDefinition\n*$", r"</div>"),
-	(r"^BeginTheorem\n*$", r"<div class='theorem'><b>Theorem:</b>"),
-	(r"^EndTheorem\n*$", r"</div>"),
-]
-inlineLatexSubstitutions = [  # the order is important
-	(r"%%", r"%"),
-	(r"%([^(])", r"%%\1"),
-	(r"'''(([^']|'[^']|''[^'])*)'''", r"{\\bf \1}"),
-	(r"''(([^']|'[^'])*)''", r"{\\em \1}"),
-	(r"\[\[(\S+)\s([^\]]+)\]\]", r"\2\\footnote{\\url{\1}}"),
-	(r"\[\[(\S+)\]\]", r"\\url{\1}"),
-	(r"@cite:([-+_a-zA-Z0-9]*)", r"\protect\cite{\1}"),
-	(r"`([^`]+)`", r"$\1$"),
-#	(r"{{{", ur"\\begin{verbatim}"),
-#	(r"}}}", ur"\end{verbatim}"),
-	(r"^BeginProof\n*$", r"\\begin{pro}"),
-	(r"^EndProof\n*$", r"\\end{pro}"),
-	(r"^BeginDefinition\n*$", r"\\begin{defin}"),
-	(r"^EndDefinition\n*$", r"\\end{defin}"),
-	(r"^BeginTheorem\n*$", r"\\begin{thma}"),
-	(r"^EndTheorem\n*$", r"\\end{thma}"),
-]
-
-header = re.compile(r"^(=+)([*]?)\s*([^=]+?)\s*\1\s*$")
-headersHtml = [
-	r"<h1 id='toc_%(n)s'>%(title)s</h1>",
-	r"<h2 id='toc_%(n)s'>%(title)s</h2>",
-	r"<h3 id='toc_%(n)s'>%(title)s</h3>",
-	r"<h4 id='toc_%(n)s'>%(title)s</h4>",
-	r"<h5 id='toc_%(n)s'>%(title)s</h5>",
-]
-headersLatex = [
-	r"\chapter{%(title)s}",
-	r"\section{%(title)s}",
-	r"\subsection{%(title)s}",
-	r"\subsubsection{%(title)s}",
-]
-
-li  = re.compile(r"^([*#]+)(.*)")
-quote = re.compile(r"^[ \t](.*)")
-var = re.compile(r"^@([^:]*): (.*)")
-fig = re.compile(r"^Figure:[\s]*([^\s]+)[\s]*([^\s]+)(.*)");
-figs = re.compile(r"^Figures:[\s]*([^\s]+)[\s]*(.*)");
-todo = re.compile(r"^TODO:[\s]*(.+)");
-anno = re.compile(r"^:([^\s]+):[\s]*(.*)");
-code = re.compile(r"^Code:[\s]*([^\s]+)?");
-label = re.compile(r"^Label:[\s]*([^\s]+)");
-div = re.compile(r"^([a-zA-Z0-9]+):$")
-pre = re.compile(r"^{{{[\s]*([^\s])*")
-
-divMarkersLatex = {
-	'Abstract' : ('\\begin{abstract}', '\\end{abstract}'),
-	'Keywords' : ('\\begin{keywords}', '\\end{keywords}'),
-	'Equation' : ('\\begin{equation}', '\\end{equation}'),
-#	'Math' : ('\\[', '\\]'),
-	'Theorem': ('\\begin{thma}', '\\end{thma}'),
-	'Lemma': ('\\begin{lem}', '\\end{lem}'),
-	'Corollary': ('\\begin{cor}', '\\end{cor}'),
-	'Proof': ('\\begin{pro}', '\\end{pro}'),
-	'Definition': ('\\begin{defin}', '\\end{defin}'),
-	#TODO: add new keys added in html
-}
-
-divMarkersHtml = {
-	'Abstract' : ('<div class="abstract"><b>Abstract:</b>', '</div>'),
-	'Keywords' : ('<div class="keywords"><b>Keywords:</b>', '</div>'),
-	'Equation' : ("<div class='equation'><img src=", " /><!--<span class='eqnumber'>(123)</span>--></div>", HtmlFormulaProcessor),
-	'Math'     : ("<div class='equation'><img src=", " /></div>", HtmlFormulaProcessor),
-	'TODO'     : ('<div class="todo"><b>TODO:</b>', '</div>'),
-	'Comment'  : ('<div class="comment"><b>Comment:</b>', '</div>'),
-	'Definition'  : ('<div class="definition"><b>Definition:</b>', '</div>'),
-	'Lemma'    : ('<div class="lemma"><b>Lemma:</b>', '</div>'),
-	'Proof'    : ('<div class="proof"><b>Proof:</b>', '</div>'),
-	'Theorem'  : ('<div class="theorem"><b>Theorem:</b>', '</div>'),
-	'Corollary': ('<div class="corollary"><b>Corollary:</b>', '</div>'),
-	'Exercici': ('<div class="exercici"><b>Exercici:</b>', '</div>'),
-}
 
 defaultStyleSheet = u"""
+body {
+	background-color: white;
+	text-color: black;
+}
 .figure {
 	border: solid 1pt grey;
 	display: block;
@@ -327,7 +248,7 @@ span.tooltip
 .bibref:hover > span.tooltip:before
 {
 	float: right;
-	content: url('stock_book_open.png');
+/*	content: url('stock_book_open.png');*/
 	content: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAABmJLR0QA/wD/AP+gvaeTAAAEzUlEQVR42qWWXWgUVxTHfzOT3dnNZvOdDaaGaNG11aiFqG2tkRr6IdiaUCiBiggtFFuFUjQ+VCjSQh9KKS2t9KEfVrAtFRT0oamhjS2FWI2tJjHRGI1JzIe72U2yM9nNzu7O3D54N8QQobYHDhdmmPO7/3PuPWdgYdPq6+ufAUSOyy2Ap4BCwA2o/E/Ttm/f/qyvoFgcPnJc/NF2YQIQQBAoBlyA8l+Dq8AaX0GxeO+Tb0QsFhPdV6+JXH+hAHYBSwDff1WhAmuKyheLDz77VkxOTYn+/n7R3d0tvjxy7IpUsRYofRAV6py1Or+kvGP/wfd5Y2cDkfFxIpEIpmmyemVwVV5BCUA1kCdr8a8BKlBdWrGkY0/Tu9beXS8xOjLC5OQkHo+HdDqNK0dj95t7WoFjgB/wAjnyW2UBvwewqrwq2LFn3zvGgd079FAohOM4pFIpMpkMtm1j2za1T9Qs9ReVZVUUSCW5EpZ1j1SXkwWpQOeu1/eG3nr15fxwKIRlWdi2jeM42LaN1+vFMAzMRNK945XGcE1NzffADSAKmEBc+gBwANgg4S5AUbfU7+Txx1b6Muk0lmURiUTuCWzbNlYqnRgJRUsbXnwhcPHiRYQQC3nZ01vqXgPqgDKpTtMGejsPzbgDYw3PbSo0TZO0BKmqSjwex+Vy0Xc7HC3Kcxc0NNQriUQCw5wmnkgQjydIpTMAhMPjAhR/c/NPW4AfgBkgqQKbRwb7qo6eaDYDgQBut3s2/z6fj8HhO2OZGSOwYf06BUD3eMjPz591XddRUBgaGlR+be8GiM09BCrQ8/fZU/x27vKEoijYto2maUxPT2Oa04Y5Y3nKigvUYDCIZVlEo1EMw8AwDCzLQtNUQuNhzl/qEW2tP6vAp0AGsAGhAkmgLjQyWPXdqZbpyspKNE3D7XbTe2v4pltJFzY2NgKg6zolJSXouj7rjm3T1vYnw6Eok6FhgEuy+EnAVoEU0NX+ywla2y5FVfXu3RsYHLrqdSlrN23cqNzNcRjDMEhZ1mzwHE1laOg2UTPJV4c/VjLpVBNgyDQlAUeVUmaAuonwaNXXx0/HKioqrMikUVT50CI1GAwCEAgE0HWdpEyTqiikUhl6rt/gfEcvscgd5PGdlApSgJMDOFkV55p/pKh00cST1cvMpZWL1mzbtg3LsrAsC0cI/H4/LpcLkQeKqhCKRJicTnLy6OcATXLnMSAh6yBy5I2eVXG980LrydPKWL7Pw/Nbt+LPy0PXdQBisRiapuHxenFsh5v9g5z5vZ2EOZXd/ZTcfVo2RzQJEHKNTYRuHwg8usnd0dWtPbx8hUhaaSVmxsn1ulFVFZ/Ph6qqdPdc40rfAB8d2o/j2E3ALeCOhKTmA+ba6b6OtvKSsvIlLS0t7s6+YS509Ymx8IS4MTQqpoyE4vXq9PTepP1yl2g7e0YBvgBCQESmx84Gm99yXbJblkqvAlYAW5avXr+5el0tLrfuLKtaTEYI8eHBvRqwD/gLGALCMtXO/QCKhOTKhpXtkD45zR4BaqvX1dbFzRi3ejvfBq4Ao1KBkS3u/QDZZ5q86jkS6JGwXAnLlZ04CUzIzmpkj+b8YPez7PDIDiXXHJgu36VlzmcWCs4D/B3Mh2UnmSML6iwUHOAfyqIygtirwoUAAAAASUVORK5CYII=');
 }
 
@@ -482,7 +403,7 @@ defaultRssSkeleton = u"""\
 <description>%(description)s</description>
 <link>%(homeurl)s</link>
 <managingEditor>%(editor)s</managingEditor>
-<generator>%(generator)s</generator>
+<generator>WiKo</generator>
 <openSearch:totalResults>16</openSearch:totalResults>
 <openSearch:startIndex>1</openSearch:startIndex>
 <openSearch:itemsPerPage>25</openSearch:itemsPerPage>
@@ -504,46 +425,28 @@ defaultRssEntrySkeleton = u"""\
 </item>
 """
 
-bibfieldsOrder = [
-	u"author", 
-	u"title",
-	u"school",
-	u"booktitle",
-	u"journal",
-	u"number",
-	u"pages",
-	u"editor",
-	u"location",
-	u"address",
-	u"month",
-	u"year",
-	u"url",
-	]
-
-def stripUtfMarker(content) :
-	import codecs
-	return content.replace( unicode(codecs.BOM_UTF8,"utf8"), "")
-
-def readUtf8(filename) :
-	print "Reading",filename
-	return stripUtfMarker(codecs.open(filename,'r','utf8').read())
-
-def loadOrDefault(filename, defaultContent) :
-	try: return readUtf8(filename)
-	except: return defaultContent
-
-def writeUtf8(filename, content) :
-	import codecs, os
-	print "Generating",filename
-	path = filename.split("/")[:-1]
-	for i in range(len(path)) :
-		try : os.mkdir("/".join(path[:i+1]))
-		except: pass
-	basepath='../'*len(path)
-	content=content.replace('<!--base-->','<base href="%s" />'%basepath)
-	codecs.open(filename, "w",'utf8').write(content)
-
 class WikiCompiler :
+	li  = re.compile(r"^([*#]+)(.*)")
+	quote = re.compile(r"^[ \t](.*)")
+	var = re.compile(r"^@([^:]*): (.*)")
+	fig = re.compile(r"^Figure:[\s]*([^\s]+)[\s]*([^\s]+)(.*)");
+	figs = re.compile(r"^Figures:[\s]*([^\s]+)[\s]*(.*)");
+	todo = re.compile(r"^TODO:[\s]*(.+)");
+	anno = re.compile(r"^:([^\s]+):[\s]*(.*)");
+	code = re.compile(r"^Code:[\s]*([^\s]+)?");
+	label = re.compile(r"^Label:[\s]*([^\s]+)");
+	div = re.compile(r"^([a-zA-Z0-9]+):$")
+	pre = re.compile(r"^{{{[\s]*([^\s])*")
+	header = re.compile(r"^(=+)([*]?)\s*([^=]+?)\s*\1\s*$")
+
+	class VerbatimProcessor :
+		def __init__(self) :
+			self.content=[]
+		def __call__(self, line) :
+			if line is None:
+				return "\n".join(self.content).replace("%","%%")
+			self.content.append(line)
+			return ""
 
 	def compileInlines(self, inlines) :
 		self.inlines = [ (re.compile(wikipattern), substitution) 
@@ -602,24 +505,71 @@ class WikiCompiler :
 
 
 class LaTeXCompiler(WikiCompiler) :
+	class CodeProcessor :
+		def __init__(self, match) :
+			self.language=match.group(1) or "javascript"
+			self.content=[]
+		def __call__(self, line) :
+			if line is not None:
+				self.content.append(line)
+				return
+			return "\n".join(self.content)
+
+	inlineSubstitutions = [  # the order is important
+		(r"%%", r"%"),
+		(r"%([^(])", r"%%\1"),
+		(r"'''(([^']|'[^']|''[^'])*)'''", r"{\\bf \1}"),
+		(r"''(([^']|'[^'])*)''", r"{\\em \1}"),
+		(r"\[\[(\S+)\s([^\]]+)\]\]", r"\2\\footnote{\\url{\1}}"),
+		(r"\[\[(\S+)\]\]", r"\\url{\1}"),
+		(r"@cite:([-+_a-zA-Z0-9]*)", r"\protect\cite{\1}"),
+		(r"`([^`]+)`", r"$\1$"),
+	#	(r"{{{", ur"\\begin{verbatim}"),
+	#	(r"}}}", ur"\end{verbatim}"),
+		(r"^BeginProof\n*$", r"\\begin{pro}"),
+		(r"^EndProof\n*$", r"\\end{pro}"),
+		(r"^BeginDefinition\n*$", r"\\begin{defin}"),
+		(r"^EndDefinition\n*$", r"\\end{defin}"),
+		(r"^BeginTheorem\n*$", r"\\begin{thma}"),
+		(r"^EndTheorem\n*$", r"\\end{thma}"),
+	]
+	headerPatterns = [
+		r"\chapter{%(title)s}",
+		r"\section{%(title)s}",
+		r"\subsection{%(title)s}",
+		r"\subsubsection{%(title)s}",
+	]
+	divMarkers = {
+		'Abstract' : ('\\begin{abstract}', '\\end{abstract}'),
+		'Keywords' : ('\\begin{keywords}', '\\end{keywords}'),
+		'Equation' : ('\\begin{equation}', '\\end{equation}'),
+	#	'Math' : ('\\[', '\\]'),
+		'Theorem': ('\\begin{thma}', '\\end{thma}'),
+		'Lemma': ('\\begin{lem}', '\\end{lem}'),
+		'Corollary': ('\\begin{cor}', '\\end{cor}'),
+		'Proof': ('\\begin{pro}', '\\end{pro}'),
+		'Definition': ('\\begin{defin}', '\\end{defin}'),
+		#TODO: add new keys added in html
+	}
+
+
 	def __init__(self) :
-		self.compileInlines(inlineLatexSubstitutions)
-		self.headerPatterns = headersLatex
+		self.compileInlines(self.inlineSubstitutions)
 		self.processor = None
 	def processLine(self, line) :
 		newItemLevel = ""
-		liMatch = li.match(line)
-		quoteMatch = quote.match(line)
-		headerMatch = header.match(line)
-		varMatch = var.match(line)
-		figMatch = fig.match(line)
-		figsMatch = figs.match(line)
-		todoMatch = todo.match(line)
-		annoMatch = anno.match(line)
-		codeMatch = code.match(line)
-		labelMatch = label.match(line)
-		divMatch = div.match(line)
-		preMatch = pre.match(line)
+		liMatch = self.li.match(line)
+		quoteMatch = self.quote.match(line)
+		headerMatch = self.header.match(line)
+		varMatch = self.var.match(line)
+		figMatch = self.fig.match(line)
+		figsMatch = self.figs.match(line)
+		todoMatch = self.todo.match(line)
+		annoMatch = self.anno.match(line)
+		codeMatch = self.code.match(line)
+		labelMatch = self.label.match(line)
+		divMatch = self.div.match(line)
+		preMatch = self.pre.match(line)
 		import string
 		if liMatch :
 			self.closeAnyOpen()
@@ -664,7 +614,7 @@ class LaTeXCompiler(WikiCompiler) :
 				flags.remove("wide")
 			imageFlags+=flags
 			sizeSpecifier = "[" + ",".join(imageFlags) + "]"
-			print "flags:", sizeSpecifier
+#			print "flags:", sizeSpecifier
 			self.openBlock(
 				"\\begin{figure%(wide)s}[htbp]\n"
 				"\\begin{center}\\includegraphics%(size)s{%(img)s}\end{center}\n"
@@ -709,27 +659,27 @@ class LaTeXCompiler(WikiCompiler) :
 			self.openBlock(
 				r"\begin{lstlisting}",
 				r"\end{lstlisting}",
-				LaTeXCodeProcessor(codeMatch))
+				self.CodeProcessor(codeMatch))
 			return
 		elif preMatch :
 			self.closeAnyOpen()
 			self.openBlock(
 				r"\begin{verbatim}",
 				r"\end{verbatim}",
-				HtmlVerbatimProcessor())
+				self.VerbatimProcessor())
 			return
 		elif todoMatch :
- 			if config.enableLaTeXMarginNotes :
-				line="\\marginpar{\\footnotesize TODO: %s}"%todoMatch.group(1)
-			else: 
+ 			if config.notesOnFoot :
 				line="\\footnote{\\footnotesize TODO: %s}"%todoMatch.group(1)
+			else: 
+				line="\\marginpar{\\footnotesize TODO: %s}"%todoMatch.group(1)
 		elif annoMatch :
 			annotator = annoMatch.group(1)
 			text = annoMatch.group(2)
- 			if config.enableLaTeXMarginNotes :
-				line="\\marginpar{\\footnotesize %s: %s}"%(annotator,text)
-			else: 
+ 			if config.notesOnFoot :
 				line="\\footnote{\\footnotesize %s: %s}"%(annotator,text)
+			else: 
+				line="\\marginpar{\\footnotesize %s: %s}"%(annotator,text)
 		elif labelMatch :
 			line="\label{%s}"%labelMatch.group(1)
 		elif headerMatch :
@@ -744,9 +694,9 @@ class LaTeXCompiler(WikiCompiler) :
 			}
 		elif not liMatch : 
 			if divMatch :
-				if self.openDiv(divMarkersLatex, divMatch) :
+				if self.openDiv(self.divMarkers, divMatch) :
 					return
-				print "Not supported block class '%s'" % divMatch.group(1)
+				warn("Not supported block class '%s'" % divMatch.group(1))
 		# Equilibrate the item level
 		while len(self.itemLevel) != len(newItemLevel) :
 			self.closeAnyOpen()
@@ -763,9 +713,135 @@ class LaTeXCompiler(WikiCompiler) :
 
 
 class HtmlCompiler(WikiCompiler) :
+
+	class CodeProcessor :
+		def __init__(self, match) :
+			self.content=[]
+			self.language=match.group(1) or "javascript"
+		def __call__(self, line) :
+			if line is not None:
+				self.content.append(line)
+				return ""
+			try :
+				from pygments import highlight
+				from pygments.lexers import get_lexer_by_name
+				from pygments.formatters import HtmlFormatter
+			except:
+				warn("Warning: Pygments package not available. Generating code without syntax highlighting.")
+				return "\n".join(self.content)
+			file("style_code.css",'w').write(HtmlFormatter().get_style_defs('.code'))
+
+			lexer = get_lexer_by_name(self.language, stripall=True)
+			formatter = HtmlFormatter(linenos=False, cssclass="code")
+			return highlight("\n".join(self.content), lexer, formatter)
+
+	# TODO: make it per document formulas/docbase/00000.png
+	formulaIdGen=itertools.count()
+	@staticmethod
+	def formulaUri(latexContent) :
+		if config.useRemoteFormulas :
+			return "http://www.forkosh.dreamhost.com/mimetex.cgi?"+latexContent
+		mimetex = subprocess.Popen(["mimetex","-d",latexContent], stdout=subprocess.PIPE)
+		imageContent=mimetex.stdout.read()
+		if config.embeddedFormulas :
+			import base64
+			url = "data:image/png;base64,"+ base64.b64encode(imageContent)
+			return url
+		if not os.access("formulas",os.F_OK) :
+			os.mkdir("formulas")
+		id = HtmlCompiler.formulaIdGen.next()
+		gifname = "formulas/eq%06i.gif"%id
+		print "\t\tgenerating",gifname
+		gif = open(gifname,'wb')
+		gif.write(imageContent)
+		gif.close()
+		return gifname
+
+	class HtmlFormulaProcessor :
+		def __init__(self, match) :
+			self.content=[]
+		def __call__(self, line) :
+			if line is None:
+				return '"'+HtmlCompiler.formulaUri("\Large{"+"".join(self.content)+"}")+'"'
+			self.content.append(line.strip())
+			return ""
+
+	def htmlBibliographyText(match) :
+		"""Writes the html code for a citation to a bibliography entry"""
+		id = match.group(1)
+		context = dict(id=id)
+		# bib file not found
+		if bibEntries is None :
+			warn("No bibliography files found: %s"%id)
+			return ur"<a class='bibref' href='bibliography.bib.html#%(id)s'>[Error %(id)s]<span class='tooltip'>No bibliography file found.</span></a>"%context
+		# using raw bibtex formating (bibtex package not available)
+		if len(bibEntries)==0 :
+			return ur"<a class='bibref' href='bibliography.bib.html#%(id)s'>[%(id)s]</a>"%context
+
+		if not bibEntries.has_key(id) :
+			warn("Bibliography id not found: %s"%id)
+			return ur"<a class='bibref' href='bibliography.bib.html#%(id)s'>[Error %(id)s]<span class='tooltip'>BibTeX key not found.</span></a>"%context
+		
+		context.update(bibEntries[id])
+		result = [
+			u"<a class='bibref' href='bibliography.bib.html#%(id)s' target='bibliography'>[%(id)s]",
+			u"<span class='tooltip'>",
+		]
+		result += [ u"<span class='bibref%s'>%%(%s)s.</span> "%(field,field)
+			for field in config.bibliography.fieldsOrder if field in context.keys() ]
+		result.append("</span></a>")
+		return "".join(result)%context
+
+	def _htmlInlineFormula(match) :
+		formula = match.group(1)
+		return '<img class="inlineFormula" src="%s" alt="%s" />'%(HtmlCompiler.formulaUri(formula), formula)
+
+	inlineSubstitutions = [  # the order is important
+		(r"%%", r"%"),
+		(r"%([^(])", r"%%\1"),
+		(r"'''(([^']|'[^']|''[^'])*)'''", r"<b>\1</b>"),
+		(r"''(([^']|'[^'])*)''", r"<em>\1</em>"),
+		(r"\[\[(\S+)\s([^\]]+)\]\]", r"<a href='\1'>\2</a>"),
+		(r"\[\[(\S+)\]\]", r"<a href='\1'>\1</a>"),
+		(r"\[(http[s]?://\S+)\s([^\]]+)\]", r"<a href='\1'>\2</a>"),
+		(r"\[(http[s]?://\S+)\]", r"<a href='\1'>\1</a>"),
+		(r"@cite:([-+_a-zA-Z0-9]+)", htmlBibliographyText),
+		(r"\\ref{([-+_a-zA-Z0-9:]+)}", r"<a href='#\1'>\1</a>"), # TODO: numbered figures?
+		(r"`([^`]+)`", _htmlInlineFormula),
+	#	(r"{{{", r"<pre>"),
+	#	(r"}}}", r"</pre>"),
+		(r"^@toc\s*$", r"%(toc)s"),
+		(r"^BeginProof\n*$", r"<div class='proof'><b>Proof:</b>"),
+		(r"^EndProof\n*$", r"</div>"),
+		(r"^BeginDefinition\n*$", r"<div class='definition'><b>Definition:</b>"),
+		(r"^EndDefinition\n*$", r"</div>"),
+		(r"^BeginTheorem\n*$", r"<div class='theorem'><b>Theorem:</b>"),
+		(r"^EndTheorem\n*$", r"</div>"),
+	]
+	headerPatterns = [
+		r"<h1 id='toc_%(n)s'>%(title)s</h1>",
+		r"<h2 id='toc_%(n)s'>%(title)s</h2>",
+		r"<h3 id='toc_%(n)s'>%(title)s</h3>",
+		r"<h4 id='toc_%(n)s'>%(title)s</h4>",
+		r"<h5 id='toc_%(n)s'>%(title)s</h5>",
+	]
+	divMarkers = {
+		'Abstract' : ('<div class="abstract"><b>Abstract:</b>', '</div>'),
+		'Keywords' : ('<div class="keywords"><b>Keywords:</b>', '</div>'),
+		'Equation' : ("<div class='equation'><img src=", " /><!--<span class='eqnumber'>(123)</span>--></div>", HtmlFormulaProcessor),
+		'Math'     : ("<div class='equation'><img src=", " /></div>", HtmlFormulaProcessor),
+		'TODO'     : ('<div class="todo"><b>TODO:</b>', '</div>'),
+		'Comment'  : ('<div class="comment"><b>Comment:</b>', '</div>'),
+		'Definition'  : ('<div class="definition"><b>Definition:</b>', '</div>'),
+		'Lemma'    : ('<div class="lemma"><b>Lemma:</b>', '</div>'),
+		'Proof'    : ('<div class="proof"><b>Proof:</b>', '</div>'),
+		'Theorem'  : ('<div class="theorem"><b>Theorem:</b>', '</div>'),
+		'Corollary': ('<div class="corollary"><b>Corollary:</b>', '</div>'),
+		'Exercici': ('<div class="exercici"><b>Exercici:</b>', '</div>'),
+	}
+
 	def __init__(self, bibEntries={}) :
-		self.compileInlines(inlineHtmlSubstitutions)
-		self.headerPatterns = headersHtml
+		self.compileInlines(self.inlineSubstitutions)
 		self.bibEntries = bibEntries
 		self.processor = None
 	def buildToc(self) :
@@ -791,18 +867,18 @@ class HtmlCompiler(WikiCompiler) :
 
 	def processLine(self, line) :
 		newItemLevel = ""
-		liMatch = li.match(line)
-		quoteMatch = quote.match(line)
-		headerMatch = header.match(line)
-		varMatch = var.match(line)
-		figMatch = fig.match(line)
-		figsMatch = figs.match(line)
-		todoMatch = todo.match(line)
-		annoMatch = anno.match(line)
-		labelMatch = label.match(line)
-		codeMatch = code.match(line)
-		divMatch = div.match(line)
-		preMatch = pre.match(line)
+		liMatch = self.li.match(line)
+		quoteMatch = self.quote.match(line)
+		headerMatch = self.header.match(line)
+		varMatch = self.var.match(line)
+		figMatch = self.fig.match(line)
+		figsMatch = self.figs.match(line)
+		todoMatch = self.todo.match(line)
+		annoMatch = self.anno.match(line)
+		labelMatch = self.label.match(line)
+		codeMatch = self.code.match(line)
+		divMatch = self.div.match(line)
+		preMatch = self.pre.match(line)
 		if self.closing == "</pre>" and line == "}}}" :
 			self.closeAnyOpen()
 			return
@@ -814,7 +890,7 @@ class HtmlCompiler(WikiCompiler) :
 			return
 		elif varMatch :
 			self.vars[varMatch.group(1)] = varMatch.group(2)
-			print "Var '%s': %s"%(varMatch.group(1),varMatch.group(2))
+#			print "Var '%s': %s"%(varMatch.group(1),varMatch.group(2))
 			return
 		if liMatch :
 			self.closeAnyOpen()
@@ -854,14 +930,14 @@ class HtmlCompiler(WikiCompiler) :
 			self.openBlock(
 				"<code>",
 				"</code>",
-				HtmlCodeProcessor(codeMatch))
+				self.CodeProcessor(codeMatch))
 			return
 		elif preMatch :
 			self.closeAnyOpen()
 			self.openBlock(
 				"<pre>",
 				"</pre>",
-				HtmlVerbatimProcessor())
+				self.VerbatimProcessor())
 			return
 		elif todoMatch :
 			line=" <span class='todo'>TODO: %s</span> "%todoMatch.group(1)
@@ -887,9 +963,9 @@ class HtmlCompiler(WikiCompiler) :
 			}
 		elif not liMatch : 
 			if divMatch :
-				if self.openDiv(divMarkersHtml, divMatch) :
+				if self.openDiv(self.divMarkers, divMatch) :
 					return
-				print "Not supported block class '%s'" % divMatch.group(1)
+				warn("Not supported block class '%s'" % divMatch.group(1))
 			elif self.closing == "" :
 				self.openBlock("<p>","</p>")
 		# Equilibrate the item level
@@ -906,20 +982,13 @@ class HtmlCompiler(WikiCompiler) :
 			line = self.substituteInlines(line)	
 			self.result.append(line)
 
-def needsRebuild(target, source) :
-	if config.forceRebuild: return True
-	if not os.path.exists(target) : return True
-	if os.path.getmtime(target)<os.path.getmtime(source): return True
-	if not os.access(skeletonFileName, os.F_OK) : return False
-	if os.path.getmtime(target)<os.path.getmtime(skeletonFileName) : return True
-	return False
-
-def generateHtmlBibliography(outputFilename, bibfiles) :
-	if not bibfiles : return
-	print "Generating HTML bibliography..."
+def generateHtmlBibliography(outputFilename) :
+	bibFiles = glob.glob("*.bib")
+	print "Gathering bibliography, found %i bib files..."%len(bibFiles)
+	if not bibFiles : return
 	try: import _bibtex as bibtex
-	except: return generateHtmlBibliographyRaw(outputFilename, bibfiles)
-	return generateHtmlBibliographyPretty(outputFilename, bibfiles)
+	except: return generateHtmlBibliographyRaw(outputFilename, bibFiles)
+	return generateHtmlBibliographyPretty(outputFilename, bibFiles)
 
 def generateHtmlBibliographyRaw(outputFilename, bibfiles) :
 	result = []
@@ -965,12 +1034,13 @@ def generateHtmlBibliographyPretty(outputFilename, bibfiles) :
 					expanded = tuple(list(expanded)+[None])
 				elif len(expanded) is 6 : # year
 					expanded = expanded[0:-2]
-				elif len(expanded) is not 4 : print "Warning: unknown bibliography tuple:", id, key, expanded; continue
+				elif len(expanded) is not 4 : warn("unknown bibliography tuple: %s %s %s"%(id, key, expanded)); continue
 				foo, bar, text, content = expanded
 				if not text : continue
 				entryDict[key]=unicode(text,'utf8')
-			thisEntryFields = [ field for field in bibfieldsOrder if field in entryDict.keys()
-				] +	[ field for field in entryDict.keys() if field not in bibfieldsOrder ]
+			thisEntryFields = [
+				field for field in config.bibliography.fieldsOrder if field in entryDict.keys() ] + [
+				field for field in entryDict.keys() if field not in config.bibliography.fieldsOrder ]
 			output += ["".join(["<li><b>%s:</b> <span class='bibref%s'>%%(%s)s.</span></li>\n"%(field,field,field) for field in thisEntryFields ]) % entryDict]
 		
 			entryDict["kind"] = kind
@@ -988,24 +1058,20 @@ def generateHtmlBibliographyPretty(outputFilename, bibfiles) :
 	return entries
 
 
-skeletonFileName = "skeleton.html"
-skeleton = loadOrDefault(skeletonFileName, defaultSkeleton)
-
-# Generate bibliography
-bibEntries = generateHtmlBibliography("bibliography.bib.html", glob.glob("*.bib"))
-
 # Generate HTML with HTML content files + skeleton
-for contentFile in glob.glob("content/*.html") :
-	target = os.path.basename(contentFile)
-	if not needsRebuild(target, contentFile) :
-		print target, "is up to date."
-		continue
-	print "Generating", target, "from", contentFile, "..."
-	content = readUtf8(contentFile)
-	writeUtf8(target, skeleton%{'title':'', 'author':'','content':content})
+def generateHtmlBasedPages() :
+	htmlFragments = glob.glob(os.path.join(config.htmlContentDir,"*.html"))
+	print "Generating %i html based pages..."%len(htmlFragments)
+	for contentFile in htmlFragments :
+		target = os.path.basename(contentFile)
+		if not needsRebuild(target, contentFile) :
+			print "\t%s is up to date."%target
+			continue
+		print "\tGenerating", target, "from", contentFile, "..."
+		content = readUtf8(contentFile)
+		writeUtf8(target, skeleton%{'title':'', 'author':'','content':content})
 
 # Generate LaTeX and HTML from wiki files
-
 
 def gatherTeXSkeletons() :
 	if not config.enableLaTeX :
@@ -1016,30 +1082,29 @@ def gatherTeXSkeletons() :
 	# TeX skeletons are not generated from wiki files
 	nonGeneratedTeX = baseFileNamesForExtension("tex") - baseFileNamesForExtension("wiki")
 	# ...and contain \documentclass directive
-	return [ tex for tex in nonGeneratedTeX if readUtf8(tex+".tex").find(r" \documentclass") != -1 ]
+	return [ tex for tex in nonGeneratedTeX if readUtf8(tex+".tex").find(r"\documentclass") != -1 ]
 
-texSkeletons = gatherTeXSkeletons()
-
-for contentFile in glob.glob("*.wiki") :
-	base = os.path.basename(contentFile)
-	target = "".join(os.path.splitext(base)[0:-1])+".html"
-	targetTex = "".join(os.path.splitext(base)[0:-1])+".tex"
-	if not needsRebuild(target, contentFile) :
-		print target, "is up to date."
-		continue
-	content = readUtf8(contentFile)
-	if config.enableHtml :
-		print "Generating", target, "from", contentFile, "..."
-		htmlResult = HtmlCompiler(bibEntries).process(content)
-		htmlResult['wikiSource']=contentFile;
-		writeUtf8(target, skeleton%htmlResult)
-	if config.enableLaTeX and len(texSkeletons):
-		print "Generating", targetTex, "from", contentFile, "..."
-		texResult = LaTeXCompiler().process(content)
-		writeUtf8(targetTex, texResult['content'])
-
+def generateWikiFiles() :
+	wikifiles = glob.glob("*.wiki")
+	print "Generating html and tex from %i wiki files..."%len(wikifiles)
+	for contentFile in glob.glob("*.wiki") :
+		base = os.path.basename(contentFile)
+		target = "".join(os.path.splitext(base)[0:-1])+".html"
+		targetTex = "".join(os.path.splitext(base)[0:-1])+".tex"
+		if not needsRebuild(target, contentFile) :
+			print "\t%s is up to date."%target
+			continue
+		content = readUtf8(contentFile)
+		if config.enableHtml :
+			print "\tGenerating", target, "from", contentFile, "..."
+			htmlResult = HtmlCompiler(bibEntries).process(content)
+			htmlResult['wikiSource']=contentFile;
+			writeUtf8(target, skeleton%htmlResult)
+		if config.enableLaTeX and len(texSkeletons):
+			print "\tGenerating", targetTex, "from", contentFile, "..."
+			texResult = LaTeXCompiler().process(content)
+			writeUtf8(targetTex, texResult['content'])
 # Blogging with WiKo
-print "Generating blog..."
 
 def readBlogEntries(blog) :
 	blogEntries = []
@@ -1066,7 +1131,7 @@ def readBlogEntries(blog) :
 			try :
 				publishedTime = datetime.strptime( os.path.basename(contentFile)[:16], "%Y-%m-%d-%H-%M")
 			except ValueError :
-				print >> sys.stderr, "Warning: Cannot deduce publication date for '%s', using current time."%contentFile
+				warn("Cannot deduce publication date for '%s', using current time."%contentFile)
 				publishedTime = datetime.utcnow()
 		try :
 			updatedTime = datetime.strptime(entry['updated'], "%Y-%m-%d %H:%M:%S")
@@ -1139,45 +1204,13 @@ def generateBlog(blog, blogEntries, tags) :
 		blog.htmlentries = "\n".join([tagNotice%(tag,blog.indexpage)]+tagEntries)
 		writeUtf8("blog/tag/%s.html"%tag,blogScheleton%blog.__dict__)
 
-from datetime import datetime
-# TODO: Should be a config file with default values
-class blogConfig :
-	title = "Your title here"
-	blogid = "tag:blogger.com,1999:blog-36421488"
-	editor = "You"
-	description = "Your blog description here"
-	generator = "WiKo"
-	lastbuilddate = datetime.utcnow().ctime()
-	baseurl = "http://yourblog.blogspot.com/" # The base url for the blog pages to access them remotely (rss)
-	homeurl = "http://yourblog.blogspot.com/home.html" # The home page for the blog
-
-	for configfile in ["blog/blog.config"] :
-		if not os.access(configfile,os.R_OK) : continue
-		execfile(configfile)
-
-
-blogEntries, tags = readBlogEntries(blogConfig)
-generateBlog(blogConfig, blogEntries, tags)
 
 
 # Download zones: Listing files in a directory integrated in the web site style.
 
-print "Generating download zones..."
-
-class dzConfig :
-	dirs = []
-	blacklist = [
-		"index.html",
-		"style.css",
-		"img",
-	]
-	template = skeletonFileName
-	if os.access("downloadZones.wiko", os.R_OK) :
-		execfile("downloadZones.wiko")
-
 def generateDownloadZones(dirs, skeletonFilename, blacklist) :
+	print "Generating %i download zones..."%len(dirs)
 	if not dirs : return
-
 	def humanReadableSize(filename) :
 		if os.path.isdir(filename) : return ""
 		sufixes = [
@@ -1202,7 +1235,7 @@ def generateDownloadZones(dirs, skeletonFilename, blacklist) :
 	for title, dirname in dirs:
 		dirname = os.path.expanduser(dirname)
 		if not os.access(dirname, os.X_OK):
-			print "Not available: %s"%dirname
+			warn("Not available: %s"%dirname)
 			continue
 		print "Generating download index at '%s'"%dirname
 		files = os.listdir(dirname)
@@ -1227,14 +1260,41 @@ def generateDownloadZones(dirs, skeletonFilename, blacklist) :
 		}
 		writeUtf8(os.path.join(dirname,"index.html"),index)
 
-generateDownloadZones(dzConfig.dirs, dzConfig.template, dzConfig.blacklist)
+def generateFigures() :
+	if not config.generateFigures : return
+	print "Generating figures..."
+	for dir in config.figureDirs :
+		if not os.access(dir, os.R_OK) :
+			warn("Figure directory '%s' not available"%dir)
+			continue
+		error = os.system("generate_figures.py %s"%dir)
+		if error : warn("Unable to generate the figures at '%s'"%dir)
 
-
-#os.system("(cd img; bash ./generate_figures.py)")
-
-if config.enableLaTeX :
+def compileLaTeX() :
+	if not config.enableLaTeX : return
+	if not config.compileLaTeX : return
 	for texSkeleton in texSkeletons :
 		os.system("bibtex %s" % texSkeleton)
-		os.system("pdflatex %s" % texSkeleton)
+		if config.usePDFLaTeX :
+			os.system("pdflatex %s" % texSkeleton)
+		else :
+			os.system("latex %s" % texSkeleton)
+
+if __name__ == "__main__" :
+	skeleton = loadOrDefault(config.htmlSkeletonFile, defaultSkeleton)
+	# Generate bibliography
+	bibEntries = generateHtmlBibliography("bibliography.bib.html")
+	generateHtmlBasedPages()
+	texSkeletons = gatherTeXSkeletons()
+	print "Found %i main tex files"% len(texSkeletons)
+	generateWikiFiles()
+	print "Generating blog..."
+	blogEntries, tags = readBlogEntries(config.blog)
+	generateBlog(config.blog, blogEntries, tags)
+	generateDownloadZones(config.downloads.dirs, config.downloads.template, config.downloads.blacklist)
+	generateFigures()
+	compileLaTeX()
+
+
 
 

@@ -87,14 +87,16 @@ class config :
 	useRemoteFormulas = False
 	# embed the formulas in the html instead of generating image files
 	embeddedFormulas = False
-	# \marginpar{...} is problematic with two columns. for example in acmmm style:
+	# \marginpar{...} is problematic with two columns. For example in acmmm style.
 	# use this to use footnotes instead:
 	notesOnFoot = False
 	# The html skeleton file, if present will be used as default page skeleton
 	htmlSkeletonFile = "skeleton.html"
 	# Path containing html fragments to insert into the skeleton
 	htmlContentDir = "content/"
+	# Whether to generate figures (requires generate_figures.py in the PATH)
 	generateFigures = True
+	# A list of directories containing figures to be converted
 	figureDirs = ["figs/"]
 
 	class downloads :
@@ -320,9 +322,7 @@ defaultSkeleton = u"""
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
     "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" >
-
 <!-- USING DEFAULT WIKO SKELETON. skeleton.html NOT FOUND -->
-
 <head>
 <title>%(title)s</title>
 <!--base-->
@@ -392,7 +392,6 @@ defaultBlogCommentSkeleton = u"""\
 </div>
 """
 
-
 defaultRssSkeleton = u"""\
 <?xml version='1.0' encoding='UTF-8'?>
 <rss xmlns:atom='http://www.w3.org/2005/Atom' xmlns:openSearch='http://a9.com/-/spec/opensearchrss/1.0/' version='2.0'>
@@ -449,7 +448,7 @@ class WikiCompiler :
 			return ""
 
 	def compileInlines(self, inlines) :
-		self.inlines = [ (re.compile(wikipattern), substitution) 
+		self.inlines = [ (re.compile(wikipattern), (substitution(self) if callable(substitution) else substitution )) 
 			for wikipattern, substitution in inlines  ]
 	def substituteInlines(self, line) :
 		for compiledPattern, substitution in self.inlines :
@@ -539,7 +538,7 @@ class LaTeXCompiler(WikiCompiler) :
 		r"\subsection{%(title)s}",
 		r"\subsubsection{%(title)s}",
 	]
-	divMarkers = {
+	specialParagraphs = { # start, stop, processor class (optional)
 		'Abstract' : ('\\begin{abstract}', '\\end{abstract}'),
 		'Keywords' : ('\\begin{keywords}', '\\end{keywords}'),
 		'Equation' : ('\\begin{equation}', '\\end{equation}'),
@@ -551,7 +550,6 @@ class LaTeXCompiler(WikiCompiler) :
 		'Definition': ('\\begin{defin}', '\\end{defin}'),
 		#TODO: add new keys added in html
 	}
-
 
 	def __init__(self) :
 		self.compileInlines(self.inlineSubstitutions)
@@ -694,7 +692,7 @@ class LaTeXCompiler(WikiCompiler) :
 			}
 		elif not liMatch : 
 			if divMatch :
-				if self.openDiv(self.divMarkers, divMatch) :
+				if self.openDiv(self.specialParagraphs, divMatch) :
 					return
 				warn("Not supported block class '%s'" % divMatch.group(1))
 		# Equilibrate the item level
@@ -757,7 +755,7 @@ class HtmlCompiler(WikiCompiler) :
 		gif.close()
 		return gifname
 
-	class HtmlFormulaProcessor :
+	class FormulaProcessor :
 		def __init__(self, match) :
 			self.content=[]
 		def __call__(self, line) :
@@ -766,23 +764,29 @@ class HtmlCompiler(WikiCompiler) :
 			self.content.append(line.strip())
 			return ""
 
-	def htmlBibliographyText(match) :
+	class InlineFormulaSubstitution :
+		def __init__(self, compiler) :
+			self.compiler = compiler
+		def __call__(self, match) :
+			formula = match.group(1)
+			return '<img class="inlineFormula" src="%s" alt="%s" />'%(HtmlCompiler.formulaUri(formula), formula)
+
+	def _citeSubstitution(self, id) :
 		"""Writes the html code for a citation to a bibliography entry"""
-		id = match.group(1)
 		context = dict(id=id)
 		# bib file not found
-		if bibEntries is None :
+		if self.bibEntries is None :
 			warn("No bibliography files found: %s"%id)
 			return ur"<a class='bibref' href='bibliography.bib.html#%(id)s'>[Error %(id)s]<span class='tooltip'>No bibliography file found.</span></a>"%context
 		# using raw bibtex formating (bibtex package not available)
-		if len(bibEntries)==0 :
+		if len(self.bibEntries)==0 :
 			return ur"<a class='bibref' href='bibliography.bib.html#%(id)s'>[%(id)s]</a>"%context
 
-		if not bibEntries.has_key(id) :
+		if not self.bibEntries.has_key(id) :
 			warn("Bibliography id not found: %s"%id)
 			return ur"<a class='bibref' href='bibliography.bib.html#%(id)s'>[Error %(id)s]<span class='tooltip'>BibTeX key not found.</span></a>"%context
 		
-		context.update(bibEntries[id])
+		context.update(self.bibEntries[id])
 		result = [
 			u"<a class='bibref' href='bibliography.bib.html#%(id)s' target='bibliography'>[%(id)s]",
 			u"<span class='tooltip'>",
@@ -792,9 +796,12 @@ class HtmlCompiler(WikiCompiler) :
 		result.append("</span></a>")
 		return "".join(result)%context
 
-	def _htmlInlineFormula(match) :
-		formula = match.group(1)
-		return '<img class="inlineFormula" src="%s" alt="%s" />'%(HtmlCompiler.formulaUri(formula), formula)
+	class CiteSubstitution :
+		def __init__(self, compiler) :
+			self.compiler = compiler
+		def __call__(self, match) :
+			id = match.group(1)
+			return self.compiler._citeSubstitution(id)
 
 	inlineSubstitutions = [  # the order is important
 		(r"%%", r"%"),
@@ -805,9 +812,9 @@ class HtmlCompiler(WikiCompiler) :
 		(r"\[\[(\S+)\]\]", r"<a href='\1'>\1</a>"),
 		(r"\[(http[s]?://\S+)\s([^\]]+)\]", r"<a href='\1'>\2</a>"),
 		(r"\[(http[s]?://\S+)\]", r"<a href='\1'>\1</a>"),
-		(r"@cite:([-+_a-zA-Z0-9]+)", htmlBibliographyText),
+		(r"@cite:([-+_a-zA-Z0-9]+)", CiteSubstitution),
 		(r"\\ref{([-+_a-zA-Z0-9:]+)}", r"<a href='#\1'>\1</a>"), # TODO: numbered figures?
-		(r"`([^`]+)`", _htmlInlineFormula),
+		(r"`([^`]+)`", InlineFormulaSubstitution),
 	#	(r"{{{", r"<pre>"),
 	#	(r"}}}", r"</pre>"),
 		(r"^@toc\s*$", r"%(toc)s"),
@@ -825,11 +832,11 @@ class HtmlCompiler(WikiCompiler) :
 		r"<h4 id='toc_%(n)s'>%(title)s</h4>",
 		r"<h5 id='toc_%(n)s'>%(title)s</h5>",
 	]
-	divMarkers = {
+	specialParagraphs = { # start, stop, processor class (optional)
 		'Abstract' : ('<div class="abstract"><b>Abstract:</b>', '</div>'),
 		'Keywords' : ('<div class="keywords"><b>Keywords:</b>', '</div>'),
-		'Equation' : ("<div class='equation'><img src=", " /><!--<span class='eqnumber'>(123)</span>--></div>", HtmlFormulaProcessor),
-		'Math'     : ("<div class='equation'><img src=", " /></div>", HtmlFormulaProcessor),
+		'Equation' : ("<div class='equation'><img src=", " /><!--<span class='eqnumber'>(123)</span>--></div>", FormulaProcessor),
+		'Math'     : ("<div class='equation'><img src=", " /></div>", FormulaProcessor),
 		'TODO'     : ('<div class="todo"><b>TODO:</b>', '</div>'),
 		'Comment'  : ('<div class="comment"><b>Comment:</b>', '</div>'),
 		'Definition'  : ('<div class="definition"><b>Definition:</b>', '</div>'),
@@ -841,8 +848,8 @@ class HtmlCompiler(WikiCompiler) :
 	}
 
 	def __init__(self, bibEntries={}) :
-		self.compileInlines(self.inlineSubstitutions)
 		self.bibEntries = bibEntries
+		self.compileInlines(self.inlineSubstitutions)
 		self.processor = None
 	def buildToc(self) :
 		result = []
@@ -963,7 +970,7 @@ class HtmlCompiler(WikiCompiler) :
 			}
 		elif not liMatch : 
 			if divMatch :
-				if self.openDiv(self.divMarkers, divMatch) :
+				if self.openDiv(self.specialParagraphs, divMatch) :
 					return
 				warn("Not supported block class '%s'" % divMatch.group(1))
 			elif self.closing == "" :
@@ -982,15 +989,15 @@ class HtmlCompiler(WikiCompiler) :
 			line = self.substituteInlines(line)	
 			self.result.append(line)
 
-def generateHtmlBibliography(outputFilename) :
+def generateHtmlBibliography(outputFilename, skeleton) :
 	bibFiles = glob.glob("*.bib")
 	print "Gathering bibliography, found %i bib files..."%len(bibFiles)
 	if not bibFiles : return
 	try: import _bibtex as bibtex
-	except: return generateHtmlBibliographyRaw(outputFilename, bibFiles)
-	return generateHtmlBibliographyPretty(outputFilename, bibFiles)
+	except: return generateHtmlBibliographyRaw(outputFilename, bibFiles, skeleton)
+	return generateHtmlBibliographyPretty(outputFilename, bibFiles, skeleton)
 
-def generateHtmlBibliographyRaw(outputFilename, bibfiles) :
+def generateHtmlBibliographyRaw(outputFilename, bibfiles, skeleton) :
 	result = []
 	bibfilename = "bibliography.bib.html"
 	entry = re.compile(r"@\w*{([^,]*),")
@@ -1012,7 +1019,7 @@ def generateHtmlBibliographyRaw(outputFilename, bibfiles) :
 		))
 	return {} # no hoverable bibliography
 
-def generateHtmlBibliographyPretty(outputFilename, bibfiles) :
+def generateHtmlBibliographyPretty(outputFilename, bibfiles, skeleton) :
 	import _bibtex as bibtex
 	def bibIterator( file ) :
 		while True :
@@ -1072,7 +1079,6 @@ def generateHtmlBasedPages() :
 		writeUtf8(target, skeleton%{'title':'', 'author':'','content':content})
 
 # Generate LaTeX and HTML from wiki files
-
 def gatherTeXSkeletons() :
 	if not config.enableLaTeX :
 		return []
@@ -1084,7 +1090,7 @@ def gatherTeXSkeletons() :
 	# ...and contain \documentclass directive
 	return [ tex for tex in nonGeneratedTeX if readUtf8(tex+".tex").find(r"\documentclass") != -1 ]
 
-def generateWikiFiles() :
+def generateWikiFiles(skeleton, bibEntries) :
 	wikifiles = glob.glob("*.wiki")
 	print "Generating html and tex from %i wiki files..."%len(wikifiles)
 	for contentFile in glob.glob("*.wiki") :
@@ -1100,13 +1106,14 @@ def generateWikiFiles() :
 			htmlResult = HtmlCompiler(bibEntries).process(content)
 			htmlResult['wikiSource']=contentFile;
 			writeUtf8(target, skeleton%htmlResult)
-		if config.enableLaTeX and len(texSkeletons):
+		if config.enableLaTeX :
 			print "\tGenerating", targetTex, "from", contentFile, "..."
 			texResult = LaTeXCompiler().process(content)
 			writeUtf8(targetTex, texResult['content'])
+
 # Blogging with WiKo
 
-def readBlogEntries(blog) :
+def readBlogEntries(blog, bibEntries) :
 	blogEntries = []
 	tags=set()
 	blog.comments=[
@@ -1270,7 +1277,7 @@ def generateFigures() :
 		error = os.system("generate_figures.py %s"%dir)
 		if error : warn("Unable to generate the figures at '%s'"%dir)
 
-def compileLaTeX() :
+def compileLaTeX(texSkeletons) :
 	if not config.enableLaTeX : return
 	if not config.compileLaTeX : return
 	for texSkeleton in texSkeletons :
@@ -1280,21 +1287,24 @@ def compileLaTeX() :
 		else :
 			os.system("latex %s" % texSkeleton)
 
-if __name__ == "__main__" :
+def main() :
 	skeleton = loadOrDefault(config.htmlSkeletonFile, defaultSkeleton)
 	# Generate bibliography
-	bibEntries = generateHtmlBibliography("bibliography.bib.html")
+	bibEntries = generateHtmlBibliography("bibliography.bib.html",skeleton)
 	generateHtmlBasedPages()
 	texSkeletons = gatherTeXSkeletons()
+	if not texSkeletons : config.enableLaTeX = False
 	print "Found %i main tex files"% len(texSkeletons)
-	generateWikiFiles()
+	generateWikiFiles(skeleton, bibEntries)
 	print "Generating blog..."
-	blogEntries, tags = readBlogEntries(config.blog)
+	blogEntries, tags = readBlogEntries(config.blog, bibEntries)
 	generateBlog(config.blog, blogEntries, tags)
 	generateDownloadZones(config.downloads.dirs, config.downloads.template, config.downloads.blacklist)
 	generateFigures()
-	compileLaTeX()
+	compileLaTeX(texSkeletons)
 
+if __name__ == "__main__" :
+	main()
 
 
 

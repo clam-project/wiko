@@ -248,17 +248,18 @@ class BloggerImportWizard (QWizard) :
 		self.runPage = self.addPage(RunPage(self))
 
 	def permaFormTitle(self, title) :
-		filetitle = title.lower().strip()
+		filetitle = unicode(title, 'utf-8')
+		filetitle = filetitle.lower().strip()
 		# Turn punctuation into spaces
 		for char in ur"!,()./\:?" :
-			filetitle = filetitle.replace(char, " ")
+			filetitle = filetitle.replace(char, u" ")
 		# Simplify spaces (a better function for that?
 		filetitle = filetitle.strip()
-		filetitle = filetitle.replace('  ', ' ')
-		filetitle = filetitle.replace('  ', ' ')
-		filetitle = filetitle.replace('  ', ' ')
+		filetitle = filetitle.replace(u'  ', u' ')
+		filetitle = filetitle.replace(u'  ', u' ')
+		filetitle = filetitle.replace(u'  ', u' ')
 		# Turn any space into hyphen
-		filetitle = filetitle.replace(' ', '-')
+		filetitle = filetitle.replace(u' ', u'-')
 		return filetitle
 
 	def dump(self, stepped=False) :
@@ -274,44 +275,49 @@ class BloggerImportWizard (QWizard) :
 		blogconfig=codecs.open(configfilename,'w','utf-8')
 		links = dict([(link.rel, link.href) for link in feed.link])
 		if stepped : yield "Title: '%s' Subtitle: '%s'" % ( feed.title.text, feed.subtitle.text)
-		print >> blogconfig, "blogid = '%s'" % feed.id.text
-		print >> blogconfig, "title = '%s'" % feed.title.text
-		print >> blogconfig, "description = '%s' " % feed.subtitle.text
-		print >> blogconfig, "generator = '%s'" % feed.generator.text # TODO: blogger2wiko?
-		print >> blogconfig, "editor = '%s'" % ', '.join([author.name.text for author in feed.author])
-		print >> blogconfig, "editorEmail = '%s'" % ', '.join([author.email.text for author in feed.author])
-		print >> blogconfig, "editorUri = '%s'" % ', '.join([author.uri.text for author in feed.author])
-		print >> blogconfig, "blogtags = '%s'" % ', '.join([category.text for category in feed.category])
-		print >> blogconfig, "contributor = '%s'" % ', '.join([contributor.name.text for contributor in feed.contributor])
-		print >> blogconfig, "homeurl = '%s'" % links['alternate']
-		print >> blogconfig, "updated = '%s'" % feed.updated.text
+		def dumpConfig(name, value) :
+			print >> blogconfig, u"%s = '%s'" % (name, unicode(value,'utf-8'))
+		dumpConfig("blogid", feed.id.text)
+		dumpConfig("title", feed.title.text)
+		dumpConfig("description", feed.subtitle.text)
+		dumpConfig("generator", feed.generator.text) # TODO: blogger2wiko?
+		dumpConfig("editor", ', '.join([author.name.text for author in feed.author]))
+		dumpConfig("editorEmail", ', '.join([author.email.text for author in feed.author]))
+		dumpConfig("editorUri", ', '.join([author.uri.text for author in feed.author]))
+		dumpConfig("blogtags", ', '.join([category.text for category in feed.category]))
+		dumpConfig("contributor", ', '.join([contributor.name.text for contributor in feed.contributor]))
+		dumpConfig("homeurl", links['alternate'])
+		dumpConfig("updated", feed.updated.text)
 		print "\n".join(str(link) for link in feed.link)
 		blogconfig.close()
 		import string
 		for entry in feed.entry:
 			id = int(entry.id.text.split("-")[-1])
-			title = entry.title.text or "No title"
-			filename = "blog-%019i-%s.wiki"%(id, self.permaFormTitle(title))
+			print entry.title.text
+			title = entry.title.text or u"No title"
+			filename = u"blog-%019i-%s.wiki"%(id, self.permaFormTitle(title))
 			fullfilename = os.path.join(self.targetDir,filename)
 			if stepped: yield "Generating " + filename
 			blogfile=codecs.open(fullfilename,'w','utf-8')
-			print >> blogfile, "@id:", id
-			
-			print >> blogfile, "@author:", (", ".join([author.name.text for author in entry.author]))
-#			print >> blogfile, "@authoremail:", (", ".join([author.email.text for author in entry.author if author.email]))
-#			print >> blogfile, "@authoruri:", (", ".join([author.uri.href for author in entry.author if author.uri]))
-#			print >> blogfile, "@contributor:", (", ".join([contrib.name.text for contrib in entry.contributor]))
-#			print >> blogfile, "@source:", entry.source and entry.source.text
-			print >> blogfile, "@title: " + title
-			print >> blogfile, "@updated:", datetime.datetime.strptime(entry.updated.text[:19], "%Y-%m-%dT%H:%M:%S").strftime("%Y-%m-%d %H:%M:%S")
-			print >> blogfile, "@published:", datetime.datetime.strptime(entry.published.text[:19], "%Y-%m-%dT%H:%M:%S").strftime("%Y-%m-%d %H:%M:%S")
-			print >> blogfile, "@tags:", (", ".join([category.term for category in entry.category]))
+			def dumpBlogVar(name, value) :
+				print >> blogfile, u"@%s: %s"%(name, unicode(value,'utf-8'))
+			dumpBlogVar("id", str(id))
+			dumpBlogVar("author", (", ".join([author.name.text for author in entry.author])))
+#			dumpBlogVar("authoremail", (", ".join([author.email.text for author in entry.author if author.email])))
+#			dumpBlogVar("authoruri", (", ".join([author.uri.href for author in entry.author if author.uri])))
+#			dumpBlogVar("contributor", (", ".join([contrib.name.text for contrib in entry.contributor])))
+#			dumpBlogVar("source", entry.source and entry.source.text)
+			dumpBlogVar("title", title)
+			dumpBlogVar("updated", datetime.datetime.strptime(entry.updated.text[:19], "%Y-%m-%dT%H:%M:%S").strftime("%Y-%m-%d %H:%M:%S"))
+			dumpBlogVar("published", datetime.datetime.strptime(entry.published.text[:19], "%Y-%m-%dT%H:%M:%S").strftime("%Y-%m-%d %H:%M:%S"))
+			dumpBlogVar("tags", (", ".join([category.term for category in entry.category])))
 			print >> blogfile
-			content = self.wikify(entry.content.text)
+			content = self.wikify(unicode(entry.content.text,'utf-8'))
 			print >> blogfile, content
 			blogfile.close()
 		for comment in self.getComments() :
-			commentfilename = "blog/blog-%(inreplyto)019i-%(id)s.comment"%comment
+			commentfilename = os.path.join(self.targetDir,"blog-%(inreplyto)019i-%(id)s.comment"%comment)
+			print "Generating comment %s"%commentfilename
 			commentfile=codecs.open(commentfilename,'w','utf-8')
 			for key in [
 				'id',
@@ -323,9 +329,9 @@ class BloggerImportWizard (QWizard) :
 				"authoruri",
 				"authoremail",
 				] :
-				print >> commentfile, "@%s:"%key, comment[key]
+				print >> commentfile, "@%s:"%key, unicode(str(comment[key]),'utf-8')
 			print >> commentfile
-			print >> commentfile, comment['content']
+			print >> commentfile, unicode(comment['content'],'utf-8')
 
 	def wikify(self, content) :
 		if Config.useTidy:
@@ -340,14 +346,14 @@ class BloggerImportWizard (QWizard) :
 			tidy.parseString(content+"\n", **tidyOptions)
 		import re
 		substitutions = [
-			(r'<a\s+href\s*=\s*"([^"]+)">([^<]+)\s*<\s*/\s*a\s*>', r"[[\1 \2]]"),
-			(r"<a\s+href\s*=\s*'([^']+)'>([^<]+)\s*<\s*/\s*a\s*>", r"[[\1 \2]]"),
-			(r'<br />', "\n"),
-			('<p>', "\n\n"),
-			('</p>', ""),
-#			('<pre>', "Code:\n"),
-#			('</pre>', ""),
-			('%', '%%'),
+			(ur'<a\s+href\s*=\s*"([^"]+)">([^<]+)\s*<\s*/\s*a\s*>', ur"[[\1 \2]]"),
+			(ur"<a\s+href\s*=\s*'([^']+)'>([^<]+)\s*<\s*/\s*a\s*>", ur"[[\1 \2]]"),
+			(ur'<br />', "\n"),
+			(u'<p>', "\n\n"),
+			(u'</p>', ""),
+#			(u'<pre>', "Code:\n"),
+#			(u'</pre>', ""),
+			(u'%', '%%'),
 		]
 		substitutions = [(re.compile(old), new) for old, new in substitutions]
 		for old, new in substitutions :

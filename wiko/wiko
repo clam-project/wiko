@@ -25,6 +25,7 @@ import urllib
 import codecs
 from datetime import datetime
 import itertools
+import string
 
 def warn(message) :
 	print >> sys.stdout,"\033[31mWarning:\033[0m \033[33m%s\033[0m"%message
@@ -550,6 +551,19 @@ class LaTeXCompiler(WikiCompiler) :
 		'Definition': ('\\begin{defin}', '\\end{defin}'),
 		#TODO: add new keys added in html
 	}
+	if config.notesOnFoot :
+		todoTemplate= r"\footnote{\footnotesize TODO: %(text)s}"
+		noteTemplate= r"\footnote{\footnotesize %(annotator)s: %(text)s}"
+	else: 
+		todoTemplate= r"\marginpar{\footnotesize TODO: %(text)s}"
+		noteTemplate= r"\marginpar{\footnotesize %(annotator)s: %(text)s}"
+	labelTemplate= r"\label{%(label)s}"
+	codeMarkers = (	r"\begin{lstlisting}", r"\end{lstlisting}")
+	preMarkers = ( r"\begin{verbatim}", r"\end{verbatim}")
+	quoteMarkers = (r"\begin{quotation}", r"\end{quotation}")
+	itemTemplate = r"%s\item %s"
+	orderedMarquers = (r"\begin{enumerate}", "\end{enumerate}")
+	unordererMarquers = (r"\begin{itemize}", "\end{itemize}")
 
 	def __init__(self) :
 		self.compileInlines(self.inlineSubstitutions)
@@ -564,22 +578,21 @@ class LaTeXCompiler(WikiCompiler) :
 		figsMatch = self.figs.match(line)
 		todoMatch = self.todo.match(line)
 		annoMatch = self.anno.match(line)
-		codeMatch = self.code.match(line)
 		labelMatch = self.label.match(line)
+		codeMatch = self.code.match(line)
 		divMatch = self.div.match(line)
 		preMatch = self.pre.match(line)
-		import string
 		if liMatch :
 			self.closeAnyOpen()
 			newItemLevel = liMatch.group(1)
-			line = "%s\item %s" %("\t"*len(newItemLevel), liMatch.group(2) )
+			line = self.itemTemplate %("\t"*len(newItemLevel), liMatch.group(2) )
 		while len(newItemLevel) < len(self.itemLevel) or  \
 				self.itemLevel != newItemLevel[0:len(self.itemLevel)]:
 #			print "pop '"+self.itemLevel+"','"+newItemLevel+"'"
-			tag = "itemize" if self.itemLevel[-1] == "*" else "enumerate"
-			self.result.append("%s\\end{%s}"%("\t"*(len(self.itemLevel)-1),tag))
+			endMarker = unordererMarquers[1] if self.itemLevel[-1] == "*" else orderedMarquers[1]
+			self.result.append("\t"*(len(self.itemLevel)-1) + endMarker)
 			self.itemLevel=self.itemLevel[0:-1]
-		if self.closing == r"\end{verbatim}" and line == "}}}" :
+		if self.closing == self.preMarkers[1] and line == "}}}" :
 			self.closeAnyOpen()
 			return
 		elif string.strip(line)=="" :
@@ -591,8 +604,8 @@ class LaTeXCompiler(WikiCompiler) :
 			self.vars[varMatch.group(1)] = varMatch.group(2)
 			return
 		elif quoteMatch:
-			if self.closing != "\\end{quotation}" :
-				self.openBlock("\\begin{quotation}", "\\end{quotation}")
+			if self.closing != self.quoteMarkers[1] :
+				self.openBlock(self.quoteMarkers[0], self.quoteMarkers[1])
 			line=line[1:] # remove the quotation indicator space
 		elif figMatch :
 			self.closeAnyOpen()
@@ -654,32 +667,25 @@ class LaTeXCompiler(WikiCompiler) :
 			return
 		elif codeMatch :
 			self.closeAnyOpen()
-			self.openBlock(
-				r"\begin{lstlisting}",
-				r"\end{lstlisting}",
-				self.CodeProcessor(codeMatch))
+			self.openBlock( self.codeMarkers[0], self.codeMarkers[1], self.CodeProcessor(codeMatch))
 			return
 		elif preMatch :
 			self.closeAnyOpen()
-			self.openBlock(
-				r"\begin{verbatim}",
-				r"\end{verbatim}",
-				self.VerbatimProcessor())
+			self.openBlock( self.preMarkers[0], self.preMarkers[1], self.VerbatimProcessor())
 			return
 		elif todoMatch :
- 			if config.notesOnFoot :
-				line="\\footnote{\\footnotesize TODO: %s}"%todoMatch.group(1)
-			else: 
-				line="\\marginpar{\\footnotesize TODO: %s}"%todoMatch.group(1)
+			line = self.todoTemplate%dict(
+				text=todoMatch.group(1),
+			)
 		elif annoMatch :
-			annotator = annoMatch.group(1)
-			text = annoMatch.group(2)
- 			if config.notesOnFoot :
-				line="\\footnote{\\footnotesize %s: %s}"%(annotator,text)
-			else: 
-				line="\\marginpar{\\footnotesize %s: %s}"%(annotator,text)
+			line = self.noteTemplate%dict(
+				annotator = annoMatch.group(1),
+				text = annoMatch.group(2),
+			)
 		elif labelMatch :
-			line="\label{%s}"%labelMatch.group(1)
+			line = self.labelTemplate % dict(
+				label = labelMatch.group(1),
+			)
 		elif headerMatch :
 			self.closeAnyOpen()
 			title = headerMatch.group(3)
@@ -700,8 +706,8 @@ class LaTeXCompiler(WikiCompiler) :
 			self.closeAnyOpen()
 #			print "push '"+self.itemLevel+"','"+newItemLevel+"'"
 			levelToAdd = newItemLevel[len(self.itemLevel)]
-			tag = "itemize" if levelToAdd == "*" else "enumerate"
-			self.result.append("%s\\begin{%s}"%("\t"*len(self.itemLevel),tag))
+			beginMarker = unordererMarquers[0] if self.itemLevel[-1] == "*" else orderedMarquers[0]
+			self.result.append("\t"*len(self.itemLevel)+beginMarker)
 			self.itemLevel += levelToAdd
 		if self.processor :
 			self.processor(line)
@@ -745,10 +751,11 @@ class HtmlCompiler(WikiCompiler) :
 			import base64
 			url = "data:image/png;base64,"+ base64.b64encode(imageContent)
 			return url
-		if not os.access("formulas",os.F_OK) :
-			os.mkdir("formulas")
+		formulasDir = "formulas"
+		if not os.access(formulasDir,os.F_OK) :
+			os.mkdir(formulasDir)
 		id = HtmlCompiler.formulaIdGen.next()
-		gifname = "formulas/eq%06i.gif"%id
+		gifname = os.path.join(formulasDir,"eq%06i.gif"%id)
 		print "\t\tgenerating",gifname
 		gif = open(gifname,'wb')
 		gif.write(imageContent)
@@ -846,6 +853,15 @@ class HtmlCompiler(WikiCompiler) :
 		'Corollary': ('<div class="corollary"><b>Corollary:</b>', '</div>'),
 		'Exercici': ('<div class="exercici"><b>Exercici:</b>', '</div>'),
 	}
+	noteTemplate = (
+		" <a class='anno'><img alt='[Ann:%(annotator)s]' src='stock_notes.png' />\n"+
+		"<span class='tooltip'><b>%(annotator)s:</b> %(text)s</span></a> ")
+	todoTemplate = " <span class='todo'>TODO: %(text)s</span> "
+	labelTemplate =" <a name='#%(label)s'></a>\n"
+	codeMarkers = ( "<code>", "</code>")
+	preMarkers = ( "<pre>", "</pre>")
+	quoteMarkers = ( "<blockquote>","</blockquote>")
+	itemTemplate = "%s<li>%s</li>"
 
 	def __init__(self, bibEntries={}) :
 		self.bibEntries = bibEntries
@@ -886,7 +902,7 @@ class HtmlCompiler(WikiCompiler) :
 		codeMatch = self.code.match(line)
 		divMatch = self.div.match(line)
 		preMatch = self.pre.match(line)
-		if self.closing == "</pre>" and line == "}}}" :
+		if self.closing == self.preMarkers[1] and line == "}}}" :
 			self.closeAnyOpen()
 			return
 		elif line=="" :
@@ -902,7 +918,7 @@ class HtmlCompiler(WikiCompiler) :
 		if liMatch :
 			self.closeAnyOpen()
 			newItemLevel = liMatch.group(1)
-			line = "%s<li>%s</li>" %("\t"*len(newItemLevel), liMatch.group(2) )
+			line = self.itemTemplate %("\t"*len(newItemLevel), liMatch.group(2) )
 		while len(newItemLevel) < len(self.itemLevel) or  \
 				self.itemLevel != newItemLevel[0:len(self.itemLevel)]:
 #			print "pop '"+self.itemLevel+"','"+newItemLevel+"' "+self.itemLevel[-1]
@@ -910,9 +926,9 @@ class HtmlCompiler(WikiCompiler) :
 			self.result.append("%s</%s>"%("\t"*(len(self.itemLevel)-1),tag))
 			self.itemLevel=self.itemLevel[0:-1]
 		if quoteMatch:
-			if self.closing != "</blockquote>" :
-				self.openBlock("<blockquote>","</blockquote>")
-			line=line[1:] # remove the quoting indicator space
+			if self.closing != self.quoteMarkers[1] :
+				self.openBlock(self.quoteMarkers[0], self.quoteMarkers[1])
+			line=line[1:] # remove the quotation indicator space
 		elif figMatch :
 			self.closeAnyOpen()
 			self.openBlock(
@@ -934,27 +950,25 @@ class HtmlCompiler(WikiCompiler) :
 			return
 		elif codeMatch :
 			self.closeAnyOpen()
-			self.openBlock(
-				"<code>",
-				"</code>",
-				self.CodeProcessor(codeMatch))
+			self.openBlock( self.codeMarkers[0], self.codeMarkers[1], self.CodeProcessor(codeMatch))
 			return
 		elif preMatch :
 			self.closeAnyOpen()
-			self.openBlock(
-				"<pre>",
-				"</pre>",
-				self.VerbatimProcessor())
+			self.openBlock( self.preMarkers[0], self.preMarkers[1], self.VerbatimProcessor())
 			return
 		elif todoMatch :
-			line=" <span class='todo'>TODO: %s</span> "%todoMatch.group(1)
+			line = self.todoTemplate%dict(
+				text=todoMatch.group(1),
+			)
 		elif annoMatch :
-			annotator = annoMatch.group(1)
-			text = annoMatch.group(2)
-			line=(" <a class='anno'><img alt='[Ann:%s]' src='stock_notes.png' />"+ 
-				"<span class='tooltip'><b>%s:</b> %s</span></a> ")%(annotator,annotator,text)
+			line = self.noteTemplate%dict(
+				annotator = annoMatch.group(1),
+				text = annoMatch.group(2),
+			)
 		elif labelMatch :
-			line=" <a name='#%s'></a>"%labelMatch.group(1)
+			line = self.labelTemplate % dict(
+				label = labelMatch.group(1),
+			)
 		elif headerMatch :
 			self.closeAnyOpen()
 			title = headerMatch.group(3)

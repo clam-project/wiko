@@ -3,16 +3,19 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
     "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" >
-
 <!-- USING DEFAULT WIKO SKELETON. skeleton.html NOT FOUND -->
-
 <head>
 <title>Wiki page generator test</title>
+<base href="" />
 <meta name="author" content="David García Garzón">
 <alink rel='stylesheet' href='style.css' type='text/css'/>
 <link rel='stylesheet' href='style_code.css' type='text/css'/>
 <style type='text/css'>
 
+body {
+	background-color: white;
+	text-color: black;
+}
 .figure {
 	border: solid 1pt grey;
 	display: block;
@@ -92,7 +95,7 @@ span.tooltip
 .bibref:hover > span.tooltip:before
 {
 	float: right;
-	content: url('stock_book_open.png');
+/*	content: url('stock_book_open.png');*/
 	content: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAABmJLR0QA/wD/AP+gvaeTAAAEzUlEQVR42qWWXWgUVxTHfzOT3dnNZvOdDaaGaNG11aiFqG2tkRr6IdiaUCiBiggtFFuFUjQ+VCjSQh9KKS2t9KEfVrAtFRT0oamhjS2FWI2tJjHRGI1JzIe72U2yM9nNzu7O3D54N8QQobYHDhdmmPO7/3PuPWdgYdPq6+ufAUSOyy2Ap4BCwA2o/E/Ttm/f/qyvoFgcPnJc/NF2YQIQQBAoBlyA8l+Dq8AaX0GxeO+Tb0QsFhPdV6+JXH+hAHYBSwDff1WhAmuKyheLDz77VkxOTYn+/n7R3d0tvjxy7IpUsRYofRAV6py1Or+kvGP/wfd5Y2cDkfFxIpEIpmmyemVwVV5BCUA1kCdr8a8BKlBdWrGkY0/Tu9beXS8xOjLC5OQkHo+HdDqNK0dj95t7WoFjgB/wAjnyW2UBvwewqrwq2LFn3zvGgd079FAohOM4pFIpMpkMtm1j2za1T9Qs9ReVZVUUSCW5EpZ1j1SXkwWpQOeu1/eG3nr15fxwKIRlWdi2jeM42LaN1+vFMAzMRNK945XGcE1NzffADSAKmEBc+gBwANgg4S5AUbfU7+Txx1b6Muk0lmURiUTuCWzbNlYqnRgJRUsbXnwhcPHiRYQQC3nZ01vqXgPqgDKpTtMGejsPzbgDYw3PbSo0TZO0BKmqSjwex+Vy0Xc7HC3Kcxc0NNQriUQCw5wmnkgQjydIpTMAhMPjAhR/c/NPW4AfgBkgqQKbRwb7qo6eaDYDgQBut3s2/z6fj8HhO2OZGSOwYf06BUD3eMjPz591XddRUBgaGlR+be8GiM09BCrQ8/fZU/x27vKEoijYto2maUxPT2Oa04Y5Y3nKigvUYDCIZVlEo1EMw8AwDCzLQtNUQuNhzl/qEW2tP6vAp0AGsAGhAkmgLjQyWPXdqZbpyspKNE3D7XbTe2v4pltJFzY2NgKg6zolJSXouj7rjm3T1vYnw6Eok6FhgEuy+EnAVoEU0NX+ywla2y5FVfXu3RsYHLrqdSlrN23cqNzNcRjDMEhZ1mzwHE1laOg2UTPJV4c/VjLpVBNgyDQlAUeVUmaAuonwaNXXx0/HKioqrMikUVT50CI1GAwCEAgE0HWdpEyTqiikUhl6rt/gfEcvscgd5PGdlApSgJMDOFkV55p/pKh00cST1cvMpZWL1mzbtg3LsrAsC0cI/H4/LpcLkQeKqhCKRJicTnLy6OcATXLnMSAh6yBy5I2eVXG980LrydPKWL7Pw/Nbt+LPy0PXdQBisRiapuHxenFsh5v9g5z5vZ2EOZXd/ZTcfVo2RzQJEHKNTYRuHwg8usnd0dWtPbx8hUhaaSVmxsn1ulFVFZ/Ph6qqdPdc40rfAB8d2o/j2E3ALeCOhKTmA+ba6b6OtvKSsvIlLS0t7s6+YS509Ymx8IS4MTQqpoyE4vXq9PTepP1yl2g7e0YBvgBCQESmx84Gm99yXbJblkqvAlYAW5avXr+5el0tLrfuLKtaTEYI8eHBvRqwD/gLGALCMtXO/QCKhOTKhpXtkD45zR4BaqvX1dbFzRi3ejvfBq4Ao1KBkS3u/QDZZ5q86jkS6JGwXAnLlZ04CUzIzmpkj+b8YPez7PDIDiXXHJgu36VlzmcWCs4D/B3Mh2UnmSML6iwUHOAfyqIygtirwoUAAAAASUVORK5CYII=');
 }
 
@@ -137,12 +140,32 @@ img.inlineFormula
 	vertical-align: middle;
 }
 
+.menu li
+{
+	display: inline;
+}
+.menu li.cloud0 { font-size:60%;}
+.menu li.cloud1 { font-size:70%;}
+.menu li.cloud2 { font-size:80%;}
+.menu li.cloud3 { font-size:90%;}
+.menu li.cloud4 { font-size:100%;}
+.menu li.cloud5 { font-size:105%;}
+.menu li.cloud6 { font-size:110%;}
+.menu li.cloud7 { font-size:120%;}
+.menu li.cloud8 { font-size:130%;}
+.menu li.cloud9 { font-size:140%;}
+.menu li.cloud10 { font-size:150%;}
+.menu
+{
+	padding: inherit;
+	text-align: justify;
+}
+
 </style>
 </head>
 <body>
-
-<h1 id='toc_1'>Wiki generator tests</h1>
-<h2 id='toc_2'>Paragraph test</h2>
+<h1 id='toc_void'>Wiki generator tests</h1>
+<h2 id='toc_1'>Paragraph test</h2>
 <p>
 This is a simple test for the web/article generator.
 It takes wiki pages and produces HTML and LaTeX output.
@@ -153,25 +176,15 @@ but maintain the files on a SVN server and editing
 them using your favorite editor (vim?) instead of
 the web interface.
 </p>
-
 <p>
 Paragraph are separated by an empty line.
 Like the one before.
 </p>
-
-<h2 id='toc_3'>Lists tests</h2>
-
-
+<h2 id='toc_2'>Lists tests</h2>
 <ol>
 	<li> first</li>
 	<li> second</li>
-</ol>
-
-<ol>
 	<li> new first</li>
-</ol>
-
-<ol>
 	<li> parent 1</li>
 	<ol>
 		<li> child 1</li>
@@ -183,7 +196,6 @@ Like the one before.
 	</ol>
 	<li> parent 2</li>
 </ol>
-
 <p>
 Paragraph touching the itemization
 </p>
@@ -212,103 +224,85 @@ Paragraph touching the itemization
 <p>
 Paragraph touching the itemization
 </p>
-
-<h2 id='toc_4'>Special paragraphs</h2>
-
+<h2 id='toc_3'>Special paragraphs</h2>
 <blockquote>
 Placing spaces at the begining of the line indicates
 that you are in a quote.
 </blockquote>
-
 <pre>
 You can place preformated code by enclosing it in
 three curly braces.
 	Tabs and new lines are preserved.
 </pre>
-
 <code>
 <div class="code"><pre><span class="k">for</span> <span class="nx">a</span> <span class="k">in</span> <span class="nx">list</span><span class="o">:</span>
 	<span class="nx">print</span> <span class="nx">a</span>
 </pre></div>
 
 </code>
-
 <div class="abstract"><b>Abstract:</b>
 Some special paragraphs can be defined by preceding them by a
 colon ended keyword such as 'Abstract:'
 </div>
-
 <div class="keywords"><b>Keywords:</b>
 And the Keywords: special paragraph
 </div>
-
  <span class='todo'>TODO: This is a pending task</span> 
-
 <blockquote>
 
 </blockquote>
-<h2 id='toc_5'>Toc generation</h2>
-
-<h3 id='toc_6'>Third level</h3>
-
-<h4 id='toc_7'>Fourth level</h4>
-
+<h2 id='toc_4'>Toc generation</h2>
+<h3 id='toc_5'>Third level</h3>
+<h4 id='toc_6'>Fourth level</h4>
 <p>
 Headers generate labels.
 They can be refered from a Table of Content.
 This is the place holder for a Table of Content
 </p>
-
 <p>
 <h2>Index</h2>
 <div class='toc'>
 <ul>
-<li><a href='#toc_1'>Wiki generator tests</a></li>
 <ul>
-<li><a href='#toc_2'>Paragraph test</a></li>
-<li><a href='#toc_3'>Lists tests</a></li>
-<li><a href='#toc_4'>Special paragraphs</a></li>
-<li><a href='#toc_5'>Toc generation</a></li>
+<li><a href='#toc_1'>Paragraph test</a></li>
+<li><a href='#toc_2'>Lists tests</a></li>
+<li><a href='#toc_3'>Special paragraphs</a></li>
+<li><a href='#toc_4'>Toc generation</a></li>
 <ul>
-<li><a href='#toc_6'>Third level</a></li>
+<li><a href='#toc_5'>Third level</a></li>
 <ul>
-<li><a href='#toc_7'>Fourth level</a></li>
+<li><a href='#toc_6'>Fourth level</a></li>
 </ul>
 </ul>
-<li><a href='#toc_8'>Images and figures</a></li>
-<li><a href='#toc_9'>Inline substitutions</a></li>
+<li><a href='#toc_7'>Images and figures</a></li>
+<li><a href='#toc_8'>Inline substitutions</a></li>
 </ul>
 </ul>
 </div>
 </p>
-
 <p>
 The index header doesn't appear on the ToC.
 The ToC in LaTeX output is ignored.
 </p>
-
-<h2 id='toc_8'>Images and figures</h2>
+<h2 id='toc_7'>Images and figures</h2>
  <a name='#OtherLabel'></a>
 
 <p>
 Full featured figures can be generated by using the 'Figure:' special word
 </p>
 <div class='figure' id='MyLabel'><img src='MyImage.jpg' alt='MyLabel'/><br />
+
 This is the caption text.
 Til the next empty line.
 </div>
 
 <div class='equation'><img src=
-'http://www.forkosh.dreamhost.com/mimetex.cgi?\Large{a\over{b}}'
+"http://www.forkosh.dreamhost.com/mimetex.cgi?\Large{a\over{b}}"
  /></div>
-
 <div class='equation'><img src=
-'http://www.forkosh.dreamhost.com/mimetex.cgi?\Large{a\over{b}}'
+"http://www.forkosh.dreamhost.com/mimetex.cgi?\Large{a\over{b}}"
  /><!--<span class='eqnumber'>(123)</span>--></div>
-
-
-<h2 id='toc_9'>Inline substitutions</h2>
-
+<h2 id='toc_8'>Inline substitutions</h2>
 <p>
 Normal <em>emphasis</em> Normal. <em>Another emphasis</em> Normal
 Normal <em>em'phasis</em> Normal. <em>Another emphasis</em> Normal.
@@ -316,35 +310,25 @@ Normal <b>bold</b> Normal. <b>Another bold</b> Normal.
 Normal <b>bold <em>emphasis</em> more bold. don't </b> Normal. <b>Another bold</b> Normal.
 Normal <em>emphasis <b>bold don't</b> more emphasis</em> Normal. <b>Another bold</b> Normal.
 </p>
-
 <p>
 <a href='http://link.com'>a link</a>
 <a href='http://link.com'>http://link.com</a> without alias
 <a href='http://link.com'>one</a> and <a href='http://link.com'>other</a> link in the same line.
 </p>
-
 <p>
 <a href='link.html'>a local link</a>
 <a href='link.html'>local link without alias</a>
 <a href='link.html'>one</a> and <a href='link.html'>other</a> local link in the same line.
 </p>
-
-
 <p>
-This work can be found in <a class='bibref' href='bibliography.bib.html#lee87'>[Error lee87]<span class='tooltip'>No bibliography file found.</span></a>. And also in <a class='bibref' href='bibliography.bib.html#www-CLAM'>[Error www-CLAM]<span class='tooltip'>No bibliography file found.</span></a>.
+This work can be found in <a class='bibref' href='bibliography.bib.html#lee87'>[lee87]</a>. And also in <a class='bibref' href='bibliography.bib.html#www-CLAM'>[www-CLAM]</a>.
 </p>
-
-
 <p>
 <img class="inlineFormula" src="http://www.forkosh.dreamhost.com/mimetex.cgi?r_iO_i=r_jI_j" alt="r_iO_i=r_jI_j" />
 </p>
-
 <p>
 Were <img class="inlineFormula" src="http://www.forkosh.dreamhost.com/mimetex.cgi?r_i" alt="r_i" /> and <img class="inlineFormula" src="http://www.forkosh.dreamhost.com/mimetex.cgi?r_j" alt="r_j" /> are the number of times that node i and node j will be fired during a period. The vector <img class="inlineFormula" src="http://www.forkosh.dreamhost.com/mimetex.cgi?\vec{r}" alt="\vec{r}" /> gives the number of repetitions for each node.
 </p>
-
-
-
 <div style='position:fixed; bottom:2px; right:2px; padding: 0pt 4pt; background-color:#999; color: grey'>Generated by <a href='http://wiko.sourceforge.net'>WiKo</a></div>
 </body>
 </html>

@@ -566,36 +566,54 @@ class LaTeXCompiler(WikiCompiler) :
 	unordererMarquers = (r"\begin{itemize}", "\end{itemize}")
 
 	def figure(self, label, image, flags) :
-			imageFlags = []
-			widechar = ""
-			if "rotated90" in flags :
-				imageFlags.append("angle=90")
-				flags.remove("rotated90")
-			if "halfSize" in flags :
-				imageFlags.append("scale=.5")
-				flags.remove("halfSize")
-			else:
-				imageFlags.append("width=4.8in")
-			if "wide" in flags :
-				widechar = "*"
-				flags.remove("wide")
-			imageFlags+=flags
-			sizeSpecifier = "[" + ",".join(imageFlags) + "]"
-#			print "flags:", sizeSpecifier
-			return (
-				"\\begin{figure%(wide)s}[htbp]\n"
-				"\\begin{center}\\includegraphics%(size)s{%(img)s}\end{center}\n"
-				"\\caption{%%%%"%{
-					'img': image,
-					'size': sizeSpecifier,
-					'wide':widechar,
-					},
-				"}\n\\label{%(id)s}\n"
-				"\\end{figure%(wide)s}\n"%{
-					'id':label,
-					'wide':widechar,
-					},
-				)
+		imageFlags = []
+		widechar = ""
+		if "rotated90" in flags :
+			imageFlags.append("angle=90")
+			flags.remove("rotated90")
+		if "halfSize" in flags :
+			imageFlags.append("scale=.5")
+			flags.remove("halfSize")
+		else:
+			imageFlags.append("width=4.8in")
+		if "wide" in flags :
+			widechar = "*"
+			flags.remove("wide")
+		imageFlags+=flags
+		sizeSpecifier = "[" + ",".join(imageFlags) + "]"
+		return (
+			"\\begin{figure%(wide)s}[htbp]\n"
+			"\\begin{center}\\includegraphics%(size)s{%(img)s}\end{center}\n"
+			"\\caption{%%%%"%{
+				'img': image,
+				'size': sizeSpecifier,
+				'wide':widechar,
+				},
+			"}\n\\label{%(id)s}\n"
+			"\\end{figure%(wide)s}\n"%{
+				'id':label,
+				'wide':widechar,
+				},
+			)
+	def figures(self, label, images) :
+		imageFlags = []
+		widechar = ""
+		imageFlags.append("width=4.8in")
+		sizeSpecifier = "[" + ",".join(imageFlags) + "]"
+		return ((
+			"\\begin{figure%(wide)s}[htbp]\n"
+			+ ("".join(["\\begin{center}\\includegraphics%%(size)s{%s}\end{center}\n"%image for image in images]))
+			+ "\\caption{%%%%")%{
+				'size': sizeSpecifier,
+				'wide': widechar,
+				},
+			"}\n\\label{%(id)s}\n"
+			"\\end{figure%(wide)s}\n"%{
+				'id': label,
+				'wide': widechar,
+				},
+			)
+
 
 
 	def __init__(self) :
@@ -645,34 +663,21 @@ class LaTeXCompiler(WikiCompiler) :
 			flags = [ flag.strip() for flag in figMatch.group(3).split()
 				if flag.strip() ]
 			startFigure, endFigure = self.figure(
-					label = figMatch.group(1),
-					image = figMatch.group(2),
-					flags = flags,
-					)
+				label = figMatch.group(1),
+				image = figMatch.group(2),
+				flags = flags,
+				)
 			self.openBlock(startFigure, endFigure)
 			return
 		elif figsMatch :
 			self.closeAnyOpen()
-			images = [ flag.strip() for flag in figsMatch.group(2).split() if flag.strip() ]
-			imageFlags = []
-			widechar = ""
-			imageFlags.append("width=4.8in")
-			sizeSpecifier = "[" + ",".join(imageFlags) + "]"
-			print "flags:", sizeSpecifier
-			self.openBlock((
-				"\\begin{figure%(wide)s}[htbp]\n"
-				+ ("".join(["\\begin{center}\\includegraphics%%(size)s{%s}\end{center}\n"%image for image in images]))
-				+ "\\caption{%%%%")%{
-					'size': sizeSpecifier,
-					'wide':widechar,
-					},
-				"}\n\\label{%(id)s}\n"
-				"\\end{figure%(wide)s}\n"%{
-					'id':figsMatch.group(1),
-					'wide':widechar,
-					},
+			startFigure, endFigure = self.figures(
+				label = figsMatch.group(1),
+				images = [image.strip()
+					for image in figsMatch.group(2).split()
+					if image.strip() ]
 				)
-
+			self.openBlock(startFigure, endFigure)
 			return
 		elif codeMatch :
 			self.closeAnyOpen()
@@ -905,6 +910,14 @@ class HtmlCompiler(WikiCompiler) :
 					'img': image,
 					},
 				"</div>\n")
+	def figures(self, label, images) :
+		return (
+			("<div class='figure' id='%(id)s'>\n"
+			+"".join(["<img src='%s' alt='%%(id)s'/><br />\n"%image for image in images]))
+			%{
+				'id': label,
+				},
+			"</div>\n")
 
 	def processLine(self, line) :
 		newItemLevel = ""
@@ -959,13 +972,10 @@ class HtmlCompiler(WikiCompiler) :
 			return
 		elif figsMatch :
 			self.closeAnyOpen()
-			self.openBlock(
-				("<div class='figure' id='%(id)s'>\n"
-				+"".join(["<img src='%s' alt='%%(id)s'/><br />\n"%image for image in figsMatch.group(2).split()]))
-				%{
-					'id':figsMatch.group(1),
-					},
-				"</div>\n")
+			self.openBlock( * self.figures(
+				label = figsMatch.group(1),
+				images = figsMatch.group(2).split())
+				)
 			return
 		elif codeMatch :
 			self.closeAnyOpen()

@@ -589,7 +589,7 @@ class LaTeXCompiler(WikiCompiler) :
 		while len(newItemLevel) < len(self.itemLevel) or  \
 				self.itemLevel != newItemLevel[0:len(self.itemLevel)]:
 #			print "pop '"+self.itemLevel+"','"+newItemLevel+"'"
-			endMarker = unordererMarquers[1] if self.itemLevel[-1] == "*" else orderedMarquers[1]
+			endMarker = self.unordererMarquers[1] if self.itemLevel[-1] == "*" else self.orderedMarquers[1]
 			self.result.append("\t"*(len(self.itemLevel)-1) + endMarker)
 			self.itemLevel=self.itemLevel[0:-1]
 		if self.closing == self.preMarkers[1] and line == "}}}" :
@@ -706,7 +706,7 @@ class LaTeXCompiler(WikiCompiler) :
 			self.closeAnyOpen()
 #			print "push '"+self.itemLevel+"','"+newItemLevel+"'"
 			levelToAdd = newItemLevel[len(self.itemLevel)]
-			beginMarker = unordererMarquers[0] if self.itemLevel[-1] == "*" else orderedMarquers[0]
+			beginMarker = self.unordererMarquers[0] if levelToAdd == "*" else self.orderedMarquers[0]
 			self.result.append("\t"*len(self.itemLevel)+beginMarker)
 			self.itemLevel += levelToAdd
 		if self.processor :
@@ -857,7 +857,7 @@ class HtmlCompiler(WikiCompiler) :
 		" <a class='anno'><img alt='[Ann:%(annotator)s]' src='stock_notes.png' />\n"+
 		"<span class='tooltip'><b>%(annotator)s:</b> %(text)s</span></a> ")
 	todoTemplate = " <span class='todo'>TODO: %(text)s</span> "
-	labelTemplate =" <a name='#%(label)s'></a>\n"
+	labelTemplate =" <a name='#%(label)s'></a>"
 	codeMarkers = ( "<code>", "</code>")
 	preMarkers = ( "<pre>", "</pre>")
 	quoteMarkers = ( "<blockquote>","</blockquote>")
@@ -887,6 +887,13 @@ class HtmlCompiler(WikiCompiler) :
 			lastLevel-=1
 		result += ["</div>"]
 		return "\n".join(result)
+
+	def figure(self, label, image, flags) :
+		return ("<div class='figure' id='%(id)s'><img src='%(img)s' alt='%(id)s'/><br />\n"%{
+					'id': label,
+					'img': image,
+					},
+				"</div>\n")
 
 	def processLine(self, line) :
 		newItemLevel = ""
@@ -931,12 +938,12 @@ class HtmlCompiler(WikiCompiler) :
 			line=line[1:] # remove the quotation indicator space
 		elif figMatch :
 			self.closeAnyOpen()
-			self.openBlock(
-				"<div class='figure' id='%(id)s'><img src='%(img)s' alt='%(id)s'/><br />\n"%{
-					'id':figMatch.group(1),
-					'img': figMatch.group(2),
-					},
-				"</div>\n")
+			startFigure, endFigure = self.figure(
+					label = figMatch.group(1),
+					image = figMatch.group(2),
+					flags = figMatch.group(3),
+					)
+			self.openBlock(startFigure, endFigure)
 			return
 		elif figsMatch :
 			self.closeAnyOpen()

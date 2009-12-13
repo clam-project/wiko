@@ -565,6 +565,9 @@ class LaTeXCompiler(WikiCompiler) :
 	orderedMarquers = (r"\begin{enumerate}", "\end{enumerate}")
 	unordererMarquers = (r"\begin{itemize}", "\end{itemize}")
 
+	def __init__(self) :
+		self.compileInlines(self.inlineSubstitutions)
+		self.processor = None
 	def figure(self, label, image, flags) :
 		imageFlags = []
 		widechar = ""
@@ -614,11 +617,6 @@ class LaTeXCompiler(WikiCompiler) :
 				},
 			)
 
-
-
-	def __init__(self) :
-		self.compileInlines(self.inlineSubstitutions)
-		self.processor = None
 	def processLine(self, line) :
 		newItemLevel = ""
 		liMatch = self.li.match(line)

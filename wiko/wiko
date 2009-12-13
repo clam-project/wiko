@@ -561,7 +561,7 @@ class LaTeXCompiler(WikiCompiler) :
 	codeMarkers = (	r"\begin{lstlisting}", r"\end{lstlisting}")
 	preMarkers = ( r"\begin{verbatim}", r"\end{verbatim}")
 	quoteMarkers = (r"\begin{quotation}", r"\end{quotation}")
-	itemTemplate = r"%s\item %s"
+	itemTemplate = r"\item %s"
 	orderedMarquers = (r"\begin{enumerate}", "\end{enumerate}")
 	unordererMarquers = (r"\begin{itemize}", "\end{itemize}")
 
@@ -585,7 +585,7 @@ class LaTeXCompiler(WikiCompiler) :
 		if liMatch :
 			self.closeAnyOpen()
 			newItemLevel = liMatch.group(1)
-			line = self.itemTemplate %("\t"*len(newItemLevel), liMatch.group(2) )
+			line = "\t"*len(newItemLevel)+self.itemTemplate %liMatch.group(2)
 		while len(newItemLevel) < len(self.itemLevel) or  \
 				self.itemLevel != newItemLevel[0:len(self.itemLevel)]:
 #			print "pop '"+self.itemLevel+"','"+newItemLevel+"'"
@@ -861,7 +861,9 @@ class HtmlCompiler(WikiCompiler) :
 	codeMarkers = ( "<code>", "</code>")
 	preMarkers = ( "<pre>", "</pre>")
 	quoteMarkers = ( "<blockquote>","</blockquote>")
-	itemTemplate = "%s<li>%s</li>"
+	itemTemplate = "<li>%s</li>"
+	orderedMarquers = ("<ol>", "</ol>")
+	unordererMarquers = ("<ul>", "</ul>")
 
 	def __init__(self, bibEntries={}) :
 		self.bibEntries = bibEntries
@@ -925,12 +927,12 @@ class HtmlCompiler(WikiCompiler) :
 		if liMatch :
 			self.closeAnyOpen()
 			newItemLevel = liMatch.group(1)
-			line = self.itemTemplate %("\t"*len(newItemLevel), liMatch.group(2) )
+			line = "\t"*len(newItemLevel) + self.itemTemplate %liMatch.group(2)
 		while len(newItemLevel) < len(self.itemLevel) or  \
 				self.itemLevel != newItemLevel[0:len(self.itemLevel)]:
 #			print "pop '"+self.itemLevel+"','"+newItemLevel+"' "+self.itemLevel[-1]
-			tag = "ul" if self.itemLevel[-1] == "*" else "ol"
-			self.result.append("%s</%s>"%("\t"*(len(self.itemLevel)-1),tag))
+			endMarker = self.unordererMarquers[1] if self.itemLevel[-1] == "*" else self.orderedMarquers[1]
+			self.result.append("\t"*(len(self.itemLevel)-1)+endMarker)
 			self.itemLevel=self.itemLevel[0:-1]
 		if quoteMatch:
 			if self.closing != self.quoteMarkers[1] :
@@ -1001,8 +1003,8 @@ class HtmlCompiler(WikiCompiler) :
 			self.closeAnyOpen()
 #			print "push '"+self.itemLevel+"','"+newItemLevel+"'"
 			levelToAdd = newItemLevel[len(self.itemLevel)]
-			tag = "ul" if levelToAdd == u"*" else "ol"
-			self.result.append("%s<%s>"%("\t"*len(self.itemLevel),tag))
+			beginMarker = self.unordererMarquers[0] if levelToAdd == "*" else self.orderedMarquers[0]
+			self.result.append("\t"*len(self.itemLevel)+beginMarker)
 			self.itemLevel += levelToAdd
 		if self.processor :
 			self.processor(line)

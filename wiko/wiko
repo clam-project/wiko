@@ -565,6 +565,39 @@ class LaTeXCompiler(WikiCompiler) :
 	orderedMarquers = (r"\begin{enumerate}", "\end{enumerate}")
 	unordererMarquers = (r"\begin{itemize}", "\end{itemize}")
 
+	def figure(self, label, image, flags) :
+			imageFlags = []
+			widechar = ""
+			if "rotated90" in flags :
+				imageFlags.append("angle=90")
+				flags.remove("rotated90")
+			if "halfSize" in flags :
+				imageFlags.append("scale=.5")
+				flags.remove("halfSize")
+			else:
+				imageFlags.append("width=4.8in")
+			if "wide" in flags :
+				widechar = "*"
+				flags.remove("wide")
+			imageFlags+=flags
+			sizeSpecifier = "[" + ",".join(imageFlags) + "]"
+#			print "flags:", sizeSpecifier
+			return (
+				"\\begin{figure%(wide)s}[htbp]\n"
+				"\\begin{center}\\includegraphics%(size)s{%(img)s}\end{center}\n"
+				"\\caption{%%%%"%{
+					'img': image,
+					'size': sizeSpecifier,
+					'wide':widechar,
+					},
+				"}\n\\label{%(id)s}\n"
+				"\\end{figure%(wide)s}\n"%{
+					'id':label,
+					'wide':widechar,
+					},
+				)
+
+
 	def __init__(self) :
 		self.compileInlines(self.inlineSubstitutions)
 		self.processor = None
@@ -609,38 +642,14 @@ class LaTeXCompiler(WikiCompiler) :
 			line=line[1:] # remove the quotation indicator space
 		elif figMatch :
 			self.closeAnyOpen()
-			flags = [ flag.strip() for flag in figMatch.group(3).split() if flag.strip() ]
-			imageFlags = []
-			widechar = ""
-			if "rotated90" in flags :
-				imageFlags.append("angle=90")
-				flags.remove("rotated90")
-			if "halfSize" in flags :
-				imageFlags.append("scale=.5")
-				flags.remove("halfSize")
-			else:
-				imageFlags.append("width=4.8in")
-			if "wide" in flags :
-				widechar = "*"
-				flags.remove("wide")
-			imageFlags+=flags
-			sizeSpecifier = "[" + ",".join(imageFlags) + "]"
-#			print "flags:", sizeSpecifier
-			self.openBlock(
-				"\\begin{figure%(wide)s}[htbp]\n"
-				"\\begin{center}\\includegraphics%(size)s{%(img)s}\end{center}\n"
-				"\\caption{%%%%"%{
-					'img': figMatch.group(2),
-					'size': sizeSpecifier,
-					'wide':widechar,
-					},
-				"}\n\\label{%(id)s}\n"
-				"\\end{figure%(wide)s}\n"%{
-					'id':figMatch.group(1),
-					'wide':widechar,
-					},
-				)
-
+			flags = [ flag.strip() for flag in figMatch.group(3).split()
+				if flag.strip() ]
+			startFigure, endFigure = self.figure(
+					label = figMatch.group(1),
+					image = figMatch.group(2),
+					flags = flags,
+					)
+			self.openBlock(startFigure, endFigure)
 			return
 		elif figsMatch :
 			self.closeAnyOpen()
@@ -940,10 +949,11 @@ class HtmlCompiler(WikiCompiler) :
 			line=line[1:] # remove the quotation indicator space
 		elif figMatch :
 			self.closeAnyOpen()
+			flags = [ flag.strip() for flag in figMatch.group(3).split() if flag.strip() ]
 			startFigure, endFigure = self.figure(
 					label = figMatch.group(1),
 					image = figMatch.group(2),
-					flags = figMatch.group(3),
+					flags = flags,
 					)
 			self.openBlock(startFigure, endFigure)
 			return

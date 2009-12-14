@@ -77,11 +77,11 @@ def needsRebuild(target, source) :
 
 class bind_method(object) :
 	"""this class is an utility class to bind an unbound method to an instance"""
-	def __init__(self, unboundMethod, object) :
+	def __init__(self, unboundMethod, instance) :
 		self.unboundMethod = unboundMethod
-		self.object = object
+		self.instance = instance
 	def __call__(self, *args, **kwargs) :
-		return self.unboundMethod(self.object, *args, **kwargs)
+		return self.unboundMethod(self.instance, *args, **kwargs)
 
 
 class config :

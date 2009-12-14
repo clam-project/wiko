@@ -75,6 +75,15 @@ def needsRebuild(target, source) :
 	if os.path.getmtime(target)<os.path.getmtime(config.htmlSkeletonFile) : return True
 	return False
 
+class bind_method(object) :
+	"""this class is an utility class to bind an unbound method to an instance"""
+	def __init__(self, unboundMethod, object) :
+		self.unboundMethod = unboundMethod
+		self.object = object
+	def __call__(self, *args, **kwargs) :
+		return self.unboundMethod(self.object, *args, **kwargs)
+
+
 class config :
 	enableLaTeX = True
 	enableHtml = True
@@ -453,7 +462,7 @@ class WikiCompiler(object) :
 		self.compileInlines()
 		self.processor = None
 	def compileInlines(self) :
-		self.inlines = [ (re.compile(wikipattern), (substitution(self) if callable(substitution) else substitution )) 
+		self.inlines = [ (re.compile(wikipattern), (bind_method(substitution,self) if callable(substitution) else substitution )) 
 			for wikipattern, substitution in self.inlineSubstitutions  ]
 	def substituteInlines(self, line) :
 		for compiledPattern, substitution in self.inlines :
@@ -782,14 +791,12 @@ class HtmlCompiler(WikiCompiler) :
 			self.content.append(line.strip())
 			return ""
 
-	class InlineFormulaSubstitution :
-		def __init__(self, compiler) :
-			self.compiler = compiler
-		def __call__(self, match) :
-			formula = match.group(1)
-			return '<img class="inlineFormula" src="%s" alt="%s" />'%(HtmlCompiler.formulaUri(formula), formula)
+	def substituteInlineFormula(self, match) :
+		formula = match.group(1)
+		return '<img class="inlineFormula" src="%s" alt="%s" />'%(HtmlCompiler.formulaUri(formula), formula)
 
-	def _citeSubstitution(self, id) :
+	def substituteCite(self, match) :
+		id = match.group(1)
 		"""Writes the html code for a citation to a bibliography entry"""
 		context = dict(id=id)
 		# bib file not found
@@ -814,13 +821,7 @@ class HtmlCompiler(WikiCompiler) :
 		result.append("</span></a>")
 		return "".join(result)%context
 
-	class CiteSubstitution :
-		def __init__(self, compiler) :
-			self.compiler = compiler
-		def __call__(self, match) :
-			id = match.group(1)
-			return self.compiler._citeSubstitution(id)
-
+	# Substitutions to be done in a single line
 	inlineSubstitutions = [  # the order is important
 		(r"%%", r"%"),
 		(r"%([^(])", r"%%\1"),
@@ -830,9 +831,9 @@ class HtmlCompiler(WikiCompiler) :
 		(r"\[\[(\S+)\]\]", r"<a href='\1'>\1</a>"),
 		(r"\[(http[s]?://\S+)\s([^\]]+)\]", r"<a href='\1'>\2</a>"),
 		(r"\[(http[s]?://\S+)\]", r"<a href='\1'>\1</a>"),
-		(r"@cite:([-+_a-zA-Z0-9]+)", CiteSubstitution),
+		(r"@cite:([-+_a-zA-Z0-9]+)", substituteCite),
 		(r"\\ref{([-+_a-zA-Z0-9:]+)}", r"<a href='#\1'>\1</a>"), # TODO: numbered figures?
-		(r"`([^`]+)`", InlineFormulaSubstitution),
+		(r"`([^`]+)`", substituteInlineFormula),
 	#	(r"{{{", r"<pre>"),
 	#	(r"}}}", r"</pre>"),
 		(r"^@toc\s*$", r"%(toc)s"),
@@ -850,6 +851,7 @@ class HtmlCompiler(WikiCompiler) :
 		r"<h4 id='toc_%(label)s'>%(title)s</h4>",
 		r"<h5 id='toc_%(label)s'>%(title)s</h5>",
 	]
+	# Those ones are started with 'Keyword:' and last til the first empty line
 	specialParagraphs = { # start, stop, processor class (optional)
 		'Abstract' : ('<div class="abstract"><b>Abstract:</b>', '</div>'),
 		'Keywords' : ('<div class="keywords"><b>Keywords:</b>', '</div>'),

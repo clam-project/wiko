@@ -426,7 +426,7 @@ defaultRssEntrySkeleton = u"""\
 </item>
 """
 
-class WikiCompiler :
+class WikiCompiler(object) :
 	li  = re.compile(r"^([*#]+)(.*)")
 	quote = re.compile(r"^[ \t](.*)")
 	var = re.compile(r"^@([^:]*): (.*)")
@@ -449,9 +449,12 @@ class WikiCompiler :
 			self.content.append(line)
 			return ""
 
-	def compileInlines(self, inlines) :
+	def __init__(self) :
+		self.compileInlines()
+		self.processor = None
+	def compileInlines(self) :
 		self.inlines = [ (re.compile(wikipattern), (substitution(self) if callable(substitution) else substitution )) 
-			for wikipattern, substitution in inlines  ]
+			for wikipattern, substitution in self.inlineSubstitutions  ]
 	def substituteInlines(self, line) :
 		for compiledPattern, substitution in self.inlines :
 			line = compiledPattern.sub(substitution, line)
@@ -562,9 +565,6 @@ class LaTeXCompiler(WikiCompiler) :
 	orderedMarquers = (r"\begin{enumerate}", "\end{enumerate}")
 	unordererMarquers = (r"\begin{itemize}", "\end{itemize}")
 
-	def __init__(self) :
-		self.compileInlines(self.inlineSubstitutions)
-		self.processor = None
 	def buildToc(self) :
 		return ""
 	def figure(self, label, image, flags) :
@@ -878,9 +878,8 @@ class HtmlCompiler(WikiCompiler) :
 	unordererMarquers = ("<ul>", "</ul>")
 
 	def __init__(self, bibEntries={}) :
+		super(HtmlCompiler, self).__init__()
 		self.bibEntries = bibEntries
-		self.compileInlines(self.inlineSubstitutions)
-		self.processor = None
 	def buildToc(self) :
 		result = []
 		lastLevel = 0

@@ -156,7 +156,7 @@ class config :
 			except Exception,e :
 				die("Error loading config file '%s'\n%s"%(configfile,e))
 
-	for configfile in ["config.wiko"] :
+	for configfile in ["config.wiko", "wiko.config"] :
 		if not os.access(configfile,os.R_OK) : continue
 		try :
 			execfile(configfile)

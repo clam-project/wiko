@@ -2,7 +2,7 @@
 
 ../wiko
 ../generate_gallery.py
-scp -r * shell.sourceforge.net:/home/groups/w/wi/wiko/htdocs/prova/
+scp -r * web.sourceforge.net:/home/groups/w/wi/wiko/htdocs/prova/
 
 
 

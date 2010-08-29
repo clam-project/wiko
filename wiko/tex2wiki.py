@@ -1,4 +1,13 @@
 #!/usr/bin/python
+"""
+A helper script to convert some common constructs in LaTeX input files into
+the equivalent wiko syntax.
+It is provided by convenience but don't rely on this script for full
+automated conversions because:
+* It just converts some LaTeX constructs
+* Analysis is line per line, multiline constructs may get you into trouble
+* It is not recursive (embeded expressions), though multiple pass might do
+"""
 
 import re, sys
 

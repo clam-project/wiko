@@ -22,11 +22,11 @@ testCases = glob.glob("*")
 for case in testCases :
 	print "===== ", case
 	os.chdir(case)
-	runOrDie("../../wiko")
+	runOrDie("../../wiko --force")
 	os.chdir(testSamplesRoot)
 
-print "==== Diffing"
+print "==== Changes"
 os.chdir(wikoRoot)
-subprocess.call("svn stat -q testsamples", shell=True)
+subprocess.call("svn stat testsamples", shell=True)
 
 

@@ -1110,7 +1110,7 @@ def generateHtmlBibliographyPretty(outputFilename, bibfiles, skeleton) :
 
 
 # Generate HTML with HTML content files + skeleton
-def generateHtmlBasedPages() :
+def generateHtmlBasedPages(skeleton) :
 	htmlFragments = glob.glob(os.path.join(config.htmlContentDir,"*.html"))
 	print "Generating %i html based pages..."%len(htmlFragments)
 	for contentFile in htmlFragments :
@@ -1335,7 +1335,7 @@ def main() :
 	skeleton = loadOrDefault(config.htmlSkeletonFile, defaultSkeleton)
 	# Generate bibliography
 	bibEntries = generateHtmlBibliography("bibliography.bib.html",skeleton)
-	generateHtmlBasedPages()
+	generateHtmlBasedPages(skeleton)
 	texSkeletons = gatherTeXSkeletons()
 	if not texSkeletons : config.enableLaTeX = False
 	print "Found %i main tex files"% len(texSkeletons)

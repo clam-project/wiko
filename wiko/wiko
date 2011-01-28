@@ -83,6 +83,32 @@ class bind_method(object) :
 	def __call__(self, *args, **kwargs) :
 		return self.unboundMethod(self.instance, *args, **kwargs)
 
+def extractVars(content, variables=None, varre = re.compile(r"^@([^:]*): (.+)")) :
+	"""
+	Extracts variable specification in the form "@varname: value\\n" from text content.
+	This function is a copy of the one in wiko_utils, maintain it there.
+	>>> extractVars("normal content\\nmore content")
+	('normal content\\nmore content', {})
+	>>> extractVars("normal content\\nmore content", dict(var="value"))
+	('normal content\\nmore content', {'var': 'value'})
+	>>> extractVars("@var: value")
+	('', {'var': 'value'})
+	>>> extractVars("@var: multiple word value")
+	('', {'var': 'multiple word value'})
+	>>> extractVars("@var: value\\n@var2: value2")
+	('', {'var': 'value', 'var2': 'value2'})
+	>>> extractVars("@var: value\\nmore content")
+	('more content', {'var': 'value'})
+	"""
+	if variables is None : variables = dict()
+	cleanContent = []
+	for line in content.splitlines() :
+		match = varre.match(line)
+		if match is None :
+			cleanContent.append(line)
+		else :
+			variables.update([match.groups()])
+	return "\n".join(cleanContent), variables
 
 class config :
 	enableLaTeX = True
@@ -1123,6 +1149,7 @@ def generateHtmlBibliographyPretty(outputFilename, bibfiles, skeleton) :
 
 # Generate HTML with HTML content files + skeleton
 def generateHtmlBasedPages(skeleton) :
+	import wiko_util
 	htmlFragments = glob.glob(os.path.join(config.htmlContentDir,"*.html"))
 	print "Generating %i html based pages..."%len(htmlFragments)
 	for contentFile in htmlFragments :
@@ -1131,8 +1158,11 @@ def generateHtmlBasedPages(skeleton) :
 			print "\t%s is up to date."%target
 			continue
 		print "\tGenerating", target, "from", contentFile, "..."
+		variables = dict(title='', author='')
 		content = readUtf8(contentFile)
-		writeUtf8(target, skeleton%{'title':'', 'author':'','content':content})
+		content, variables = extractVars(content, variables)
+		variables.update(content=content)
+		writeUtf8(target, skeleton % variables)
 
 # Generate LaTeX and HTML from wiki files
 def gatherTeXSkeletons() :

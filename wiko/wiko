@@ -564,7 +564,7 @@ class LaTeXCompiler(WikiCompiler) :
 		(r"''(([^']|'[^'])*)''", r"{\\em \1}"),
 		(r"\[\[(\S+)\s([^\]]+)\]\]", r"\2\\footnote{\\url{\1}}"),
 		(r"\[\[(\S+)\]\]", r"\\url{\1}"),
-		(r"@cite:([-+_a-zA-Z0-9]*)", r"\protect\cite{\1}"),
+		(r"@cite:([-+_a-zA-Z0-9,]*[-+_a-zA-Z0-9])", r"\protect\cite{\1}"),
 		(r"`([^`]+)`", r"$\1$"),
 	#	(r"{{{", ur"\\begin{verbatim}"),
 	#	(r"}}}", ur"\end{verbatim}"),
@@ -827,29 +827,39 @@ class HtmlCompiler(WikiCompiler) :
 		return '<img class="inlineFormula" src="%s" alt="%s" />'%(HtmlCompiler.formulaUri(formula), formula)
 
 	def substituteCite(self, match) :
-		id = match.group(1)
 		"""Writes the html code for a citation to a bibliography entry"""
-		context = dict(id=id)
+		ids = match.group(1)
 		# bib file not found
 		if self.bibEntries is None :
-			warn("No bibliography files found: %s"%id)
-			return ur"<a class='bibref' href='bibliography.bib.html#%(id)s'>[Error %(id)s]<span class='tooltip'>No bibliography file found.</span></a>"%context
-		# using raw bibtex formating (bibtex package not available)
-		if len(self.bibEntries)==0 :
-			return ur"<a class='bibref' href='bibliography.bib.html#%(id)s'>[%(id)s]</a>"%context
+			warn("No bibliography files found: %s"%ids)
+			return ur"<a class='bibref' href='bibliography.bib.html#%(ids)s'>"\
+				"[Error %(ids)s]<span class='tooltip'>Bibliography file not found.</span></a>"%dict(ids=ids)
+		result = []
+		for id in ids.split(',') :
+			context = dict(id=id)
 
-		if not self.bibEntries.has_key(id) :
-			warn("Bibliography id not found: %s"%id)
-			return ur"<a class='bibref' href='bibliography.bib.html#%(id)s'>[Error %(id)s]<span class='tooltip'>BibTeX key not found.</span></a>"%context
-		
-		context.update(self.bibEntries[id])
-		result = [
-			u"<a class='bibref' href='bibliography.bib.html#%(id)s' target='bibliography'>[%(id)s]",
-			u"<span class='tooltip'>",
-		]
-		result += [ u"<span class='bibref%s'>%%(%s)s.</span> "%(field,field)
-			for field in config.bibliography.fieldsOrder if field in context.keys() ]
-		result.append("</span></a>")
+			# using raw bibtex formating (bibtex package not available)
+			if len(self.bibEntries)==0 :
+				result +=[ ur"<a class='bibref' href='bibliography.bib.html#%(id)s'>[%(id)s]</a>"%context]
+				continue
+
+			if not self.bibEntries.has_key(id) :
+				warn("Bibliography id not found: %s"%id)
+				result+=[ ur"<a class='bibref' href='bibliography.bib.html#%(id)s'>"
+					"[Error %(id)s]<span class='tooltip'>BibTeX key not found.</span></a>"%context ]
+				continue
+			
+			context.update(self.bibEntries[id])
+			result += "".join([
+				u"<a class='bibref' href='bibliography.bib.html#%(id)s' target='bibliography'>[%(id)s]",
+				u"<span class='tooltip'>",
+			] + [
+				u"<span class='bibref%s'>%%(%s)s.</span> "%(field,field)
+				for field in config.bibliography.fieldsOrder if field in context.keys()
+			] + [
+				u"</span></a>"
+			])%context
+
 		return "".join(result)%context
 
 	# Substitutions to be done in a single line
@@ -862,7 +872,7 @@ class HtmlCompiler(WikiCompiler) :
 		(r"\[\[(\S+)\]\]", r"<a href='\1'>\1</a>"),
 		(r"\[(http[s]?://\S+)\s([^\]]+)\]", r"<a href='\1'>\2</a>"),
 		(r"\[(http[s]?://\S+)\]", r"<a href='\1'>\1</a>"),
-		(r"@cite:([-+_a-zA-Z0-9]+)", substituteCite),
+		(r"@cite:([-+_a-zA-Z0-9,]*[-+_a-zA-Z0-9])", substituteCite),
 		(r"\\ref{([-+_a-zA-Z0-9:]+)}", r"<a href='#\1'>\1</a>"), # TODO: numbered figures?
 		(r"`([^`]+)`", substituteInlineFormula),
 	#	(r"{{{", r"<pre>"),

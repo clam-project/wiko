@@ -130,11 +130,17 @@ class config :
 	htmlSkeletonFile = "skeleton.html"
 	# Path containing html fragments to insert into the skeleton
 	htmlContentDir = "content/"
+	# Pattern to look for html content files
+	htmlContentPattern = "*.html"
 	# Whether to generate figures (requires generate_figures.py in the PATH)
 	generateFigures = True
 	# A list of directories containing figures to be converted
 	figureDirs = ["figs/"]
 	skipTopLevelFromToc = False
+	predefinedVariables = dict(
+		title='',
+		author='',
+		)
 
 	class downloads :
 		dirs = []
@@ -1160,7 +1166,7 @@ def generateHtmlBibliographyPretty(outputFilename, bibfiles, skeleton) :
 # Generate HTML with HTML content files + skeleton
 def generateHtmlBasedPages(skeleton) :
 	import wiko_util
-	htmlFragments = glob.glob(os.path.join(config.htmlContentDir,"*.html"))
+	htmlFragments = glob.glob(os.path.join(config.htmlContentDir,config.htmlContentPattern))
 	print "Generating %i html based pages..."%len(htmlFragments)
 	for contentFile in htmlFragments :
 		target = os.path.basename(contentFile)
@@ -1168,7 +1174,7 @@ def generateHtmlBasedPages(skeleton) :
 			print "\t%s is up to date."%target
 			continue
 		print "\tGenerating", target, "from", contentFile, "..."
-		variables = dict(title='', author='')
+		variables = config.predefinedVariables.copy() # TODO: shoud be taken from skeleton
 		content = readUtf8(contentFile)
 		content, variables = extractVars(content, variables)
 		variables.update(content=content)

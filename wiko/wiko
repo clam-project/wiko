@@ -478,6 +478,7 @@ class WikiCompiler(object) :
 	var = re.compile(r"^@([^:]*): (.*)")
 	fig = re.compile(r"^Figure:[\s]*([^\s]+)[\s]*([^\s]+)(.*)");
 	figs = re.compile(r"^Figures:[\s]*([^\s]+)[\s]*(.*)");
+	figsh = re.compile(r"^FiguresH:[\s]*([^\s]+)[\s]*(.*)");
 	todo = re.compile(r"^TODO:[\s]*(.+)");
 	anno = re.compile(r"^:([^\s]+):[\s]*(.*)");
 	code = re.compile(r"^Code:[\s]*([^\s]+)?");
@@ -619,9 +620,14 @@ class LaTeXCompiler(WikiCompiler) :
 		if "rotated90" in flags :
 			imageFlags.append("angle=90")
 			flags.remove("rotated90")
-		if "halfSize" in flags :
+		if "fullSize" in flags :
+			flags.remove("fullSize")
+		elif "halfSize" in flags :
 			imageFlags.append("scale=.5")
 			flags.remove("halfSize")
+		elif "fullWidth" in flags :
+			imageFlags.append("width=6in")
+			flags.remove("fullWidth")
 		else:
 			imageFlags.append("width=4.8in")
 		if "wide" in flags :
@@ -646,11 +652,33 @@ class LaTeXCompiler(WikiCompiler) :
 	def figures(self, label, images) :
 		imageFlags = []
 		widechar = ""
-		imageFlags.append("width=4.8in")
+		imageFlags.append("width=6in")
 		sizeSpecifier = "[" + ",".join(imageFlags) + "]"
 		return ((
 			"\\begin{figure%(wide)s}[htbp]\n"
 			+ ("".join(["\\begin{center}\\includegraphics%%(size)s{%s}\end{center}\n"%image for image in images]))
+			+ "\\caption{%%%%"
+			)%{
+				'size': sizeSpecifier,
+				'wide': widechar,
+				},
+			"}\n\\label{%(id)s}\n"
+			"\\end{figure%(wide)s}\n"%{
+				'id': label,
+				'wide': widechar,
+				},
+			)
+
+	def figuresh(self, label, images) :
+		imageFlags = []
+		widechar = ""
+		imageFlags.append("width=%fin"%(5.5/len(images)))
+		sizeSpecifier = "[" + ",".join(imageFlags) + "]"
+		return ((
+			"\\begin{figure%(wide)s}[htbp]\n"
+			+ "\\begin{center}\n"
+			+ ("".join(["\\includegraphics%%(size)s{%s}\n"%image for image in images]))
+			+ "\\end{center}\n"
 			+ "\\caption{%%%%"
 			)%{
 				'size': sizeSpecifier,
@@ -671,6 +699,7 @@ class LaTeXCompiler(WikiCompiler) :
 		varMatch = self.var.match(line)
 		figMatch = self.fig.match(line)
 		figsMatch = self.figs.match(line)
+		figshMatch = self.figsh.match(line)
 		todoMatch = self.todo.match(line)
 		annoMatch = self.anno.match(line)
 		labelMatch = self.label.match(line)
@@ -719,6 +748,16 @@ class LaTeXCompiler(WikiCompiler) :
 				label = figsMatch.group(1),
 				images = [image.strip()
 					for image in figsMatch.group(2).split()
+					if image.strip() ]
+				)
+			self.openBlock(startFigure, endFigure)
+			return
+		elif figshMatch :
+			self.closeAnyOpen()
+			startFigure, endFigure = self.figuresh(
+				label = figshMatch.group(1),
+				images = [image.strip()
+					for image in figshMatch.group(2).split()
 					if image.strip() ]
 				)
 			self.openBlock(startFigure, endFigure)
@@ -974,6 +1013,7 @@ class HtmlCompiler(WikiCompiler) :
 		varMatch = self.var.match(line)
 		figMatch = self.fig.match(line)
 		figsMatch = self.figs.match(line)
+		figshMatch = self.figsh.match(line)
 		todoMatch = self.todo.match(line)
 		annoMatch = self.anno.match(line)
 		labelMatch = self.label.match(line)
@@ -1023,6 +1063,17 @@ class HtmlCompiler(WikiCompiler) :
 				label = figsMatch.group(1),
 				images = [image.strip()
 					for image in figsMatch.group(2).split()
+					if image.strip() ]
+				)
+			self.openBlock(startFigure, endFigure)
+			return
+		elif figshMatch :
+			self.closeAnyOpen()
+			# TODO: figuresh
+			startFigure, endFigure = self.figures(
+				label = figshMatch.group(1),
+				images = [image.strip()
+					for image in figshMatch.group(2).split()
 					if image.strip() ]
 				)
 			self.openBlock(startFigure, endFigure)

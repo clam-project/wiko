@@ -14,7 +14,7 @@ This is the simplest mode of usage.
 WiKo takes each .html file at the subdirectory 'content'
 and creates an homonym html files at the working
 directory by inserting such files into the skeleton
-at the point where you inserted the '''%%%(content)s''' tag.
+at the point where you inserted the '''%%<!-- -->(content)s''' tag.
 
 This way you can fully update the look and feel of you web site
 just by updating the skeleton without having to edit every html file
@@ -37,7 +37,7 @@ It renders into [[Sample.html this html file]].
 === Generating PDF (LaTeX) from wiki files ===
 
 WiKo can also generate PDF through LaTeX. LaTeX document skeletons are a bit different from html ones:
-* In a document skeletons the user must include the generated file using the normal LaTeX facilities: '''\input{file}''' (and not with '''%%%(content)s''' as in the html case)
+* In a document skeletons the user must include the generated file using the normal LaTeX facilities: '''\input{file}''' (and not with '''%%<!-- -->(content)s''' as in the html case)
 * WiKo will consider document skeleton any .tex file in the working directory that both contains the '''\documentclass''' directive '''and''' its basename does not match with any of the .wiki files.
 
 An example of a working directory:
@@ -110,11 +110,11 @@ You should introduce a line like this in the .wiki file.
 {{{
 @variableName: value to use
 }}}
-and then using the tag '''%%%(variableName)s''' wherever you want to use it on the skeleton.
+and then using the tag '''%%<!-- -->(variableName)s''' wherever you want to use it on the skeleton.
 
 === Inserting an html table of content ===
 
-By inserting in a wiki content file the '''%%%(toc)s''' tag you can get
+By inserting in a wiki content file the '''%%<!-- -->(toc)s''' tag you can get
 in the html ouput a table of content which links to the headings of each section.
 Just like this manual.
 
@@ -130,7 +130,7 @@ The ''@cite'' directive points to the proper entry.
 === Access to the wiki source code ===
 
 If you want to place a link to the wiki source in the skeleton
-use the '''%%%(wikiSource)s''' tag to get its url.
+use the '''%%<!-- -->(wikiSource)s''' tag to get its url.
 
 === Using WiKo with version control system ===
 

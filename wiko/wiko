@@ -567,8 +567,8 @@ class LaTeXCompiler(WikiCompiler) :
 	inlineSubstitutions = [  # the order is important
 		(r"%%", r"%"),
 		(r"%([^(])", r"%%\1"),
-		(r"'''(([^']|'[^']|''[^'])*)'''", r"{\\bf \1}"),
-		(r"''(([^']|'[^'])*)''", r"{\\em \1}"),
+		(r"'''(([^']|'[^']|''[^'])*)'''", r"\\textbf{\1}"),
+		(r"''(([^']|'[^'])*)''", r"\\textit{\1}"),
 		(r"\[\[(\S+)\s([^\]]+)\]\]", r"\2\\footnote{\\url{\1}}"),
 		(r"\[\[(\S+)\]\]", r"\\url{\1}"),
 		(r"@cite:([-+_a-zA-Z0-9,]*[-+_a-zA-Z0-9])", r"\protect\cite{\1}"),
@@ -626,10 +626,10 @@ class LaTeXCompiler(WikiCompiler) :
 			imageFlags.append("scale=.5")
 			flags.remove("halfSize")
 		elif "fullWidth" in flags :
-			imageFlags.append("width=6in")
+			imageFlags.append("width=\\textwidth")
 			flags.remove("fullWidth")
 		else:
-			imageFlags.append("width=4.8in")
+			imageFlags.append("width=0.8\\textwidth")
 		if "wide" in flags :
 			widechar = "*"
 			flags.remove("wide")
@@ -652,7 +652,7 @@ class LaTeXCompiler(WikiCompiler) :
 	def figures(self, label, images) :
 		imageFlags = []
 		widechar = ""
-		imageFlags.append("width=6in")
+		imageFlags.append("width=\\textwidth")
 		sizeSpecifier = "[" + ",".join(imageFlags) + "]"
 		return ((
 			"\\begin{figure%(wide)s}[htbp]\n"
@@ -1241,7 +1241,7 @@ def gatherTeXSkeletons() :
 	# TeX skeletons are not generated from wiki files
 	nonGeneratedTeX = baseFileNamesForExtension("tex") - baseFileNamesForExtension("wiki")
 	# ...and contain \documentclass directive
-	return [ tex for tex in nonGeneratedTeX if readUtf8(tex+".tex").find(r"\documentclass") != -1 ]
+	return [ tex for tex in nonGeneratedTeX if '\documentclass' in readUtf8(tex+".tex") ]
 
 def generateWikiFiles(skeleton, bibEntries) :
 	wikifiles = glob.glob("*.wiki")

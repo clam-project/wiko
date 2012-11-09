@@ -267,7 +267,8 @@ class BloggerImportWizard (QWizard) :
 			yield "Fetching blog %s"%self.blogId
 
 		# TODO: The 'next' link indicates that there are more entries to fetch
-		feed = self.service.GetFeed('/feeds/%s/posts/default' % self.blogId )
+		feed = self.service.GetFeed('/feeds/%s/posts/default?max-results=1000' % self.blogId )
+#		feed = self.service.GetFeed('/feeds/%s/archive' % self.blogId )
 
 		import codecs, datetime
 		import os.path
@@ -284,7 +285,7 @@ class BloggerImportWizard (QWizard) :
 		dumpConfig("editor", ', '.join([author.name.text for author in feed.author]))
 		dumpConfig("editorEmail", ', '.join([author.email.text for author in feed.author]))
 		dumpConfig("editorUri", ', '.join([author.uri.text for author in feed.author]))
-		dumpConfig("blogtags", ', '.join([category.text for category in feed.category]))
+		dumpConfig("blogtags", ', '.join([category.text for category in feed.category if category.text is not None]))
 		dumpConfig("contributor", ', '.join([contributor.name.text for contributor in feed.contributor]))
 		dumpConfig("homeurl", links['alternate'])
 		dumpConfig("updated", feed.updated.text)
@@ -364,7 +365,7 @@ class BloggerImportWizard (QWizard) :
 		# Build comment feed URI and request comments on the specified post
 		feed_url = '/feeds/' + self.blogId
 		feed_url+= "" if postId is None else '/' + postId
-		feed_url+='/comments/default'
+		feed_url+='/comments/default?max-results=1000'
 		feed = self.service.Get(feed_url)
 		ignoredComments = len(feed.entry)-len([entry for entry in feed.entry if entry.extension_elements])
 		if ignoredComments :

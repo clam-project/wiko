@@ -1245,8 +1245,9 @@ def gatherTeXSkeletons() :
 
 def generateWikiFiles(skeleton, bibEntries) :
 	wikifiles = glob.glob("*.wiki")
+	wikifiles += glob.glob(os.path.join(config.htmlContentDir,"*.wiki"))
 	print "Generating html and tex from %i wiki files..."%len(wikifiles)
-	for contentFile in glob.glob("*.wiki") :
+	for contentFile in wikifiles :
 		base = os.path.basename(contentFile)
 		target = "".join(os.path.splitext(base)[0:-1])+".html"
 		targetTex = "".join(os.path.splitext(base)[0:-1])+".tex"

@@ -628,6 +628,9 @@ class LaTeXCompiler(WikiCompiler) :
 		elif "fullWidth" in flags :
 			imageFlags.append("width=\\textwidth")
 			flags.remove("fullWidth")
+		elif "columnWidth" in flags :
+			imageFlags.append("width=\\columnwidth")
+			flags.remove("columnWidth")
 		else:
 			imageFlags.append("width=0.8\\textwidth")
 		if "wide" in flags :

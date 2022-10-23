@@ -30,8 +30,8 @@ and will reformat it to an .html file also using the skeleton.
 In the example files you can take a look at the syntax we are using
 which is very similar to the one on Wikimedia and Moin-Moin wiki.
 
-Just take a quick look at this [[Sample.wiki]] which has most syntax elements.
-It renders into [[Sample.html this html file]].
+Just take a quick look at this [sample](Sample.wiki) which has most syntax elements.
+It renders into [this html file](Sample.html).
 
 <!-- [[wikosample-wikicontent.zip Sample WiKo project using wiki content]] -->
 
@@ -60,7 +60,7 @@ WiKo analyzes such files and generates:
 * Blog front page with the newer entries.
 * An individual pages for each entry.
 * Pages with the entries which contain a given tag.
-* An [[http://en.wikipedia.org/wiki/Rss RSS]] file for news syndication.
+* An [RSS](http://en.wikipedia.org/wiki/Rss) file for news syndication.
 
 It requires some page variables to be defined in each entry.
 See the sample for details.
@@ -69,7 +69,7 @@ The blog mode is currently under heavy development.
 We would like to evolve it in two directions:
 * Allowing comments
 * User definable side bar widgets
-* Interacting with [[http://www.blogger.com blogger]] and [[http://www.wordpress.org wordpress]] API's to export and import
+* Interacting with [blogger](http://www.blogger.com) and [wordpress](http://www.wordpress.org wordpress) API's to export and import
 
 <!-- [[wikosample-blog.zip Sample WiKo project for a blog]] -->
 
@@ -124,7 +124,7 @@ Just like this manual.
 
 ### Refering bibliography
 
-The wiki format allows referencing [[http://en.wikipedia.org/wiki/Bibtex BibTeX]] entries
+The wiki format allows referencing [BibTeX](http://en.wikipedia.org/wiki/Bibtex) entries
 with the `@cite` directive.
 In the LaTeX mode, that has a direct mapping to the `\cite` command.
 In the HTML mode, a link is created to a web page called `bibliography.bib.html`

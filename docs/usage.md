@@ -30,8 +30,8 @@ and will reformat it to an .html file also using the skeleton.
 In the example files you can take a look at the syntax we are using
 which is very similar to the one on Wikimedia and Moin-Moin wiki.
 
-Just take a quick look at this [sample](Sample.wiki) which has most syntax elements.
-It renders into [this html file](Sample.html).
+Just take a quick look at this [sample](../wiko/web/Sample.wiki) which has most syntax elements.
+It renders into [this html file](../wiko/web/Sample.html).
 
 <!-- [[wikosample-wikicontent.zip Sample WiKo project using wiki content]] -->
 
@@ -128,6 +128,21 @@ In the LaTeX mode, that has a direct mapping to the `\cite` command.
 In the HTML mode, a link is created to a web page called `bibliography.bib.html`
 which is an aggregation of every .bib file it founds in the working directory.
 The `@cite` directive points to the proper entry.
+
+### Galleries
+
+The script `generate_gallery.py` turns a directory full of images into
+a gallery page.
+
+You must provide the following parameters:
+
+- Gallery page title
+- Output html file
+- Image dir
+- HTML skeleton
+- Number of columns
+- Thumbnail size (squared)
+
 
 ### Access to the wiki source code
 

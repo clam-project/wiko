@@ -1,10 +1,8 @@
-﻿# Wiko, the Wiki Compiler
+﻿![](wiko/web/wikologo.svg)
 
-![](wiko/web/wikologo.svg)
+# Wiko, the Wiki Compiler
 
 By David Garcia and Pau Arumi
-
-* [The original Sourceforge project](https://sourceforge.net/projects/wiko/)
 
 ## Description
 
@@ -30,6 +28,19 @@ Main benefits of using WiKo are:
 - [Usage](docs/usage.md)
 - [Examples](docs/examples.md)
 - [Screenshots](docs/screenshots.md)
+* [The original Sourceforge project](https://sourceforge.net/projects/wiko/)
+
+
+# Installation
+
+```bash
+pip install wiko
+```
+
+## System dependencies
+
+- [python-bibtex](https://github.com/pybliographer/python-bibtex): Optional. For nicer HTML bibliography.
+- mimetex: Optional. Alternative to avoid relying on external services for formulae in HTML output.
 
 ## Features
 

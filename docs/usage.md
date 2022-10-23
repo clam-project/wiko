@@ -55,7 +55,7 @@ Then WiKo will execute pdflatex and bibtex for the LaTeX skeleton.
 ### Generating Blogs
 
 Blog entries can be defined by adding files into the
-''blog'' subdirectory of the working directory.
+`blog` subdirectory of the working directory.
 WiKo analyzes such files and generates:
 * Blog front page with the newer entries.
 * An individual pages for each entry.
@@ -78,7 +78,7 @@ We would like to evolve it in two directions:
 A download zone is a folder with a set of files you want to list and download.
 WiKo generate directory listings which integrates on the web page look and feel.
 
-You should create a file named ''downloadZones.wiko'' on the working directory
+You should create a file named `downloadZones.wiko` on the working directory
 just like that:
 ```python
  {
@@ -95,9 +95,9 @@ just like that:
 ```
 
 
-''dirs'' is a list of python tuples containing titles and paths for the download zones.
-The ''blacklist'' contains the files which should be ignored when generating the file index.
-And, ''skeletonFile'' is the html skeleton to be used with such pages.
+`dirs` is a list of python tuples containing titles and paths for the download zones.
+The `blacklist` contains the files which should be ignored when generating the file index.
+And, `skeletonFile` is the html skeleton to be used with such pages.
 Be carefull as if you use the same skeleton, relative paths used for some links, images and styles,
 might be wrong.
 
@@ -134,13 +134,13 @@ The `@cite` directive points to the proper entry.
 ### Access to the wiki source code
 
 If you want to place a link to the wiki source in the skeleton
-use the `'%%<!-- -->(wikiSource)s'` tag to get its url.
+use the `%%<!-- -->(wikiSource)s` tag to get its url.
 
 ### Using WiKo with version control system
 
 WiKo increase its potential when you use it in combination of a
-[[http://en.wikipedia.org/wiki/Version_control_system version control system]]
-such as [[http://subversion.tigris.org/ subversion]].
+[version control system](http://en.wikipedia.org/wiki/Version_control_system)
+such as [subversion](http://subversion.tigris.org/).
 Subversion allows to write your WiKo based project collaborativelly.
 Project members have their own copy of the project in their own computer.
 They can modify it locally, confirm the changes remotelly to a central repository,

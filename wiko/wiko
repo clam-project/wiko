@@ -5,7 +5,6 @@ WiKo: this script generates a web pages, PDF article or blog
 considering the files found in the local directory.
 See http://www.iua.upf.edu/~dgarcia/wiko/usage.html
 """
-
 # Bugs: 
 # * @cite:some at end of line, or @cite:some, something.
 # * don't work with iso encoding only utf8
@@ -16,36 +15,37 @@ See http://www.iua.upf.edu/~dgarcia/wiko/usage.html
 # * deactivate implicit <pre> mode when in explicit "{{{ }}}" <pre> mode
 # * bullets should allow breaking line into a new line with spaces.
 
+from builtins import filter
 import glob
 import os.path
 import re
 import sys
 import subprocess
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import codecs
 from datetime import datetime
 import itertools
 import string
 
 def warn(message) :
-	print >> sys.stdout,"\033[31mWarning:\033[0m \033[33m%s\033[0m"%message
+	print("\033[31mWarning:\033[0m \033[33m%s\033[0m"%message, file=sys.stdout)
 
 def die(message, errorCode=-1) :
-	print >> sys.stdout,"\033[31mCritical error:\033[0m \033[33m%s\033[0m"%message
+	print("\033[31mCritical error:\033[0m \033[33m%s\033[0m"%message, file=sys.stdout)
 	sys.exit(errorCode)
 
 def stripUtfMarker(content) :
 	"""Removes any UTF8 BOM marker if present, which causes 
 	problems when composing several utf8 files"""
 	import codecs
-	return content.replace( unicode(codecs.BOM_UTF8,"utf8"), "")
+	return content.replace( str(codecs.BOM_UTF8,"utf8"), "")
 
 def readUtf8(filename) :
 	"""Returns unicode content of an utf8 file"""
 #	print "\tReading",filename
 	try :
 		unicodeContent = codecs.open(filename,'r','utf8').read()
-	except UnicodeDecodeError, e :
+	except UnicodeDecodeError as e :
 		die("Bad UTF8 character found in '%s' at position %i.\nContext:\n\"%s\""%(
 			filename, e.start, e.object[max(0,e.start-20):min(len(e.object),e.end+20)] ))
 	return stripUtfMarker(unicodeContent)
@@ -110,7 +110,7 @@ def extractVars(content, variables=None, varre = re.compile(r"^@([^:]*): (.+)"))
 			variables.update([match.groups()])
 	return "\n".join(cleanContent), variables
 
-class config :
+class config(object) :
 	enableLaTeX = True
 	enableHtml = True
 	# If false WiKo won't compile the generated tex files
@@ -142,7 +142,7 @@ class config :
 		author='',
 		)
 
-	class downloads :
+	class downloads(object) :
 		dirs = []
 		blacklist = [
 			"index.html",
@@ -150,7 +150,7 @@ class config :
 			"img",
 		]
 		template = None
-	class bibliography :
+	class bibliography(object) :
 		fieldsOrder = [
 			u"title",
 			u"author", 
@@ -172,7 +172,7 @@ class config :
 			url = "<li><a href='%(content)s'>Download PDF</a></li>\n",
 		)
 
-	class blog :
+	class blog(object) :
 		title = "Your title here"
 		blogid = "tag:blogger.com,1999:blog-36421488"
 		editor = "You"
@@ -184,15 +184,15 @@ class config :
 		for configfile in ["blog/blog.config"] :
 			if not os.access(configfile,os.R_OK) : continue
 			try :
-				execfile(configfile)
-			except Exception,e :
+				exec(open(configfile).read())
+			except Exception as e :
 				die("Error loading config file '%s'\n%s"%(configfile,e))
 
 	for configfile in ["config.wiko", "wiko.config"] :
 		if not os.access(configfile,os.R_OK) : continue
 		try :
-			execfile(configfile)
-		except Exception,e :
+			exec(open(configfile).read())
+		except Exception as e :
 			die("Error loading config file '%s'\n%s"%(configfile,e))
 
 
@@ -487,7 +487,7 @@ class WikiCompiler(object) :
 	pre = re.compile(r"^{{{[\s]*([^\s])*")
 	header = re.compile(r"^(=+)([*]?)\s*([^=]+?)\s*\1\s*$")
 
-	class VerbatimProcessor :
+	class VerbatimProcessor(object) :
 		def __init__(self) :
 			self.content=[]
 		def __call__(self, line) :
@@ -554,7 +554,7 @@ class WikiCompiler(object) :
 		return self.vars
 
 class LaTeXCompiler(WikiCompiler) :
-	class CodeProcessor :
+	class CodeProcessor(object) :
 		def __init__(self, match) :
 			self.content=[]
 			self.language=match.group(1) or "javascript"
@@ -817,7 +817,7 @@ class LaTeXCompiler(WikiCompiler) :
 
 class HtmlCompiler(WikiCompiler) :
 
-	class CodeProcessor :
+	class CodeProcessor(object) :
 		def __init__(self, match) :
 			self.content=[]
 			self.language=match.group(1) or "javascript"
@@ -832,7 +832,7 @@ class HtmlCompiler(WikiCompiler) :
 			except:
 				warn("Warning: Pygments package not available. Generating code without syntax highlighting.")
 				return "\n".join(self.content)
-			file("style_code.css",'w').write(HtmlFormatter().get_style_defs('.code'))
+			open("style_code.css",'w').write(HtmlFormatter().get_style_defs('.code'))
 
 			lexer = get_lexer_by_name(self.language, stripall=True)
 			formatter = HtmlFormatter(linenos=False, cssclass="code")
@@ -853,15 +853,15 @@ class HtmlCompiler(WikiCompiler) :
 		formulasDir = "formulas"
 		if not os.access(formulasDir,os.F_OK) :
 			os.mkdir(formulasDir)
-		id = HtmlCompiler.formulaIdGen.next()
+		id = next(HtmlCompiler.formulaIdGen)
 		gifname = os.path.join(formulasDir,"eq%06i.gif"%id)
-		print "\t\tgenerating",gifname
+		print("\t\tgenerating",gifname)
 		gif = open(gifname,'wb')
 		gif.write(imageContent)
 		gif.close()
 		return gifname
 
-	class FormulaProcessor :
+	class FormulaProcessor(object) :
 		def __init__(self, match) :
 			self.content=[]
 		def __call__(self, line) :
@@ -880,7 +880,7 @@ class HtmlCompiler(WikiCompiler) :
 		# bib file not found
 		if self.bibEntries is None :
 			warn("No bibliography files found: %s"%ids)
-			return ur"<a class='bibref' href='bibliography.bib.html#%(ids)s'>"\
+			return u"<a class='bibref' href='bibliography.bib.html#%(ids)s'>"\
 				"[Error %(ids)s]<span class='tooltip'>Bibliography file not found.</span></a>"%dict(ids=ids)
 		result = []
 		for id in ids.split(',') :
@@ -888,12 +888,12 @@ class HtmlCompiler(WikiCompiler) :
 
 			# using raw bibtex formating (bibtex package not available)
 			if len(self.bibEntries)==0 :
-				result +=[ ur"<a class='bibref' href='bibliography.bib.html#%(id)s'>[%(id)s]</a>"%context]
+				result +=[ u"<a class='bibref' href='bibliography.bib.html#%(id)s'>[%(id)s]</a>"%context]
 				continue
 
-			if not self.bibEntries.has_key(id) :
+			if id not in self.bibEntries :
 				warn("Bibliography id not found: %s"%id)
-				result+=[ ur"<a class='bibref' href='bibliography.bib.html#%(id)s'>"
+				result+=[ u"<a class='bibref' href='bibliography.bib.html#%(id)s'>"
 					"[Error %(id)s]<span class='tooltip'>BibTeX key not found.</span></a>"%context ]
 				continue
 			
@@ -903,7 +903,7 @@ class HtmlCompiler(WikiCompiler) :
 				u"<span class='tooltip'>",
 			] + [
 				u"<span class='bibref%s'>%%(%s)s.</span> "%(field,field)
-				for field in config.bibliography.fieldsOrder if field in context.keys()
+				for field in config.bibliography.fieldsOrder if field in context
 			] + [
 				u"</span></a>"
 			])%context
@@ -1136,7 +1136,7 @@ class HtmlCompiler(WikiCompiler) :
 
 def generateHtmlBibliography(outputFilename, skeleton) :
 	bibFiles = glob.glob("*.bib")
-	print "Gathering bibliography, found %i bib files..."%len(bibFiles)
+	print("Gathering bibliography, found %i bib files..."%len(bibFiles))
 	if not bibFiles : return
 	try: import _bibtex as bibtex
 	except: return generateHtmlBibliographyRaw(outputFilename, bibFiles, skeleton)
@@ -1185,7 +1185,7 @@ def generateHtmlBibliographyPretty(outputFilename, bibfiles, skeleton) :
 			output += [u"<p><a name='%s'></a><b>%s</b> <b>%s</b></p><ul>"%(id,kind,id)]
 			entryDict = {}
 
-			for key, value in keys.iteritems() :
+			for key, value in keys.items():
 				expanded = bibtex.expand(bibfile, value, -1)
 				if len(expanded) is 3 :
 					expanded = tuple(list(expanded)+[None])
@@ -1194,10 +1194,10 @@ def generateHtmlBibliographyPretty(outputFilename, bibfiles, skeleton) :
 				elif len(expanded) is not 4 : warn("unknown bibliography tuple: %s %s %s"%(id, key, expanded)); continue
 				foo, bar, text, content = expanded
 				if not text : continue
-				entryDict[key]=unicode(text,'utf8')
+				entryDict[key]=str(text,'utf8')
 			thisEntryFields = [
-				field for field in config.bibliography.fieldsOrder if field in entryDict.keys() ] + [
-				field for field in entryDict.keys() if field not in config.bibliography.fieldsOrder ]
+				field for field in config.bibliography.fieldsOrder if field in entryDict ] + [
+				field for field in entryDict if field not in config.bibliography.fieldsOrder ]
 			output += [
 				longHtmlBibliographyFieldFormat(field, entryDict[field])
 				for field in thisEntryFields ]
@@ -1221,13 +1221,13 @@ def generateHtmlBibliographyPretty(outputFilename, bibfiles, skeleton) :
 def generateHtmlBasedPages(skeleton) :
 	import wiko_util
 	htmlFragments = glob.glob(os.path.join(config.htmlContentDir,config.htmlContentPattern))
-	print "Generating %i html based pages..."%len(htmlFragments)
+	print("Generating %i html based pages..."%len(htmlFragments))
 	for contentFile in htmlFragments :
 		target = os.path.basename(contentFile)
 		if not needsRebuild(target, contentFile) :
-			print "\t%s is up to date."%target
+			print("\t%s is up to date."%target)
 			continue
-		print "\tGenerating", target, "from", contentFile, "..."
+		print("\tGenerating", target, "from", contentFile, "...")
 		variables = config.predefinedVariables.copy() # TODO: shoud be taken from skeleton
 		content = readUtf8(contentFile)
 		content, variables = extractVars(content, variables)
@@ -1249,22 +1249,22 @@ def gatherTeXSkeletons() :
 def generateWikiFiles(skeleton, bibEntries) :
 	wikifiles = glob.glob("*.wiki")
 	wikifiles += glob.glob(os.path.join(config.htmlContentDir,"*.wiki"))
-	print "Generating html and tex from %i wiki files..."%len(wikifiles)
+	print("Generating html and tex from %i wiki files..."%len(wikifiles))
 	for contentFile in wikifiles :
 		base = os.path.basename(contentFile)
 		target = "".join(os.path.splitext(base)[0:-1])+".html"
 		targetTex = "".join(os.path.splitext(base)[0:-1])+".tex"
 		if not needsRebuild(target, contentFile) :
-			print "\t%s is up to date."%target
+			print("\t%s is up to date."%target)
 			continue
 		content = readUtf8(contentFile)
 		if config.enableHtml :
-			print "\tGenerating", target, "from", contentFile, "..."
+			print("\tGenerating", target, "from", contentFile, "...")
 			htmlResult = HtmlCompiler(bibEntries).process(content)
 			htmlResult['wikiSource']=contentFile;
 			writeUtf8(target, skeleton%htmlResult)
 		if config.enableLaTeX :
-			print "\tGenerating", targetTex, "from", contentFile, "..."
+			print("\tGenerating", targetTex, "from", contentFile, "...")
 			texResult = LaTeXCompiler().process(content)
 			writeUtf8(targetTex, texResult['content'])
 
@@ -1334,7 +1334,7 @@ def generateBlog(blog, blogEntries, tags) :
 	htmlentries = []
 	rssItems = []
 	for entry in blogEntries :
-		print entry['publishediso'], entry['name'] , "|" , entry['title'] , "[" + entry["tags"]+']'
+		print(entry['publishediso'], entry['name'] , "|" , entry['title'] , "[" + entry["tags"]+']')
 	for entry in blogEntries :
 		targetBlog = entry['link']
 		composed = blogEntryScheleton%entry
@@ -1343,13 +1343,15 @@ def generateBlog(blog, blogEntries, tags) :
 			tagPages[tag].append(composed)
 		rssItems.append(blogRssEntryScheleton%entry)
 
-	taglist=[(tag,len(entries)) for tag, entries in tagPages.iteritems()]
+	taglist=[(tag,len(entries)) for tag, entries in list(tagPages.items())]
 #	taglist.sort(key=lambda a : a[1],reverse=True)
 	minTagItems = min(nitems for tag,nitems in taglist)-1
 	maxTagItems = max(nitems for tag,nitems in taglist)
 	blog.taglist = "\n".join([
 		"<li class='cloud%s'><a href='blog/tag/%s.html'>%s(%i)</a></li>"%(
-			(nitems-minTagItems)*10/maxTagItems,tag,tag,nitems) for tag,nitems in taglist])
+			(nitems-minTagItems)*10//maxTagItems, tag, tag, nitems)
+		for tag,nitems in taglist
+	])
 	for entry in blogEntries :
 		blog.htmlentries = "".join(
 			[(blogEntryScheleton % entry)] +
@@ -1364,7 +1366,7 @@ def generateBlog(blog, blogEntries, tags) :
 	writeUtf8("blog/feed.rss", blogRssScheleton%blog.__dict__)
 	tagNotice = """<div class='blog_tagnotice'>Showing only entries labeled as <b>%s</b>.
 <a href='%s'>Show all entries</a></div>"""
-	for tag, tagEntries in tagPages.iteritems() :
+	for tag, tagEntries in list(tagPages.items()) :
 		blog.htmlentries = "\n".join([tagNotice%(tag,blog.indexpage)]+tagEntries)
 		writeUtf8("blog/tag/%s.html"%tag,blogScheleton%blog.__dict__)
 
@@ -1373,7 +1375,7 @@ def generateBlog(blog, blogEntries, tags) :
 # Download zones: Listing files in a directory integrated in the web site style.
 
 def generateDownloadZones(dirs, skeletonFilename, blacklist) :
-	print "Generating %i download zones..."%len(dirs)
+	print("Generating %i download zones..."%len(dirs))
 	if not dirs : return
 	def humanReadableSize(filename) :
 		if os.path.isdir(filename) : return ""
@@ -1401,11 +1403,11 @@ def generateDownloadZones(dirs, skeletonFilename, blacklist) :
 		if not os.access(dirname, os.X_OK):
 			warn("Not available: %s"%dirname)
 			continue
-		print "Generating download index at '%s'"%dirname
+		print("Generating download index at '%s'"%dirname)
 		files = os.listdir(dirname)
-		files = filter((lambda a : a not in blacklist ), files) # Filter blacklisted
+		files = list(filter((lambda a : a not in blacklist ), files)) # Filter blacklisted
 		dirs = [dir+"/" for dir in filter((lambda a : os.path.isdir(os.path.join(dirname, a)) ), files) ]
-		files = filter((lambda a : not os.path.isdir(os.path.join(dirname, a)) ), files) # Filter dirs
+		files = list(filter((lambda a : not os.path.isdir(os.path.join(dirname, a)) ), files)) # Filter dirs
 		files.sort()
 
 		table = "\n".join( [ lineTemplate%{
@@ -1426,7 +1428,7 @@ def generateDownloadZones(dirs, skeletonFilename, blacklist) :
 
 def generateFigures() :
 	if not config.generateFigures : return
-	print "Generating figures..."
+	print("Generating figures...")
 	for dir in config.figureDirs :
 		if not os.access(dir, os.R_OK) :
 			warn("Figure directory '%s' not available"%dir)
@@ -1451,9 +1453,9 @@ def main() :
 	generateHtmlBasedPages(skeleton)
 	texSkeletons = gatherTeXSkeletons()
 	if not texSkeletons : config.enableLaTeX = False
-	print "Found %i main tex files"% len(texSkeletons)
+	print("Found %i main tex files"% len(texSkeletons))
 	generateWikiFiles(skeleton, bibEntries)
-	print "Generating blog..."
+	print("Generating blog...")
 	blogEntries, tags = readBlogEntries(config.blog, bibEntries)
 	generateBlog(config.blog, blogEntries, tags)
 	generateDownloadZones(config.downloads.dirs, config.downloads.template, config.downloads.blacklist)

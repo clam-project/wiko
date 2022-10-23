@@ -1,6 +1,6 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
-
+unicode=str
 import os
 class Config :
 	useTidy = False
@@ -20,13 +20,14 @@ try:
 	import gdata
 	import gdata.service
 except:
-	print >> sys.stderr, "Execution failed: gdata python module not found"
-	sys.exit()
+	print("Execution failed: gdata python module not found", file=sys.stderr) 
+	raise
 try:
-	from PyQt4.QtCore import *
-	from PyQt4.QtGui import *
+	from PySide6.QtCore import *
+	from PySide6.QtGui import *
+	from PySide6.QtWidgets import *
 except:
-	print >> sys.stderr, "Execution failed: This script requires PyQt4 installed"
+	print("Execution failed: This script requires PySide6 installed", file=sys.stderr)
 	sys.exit()
 
 def buddyFor(widget, labelText) :
@@ -45,7 +46,7 @@ class LoginPage(QWizardPage) :
 		self.login = QLineEdit(self)
 		loginLabel = buddyFor(self.login,"Login")
 		self.passwd = QLineEdit(self)
-		self.passwd.setEchoMode(self.passwd.Password)
+		self.passwd.setEchoMode(QLineEdit.Password)
 		passwdLabel = buddyFor(self.passwd,"Password")
 		self.errorMessage=QLabel("")
 
@@ -73,8 +74,10 @@ class LoginPage(QWizardPage) :
 		self.updateStatus("Validating user...", "blue")
 		try :
 			self.wizard().login(self.login.text(), self.passwd.text(), self.server.text())
-		except Exception, error:
+		except Exception as error:
 			self.updateStatus(error, "red")
+			import traceback
+			traceback.print_exception(error)
 			return False
 		self.updateStatus("Logged in", "green")
 		return True
@@ -101,7 +104,7 @@ class BlogSelectionPage(QWizardPage) :
 	def initializePage(self) :
 		blogs = self.wizard().getBlogList()
 		for title, url, id in blogs :
-			print title, url, id
+			print(title, url, id)
 			item = QListWidgetItem(title)
 			item.setData(Qt.UserRole, QVariant(id))
 			self.blogList.addItem(item)
@@ -109,7 +112,7 @@ class BlogSelectionPage(QWizardPage) :
 	def validatePage(self) :
 		item = self.blogList.item(self.blogList.currentRow())
 		self.wizard().blogId = str(item.data(Qt.UserRole).toString())
-		print item.text(), self.wizard().blogId
+		print(item.text(), self.wizard().blogId)
 		return True
 
 class DirectoryPage(QWizardPage) :
@@ -120,7 +123,7 @@ class DirectoryPage(QWizardPage) :
 
 		self.fileedit = QLineEdit(self)
 		self.completer = QCompleter(self)
-		self.completer.setModel(QDirModel(self.completer));
+		self.completer.setModel(QFileSystemModel(self.completer));
 		self.fileedit.setCompleter(self.completer);
 		self.pushButton = QPushButton(self)
 		self.pushButton.setText('&Choose')
@@ -184,7 +187,7 @@ class RunPage(QWizardPage) :
 
 	def isComplete(self) :
 		for action in self.wizard().dump(stepped=True) :
-			print "Execution", action
+			print("Execution", action)
 			self.log.append(action)
 			QApplication.sendPostedEvents()
 			QApplication.processEvents()
@@ -202,7 +205,7 @@ class BloggerImportWizard (QWizard) :
 		self.service = gdata.service.GDataService(user, password)
 		self.service.source = 'WiKo'
 		self.service.service = 'blogger'
-		self.service.server = unicode(server)
+		self.service.server = server
 		self.service.ProgrammaticLogin()
 
 	def getBlogList(self) :
@@ -220,8 +223,8 @@ class BloggerImportWizard (QWizard) :
 	def __init__(self, parent=None) :
 		QWizard.__init__(self)
 		self.setWindowTitle("Blogger.com to WiKo")
-#		self.setPixmap(self.LogoPixmap, QPixmap("blogger_logo_small.png"))
-		self.setPixmap(self.WatermarkPixmap, QPixmap("web/wikologo.png"))
+#		self.setPixmap(QWizard.LogoPixmap, QPixmap("blogger_logo_small.png"))
+		self.setPixmap(QWizard.WatermarkPixmap, QPixmap("web/wikologo.png"))
 		self.blogId = None
 		self.service = None
 		self.targetDir = ""
@@ -251,7 +254,7 @@ class BloggerImportWizard (QWizard) :
 		filetitle = unicode(title, 'utf-8')
 		filetitle = filetitle.lower().strip()
 		# Turn punctuation into spaces
-		for char in ur"!,()./\:?" :
+		for char in r"!,()./\:?" :
 			filetitle = filetitle.replace(char, u" ")
 		# Simplify spaces (a better function for that?
 		filetitle = filetitle.strip()
@@ -277,7 +280,7 @@ class BloggerImportWizard (QWizard) :
 		links = dict([(link.rel, link.href) for link in feed.link])
 		if stepped : yield "Title: '%s' Subtitle: '%s'" % ( feed.title.text, feed.subtitle.text)
 		def dumpConfig(name, value) :
-			print >> blogconfig, u"%s = '%s'" % (name, unicode(value,'utf-8'))
+			print(u"%s = '%s'" % (name, unicode(value,'utf-8')), file=blogconfig)
 		dumpConfig("blogid", feed.id.text)
 		dumpConfig("title", feed.title.text)
 		dumpConfig("description", feed.subtitle.text)
@@ -289,19 +292,19 @@ class BloggerImportWizard (QWizard) :
 		dumpConfig("contributor", ', '.join([contributor.name.text for contributor in feed.contributor]))
 		dumpConfig("homeurl", links['alternate'])
 		dumpConfig("updated", feed.updated.text)
-		print "\n".join(str(link) for link in feed.link)
+		print("\n".join(str(link) for link in feed.link))
 		blogconfig.close()
 		import string
 		for entry in feed.entry:
 			id = int(entry.id.text.split("-")[-1])
-			print entry.title.text
+			print(entry.title.text)
 			title = entry.title.text or u"No title"
 			filename = u"blog-%019i-%s.wiki"%(id, self.permaFormTitle(title))
 			fullfilename = os.path.join(self.targetDir,filename)
 			if stepped: yield "Generating " + filename
 			blogfile=codecs.open(fullfilename,'w','utf-8')
 			def dumpBlogVar(name, value) :
-				print >> blogfile, u"@%s: %s"%(name, unicode(value,'utf-8'))
+				print(u"@%s: %s"%(name, unicode(value,'utf-8')), file=blogfile)
 			dumpBlogVar("id", str(id))
 			dumpBlogVar("author", (", ".join([author.name.text for author in entry.author])))
 #			dumpBlogVar("authoremail", (", ".join([author.email.text for author in entry.author if author.email])))
@@ -312,13 +315,13 @@ class BloggerImportWizard (QWizard) :
 			dumpBlogVar("updated", datetime.datetime.strptime(entry.updated.text[:19], "%Y-%m-%dT%H:%M:%S").strftime("%Y-%m-%d %H:%M:%S"))
 			dumpBlogVar("published", datetime.datetime.strptime(entry.published.text[:19], "%Y-%m-%dT%H:%M:%S").strftime("%Y-%m-%d %H:%M:%S"))
 			dumpBlogVar("tags", (", ".join([category.term for category in entry.category])))
-			print >> blogfile
+			print(file=blogfile)
 			content = self.wikify(unicode(entry.content.text,'utf-8'))
-			print >> blogfile, content
+			print(content, file=blogfile)
 			blogfile.close()
 		for comment in self.getComments() :
 			commentfilename = os.path.join(self.targetDir,"blog-%(inreplyto)019i-%(id)s.comment"%comment)
-			print "Generating comment %s"%commentfilename
+			print("Generating comment %s"%commentfilename)
 			commentfile=codecs.open(commentfilename,'w','utf-8')
 			for key in [
 				'id',
@@ -330,9 +333,9 @@ class BloggerImportWizard (QWizard) :
 				"authoruri",
 				"authoremail",
 				] :
-				print >> commentfile, "@%s:"%key, unicode(str(comment[key]),'utf-8')
-			print >> commentfile
-			print >> commentfile, unicode(comment['content'],'utf-8')
+				print("@%s:"%key, unicode(str(comment[key]),'utf-8'), file=commentfile)
+			print(file=commentfile)
+			print(unicode(comment['content'],'utf-8'), file=commentfile)
 
 	def wikify(self, content) :
 		if Config.useTidy:
@@ -347,14 +350,14 @@ class BloggerImportWizard (QWizard) :
 			tidy.parseString(content+"\n", **tidyOptions)
 		import re
 		substitutions = [
-			(ur'<a\s+href\s*=\s*"([^"]+)">([^<]+)\s*<\s*/\s*a\s*>', ur"[[\1 \2]]"),
-			(ur"<a\s+href\s*=\s*'([^']+)'>([^<]+)\s*<\s*/\s*a\s*>", ur"[[\1 \2]]"),
-			(ur'<br />', "\n"),
-			(u'<p>', "\n\n"),
-			(u'</p>', ""),
-#			(u'<pre>', "Code:\n"),
-#			(u'</pre>', ""),
-			(u'%', '%%'),
+			(r'<a\s+href\s*=\s*"([^"]+)">([^<]+)\s*<\s*/\s*a\s*>', r"[[\1 \2]]"),
+			(r"<a\s+href\s*=\s*'([^']+)'>([^<]+)\s*<\s*/\s*a\s*>", r"[[\1 \2]]"),
+			(r'<br />', "\n"),
+			('<p>', "\n\n"),
+			('</p>', ""),
+#			('<pre>', "Code:\n"),
+#			('</pre>', ""),
+			('%', '%%'),
 		]
 		substitutions = [(re.compile(old), new) for old, new in substitutions]
 		for old, new in substitutions :
@@ -369,7 +372,7 @@ class BloggerImportWizard (QWizard) :
 		feed = self.service.Get(feed_url)
 		ignoredComments = len(feed.entry)-len([entry for entry in feed.entry if entry.extension_elements])
 		if ignoredComments :
-			print >> sys.stderr, "Warning: ignoring", ignoredComments, "comment(s) that didn't refer the original article"
+			print("Warning: ignoring", ignoredComments, "comment(s) that didn't refer the original article", file=sys.stderr)
 		return [ dict(
 			id = entry.id.text.split("-")[-1],
 			title = entry.title.text,
@@ -389,7 +392,7 @@ def main():
 	app=QApplication(sys.argv)
 	wizard = BloggerImportWizard()
 	wizard.targetDir= Config.targetDir
-	if wizard.exec_() != QDialog.Accepted :
+	if wizard.exec() != QDialog.Accepted :
 		exit(-1)
 	exit(0)
 

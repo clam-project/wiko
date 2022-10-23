@@ -5,28 +5,30 @@ import glob
 import subprocess
 import sys
 
-def runOrDie(command) :
-	print >> sys.stderr,"Running: \033[33m", command, "\033[0m"
-	process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
-	output, _ = process.communicate()
-	if process.returncode :
-		print >> sys.stderr,"Error running: \033[33m" + command + "\033[0m"
-		print >> sys.stderr, "\033[31m" + output + "\033[0m"
-		sys.exit(-1)
+
+def runOrDie(command):
+    print("Running: \033[33m", command, "\033[0m", file=sys.stderr)
+    process = subprocess.Popen(
+        command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True
+    )
+    output, _ = process.communicate()
+    if process.returncode:
+        print("Error running: \033[33m" + command + "\033[0m", file=sys.stderr)
+        print("\033[31m" + output.decode("utf8") + "\033[0m", file=sys.stderr)
+        sys.exit(-1)
+
 
 wikoRoot = os.path.abspath(os.path.dirname(__file__))
-testSamplesRoot = os.path.join(wikoRoot,"testsamples")
+testSamplesRoot = os.path.join(wikoRoot, "testsamples")
 
 os.chdir(testSamplesRoot)
 testCases = glob.glob("*")
-for case in testCases :
-	print "===== ", case
-	os.chdir(case)
-	runOrDie("../../wiko --force")
-	os.chdir(testSamplesRoot)
+for case in testCases:
+    print("===== ", case)
+    os.chdir(case)
+    runOrDie("../../wiko --force")
+    os.chdir(testSamplesRoot)
 
-print "==== Changes"
+print("==== Changes")
 os.chdir(wikoRoot)
-subprocess.call("svn stat testsamples", shell=True)
-
-
+subprocess.call("git status testsamples", shell=True)

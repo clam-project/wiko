@@ -2,10 +2,9 @@
 
 ![](wiko/web/wikologo.svg)
 
+By David Garcia and Pau Arumi
 
-## David Garcia and Pau Arumi
-
-* The original Sourceforge project
+* [The original Sourceforge project](https://sourceforge.net/projects/wiko/)
 
 ## Description
 
@@ -32,8 +31,8 @@ It is kept alive because it is still being used to generate some websites pendin
 
 ### Common formatting
 
-* Text formating: '''bold''', ''italics''...
-* Hypertext and anchoring: [[http://lalala.com links]] and the like
+* Text formating: `'''bold'''`, `''italics''`...
+* Hypertext and anchoring: `[[http://lalala.com links]]` and the like
 * Lists and enumerations
 * Table of content generation for HTML pages
 * LaTeX constructs supported on both formats: figures, formulae, bibliography, footnotes...
@@ -58,7 +57,7 @@ such as publication date, author, tags...
 This script has been developed mainly by ''David Garcia Garzon'' and ''Pau Arumi Albo''.
 They developed the script for their own personal use
 on their webs, scientific articles and even their thesis.
-See at the [[wiko/code/examples.html WiKo examples page]].
+See at the [[wiko/web/examples.html WiKo examples page]].
 
 
 

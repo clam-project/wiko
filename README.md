@@ -27,9 +27,9 @@ Main benefits of using WiKo are:
 * You can change the look of your entire site by changing common headers, side bars, footers and styling in a pair of files which are content independent. And still it is an static web site.
 * You can put your web site or your article under a versioning system (cvs, svn...) for collaborative elaboration and having a published version that updates on commit.
 
-- [Usage](docs/usage)
-- [Examples](docs/examples)
-- [Screenshots](docs/screenshots)
+- [Usage](docs/usage.md)
+- [Examples](docs/examples.md)
+- [Screenshots](docs/screenshots.md)
 
 ## Features
 

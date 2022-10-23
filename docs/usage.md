@@ -80,7 +80,7 @@ WiKo generate directory listings which integrates on the web page look and feel.
 
 You should create a file named ''downloadZones.wiko'' on the working directory
 just like that:
-Code: python
+```python
  {
 	'dirs' : [
 		("WiKo files", "download/"),
@@ -92,6 +92,7 @@ Code: python
 	],
 	'skeletonFile' : "scheleton.html"
  }
+```
 
 
 ''dirs'' is a list of python tuples containing titles and paths for the download zones.
@@ -108,9 +109,11 @@ might be wrong.
 By using the wiki format you can also use variables to be inserted
 on the skeleton.
 You should introduce a line like this in the .wiki file.
-{{{
-@variableName: value to use
-}}}
+
+	{{{
+	@variableName: value to use
+	}}}
+
 and then using the tag '''%%<!-- -->(variableName)s''' wherever you want to use it on the skeleton.
 
 ### Inserting an html table of content
@@ -157,17 +160,18 @@ svn propset svn:keywords "Revision Date Author" aFile.wiki
 
 
 then you can insert in the wiki file text like this:
-{{{
-$Revision$
-$Date$
-$Author$
-}}}
-And subversion will rewrite it on update as:
-{{{
-$Revision: 242$
-$Date: 2002-07-22 21:42:37 -0700 (Mon, 22 Jul 2002)$
-$Author: vokimon$
-}}}
+
+	{{{
+	$Revision$
+	$Date$
+	$Author$
+	}}}
+	And subversion will rewrite it on update as:
+	{{{
+	$Revision: 242$
+	$Date: 2002-07-22 21:42:37 -0700 (Mon, 22 Jul 2002)$
+	$Author: vokimon$
+	}}}
 
 A nice way of using it is placing such tags in @ variables
 so that you can place them in a fixed location in the skeleton.
@@ -177,24 +181,27 @@ so that you can place them in a fixed location in the skeleton.
 If you are using subversion, it is very convenient having
 the web updated automatically on every subversion commit.
 You will require:
+
 * Having shell access to your server
 * Having python installed on your server (most servers have)
 * Having rights to use crontab (scheduled tasks)
 * A copy of wiko committed into your repository root
 
 Given that:
+
 * ''/var/www'' is where you can place your web files in your web service,
 * ''/var/www/myweb'' is where your project is gonna live
 * ''svn+ssh://svnuser@mysvnserver.com/home/svn/myproject/web'' is your svn repository
 
 You should issue the following commands on your server:
-Code: bash
+
+```bash
 cd /var/www/
 ssh-keygen       # and then, return, return, return, return...
 ssh-copy-id svnuser@mysvnserver.com
 svn co svn+ssh://svnuser@mysvnserver.com/home/svn/myproject/web myweb
 (crontab -l ; echo '5,15,25,35,45,55 * * * * (cd /var/www/myweb && svn up && ./wiko) 2>&1 | cat > /var/www/myweb/err') | crontab -
-
+```
 
 
 

@@ -32,6 +32,10 @@ dependencies = [
     "pillow",
 ]
 
+[project.urls]
+"Homepage" = "https://github.com/clam-project/wiko"
+"Bug Tracker" = "https://github.com/clam-project/wiko/issues"
+
 [tool.setuptools]
 packages = ["wiko"]
 

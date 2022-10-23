@@ -8,6 +8,10 @@ By David Garcia and Pau Arumi
 
 ## Description
 
+**We do not recommended to use Wiko in new projects.
+This is a quite deprecated zombie project from 2007.
+It is kept alive because it is still being used to generate some websites pending to be migrated to modern static generators.**
+
 WiKo is a very simple but powerful python script
 which takes files with _wiki_ content in a given directory
 and either builds a _web_, a _LaTeX article_ or a _blog_.
@@ -22,10 +26,6 @@ Main benefits of using WiKo are:
 * You don't need to reformat content to reuse it from the web to a LaTeX article or to a blog.
 * You can change the look of your entire site by changing common headers, side bars, footers and styling in a pair of files which are content independent. And still it is an static web site.
 * You can put your web site or your article under a versioning system (cvs, svn...) for collaborative elaboration and having a published version that updates on commit.
-
-**We do not recommended to use Wiko in new projects.
-This is a quite deprecated zombie project from 2007.
-It is kept alive because it is still being used to generate some websites pending to be migrated to modern static generators.**
 
 ## Features
 

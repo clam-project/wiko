@@ -15,7 +15,7 @@ This is the simplest mode of usage.
 WiKo takes each .html file at the subdirectory 'content'
 and creates an homonym html files at the working
 directory by inserting such files into the skeleton
-at the point where you inserted the '''%%<!-- -->(content)s''' tag.
+at the point where you inserted the `%%<!-- -->(content)s` tag.
 
 This way you can fully update the look and feel of you web site
 just by updating the skeleton without having to edit every html file
@@ -38,11 +38,11 @@ It renders into [[Sample.html this html file]].
 ### Generating PDF (LaTeX) from wiki files
 
 WiKo can also generate PDF through LaTeX. LaTeX document skeletons are a bit different from html ones:
-* In a document skeletons the user must include the generated file using the normal LaTeX facilities: '''\input{file}''' (and not with '''%%<!-- -->(content)s''' as in the html case)
-* WiKo will consider document skeleton any .tex file in the working directory that both contains the '''\documentclass''' directive '''and''' its basename does not match with any of the .wiki files.
+* In a document skeletons the user must include the generated file using the normal LaTeX facilities: `\input{file}` (and not with `%%<!-- -->(content)s` as in the html case)
+* WiKo will consider document skeleton any .tex file in the working directory that both contains the `\documentclass` directive `and` its basename does not match with any of the .wiki files.
 
 An example of a working directory:
-* document.tex (document skeleton that will be compiled. It contains '''\documentclass''' and '''\input{chapter1}''' )
+* document.tex (document skeleton that will be compiled. It contains `\documentclass` and `\input{chapter1}` )
 * chapter1.tex (generated)
 * chapter1.wiki (source)
 
@@ -114,27 +114,27 @@ You should introduce a line like this in the .wiki file.
 	@variableName: value to use
 	}}}
 
-and then using the tag '''%%<!-- -->(variableName)s''' wherever you want to use it on the skeleton.
+and then using the tag `%%<!-- -->(variableName)s` wherever you want to use it on the skeleton.
 
 ### Inserting an html table of content
 
-By inserting in a wiki content file the '''%%<!-- -->(toc)s''' tag you can get
+By inserting in a wiki content file the `%%<!-- -->(toc)s` tag you can get
 in the html ouput a table of content which links to the headings of each section.
 Just like this manual.
 
 ### Refering bibliography
 
 The wiki format allows referencing [[http://en.wikipedia.org/wiki/Bibtex BibTeX]] entries
-with the ''@cite'' directive.
-In the LaTeX mode, that has a direct mapping to the ''\cite'' command.
-In the HTML mode, a link is created to a web page called ''bibliography.bib.html''
+with the `@cite` directive.
+In the LaTeX mode, that has a direct mapping to the `\cite` command.
+In the HTML mode, a link is created to a web page called `bibliography.bib.html`
 which is an aggregation of every .bib file it founds in the working directory.
-The ''@cite'' directive points to the proper entry.
+The `@cite` directive points to the proper entry.
 
 ### Access to the wiki source code
 
 If you want to place a link to the wiki source in the skeleton
-use the '''%%<!-- -->(wikiSource)s''' tag to get its url.
+use the `'%%<!-- -->(wikiSource)s'` tag to get its url.
 
 ### Using WiKo with version control system
 
@@ -155,9 +155,9 @@ put under the version control just those files that are not generated.
 Subversion allows you to include on the file information on the revision
 number and the last modification date and author.
 
-Code: bash
+```bash
 svn propset svn:keywords "Revision Date Author" aFile.wiki
-
+```
 
 then you can insert in the wiki file text like this:
 
@@ -166,7 +166,9 @@ then you can insert in the wiki file text like this:
 	$Date$
 	$Author$
 	}}}
-	And subversion will rewrite it on update as:
+
+And subversion will rewrite it on update as:
+
 	{{{
 	$Revision: 242$
 	$Date: 2002-07-22 21:42:37 -0700 (Mon, 22 Jul 2002)$
@@ -189,9 +191,9 @@ You will require:
 
 Given that:
 
-* ''/var/www'' is where you can place your web files in your web service,
-* ''/var/www/myweb'' is where your project is gonna live
-* ''svn+ssh://svnuser@mysvnserver.com/home/svn/myproject/web'' is your svn repository
+* `/var/www` is where you can place your web files in your web service,
+* `/var/www/myweb` is where your project is gonna live
+* `svn+ssh://svnuser@mysvnserver.com/home/svn/myproject/web` is your svn repository
 
 You should issue the following commands on your server:
 

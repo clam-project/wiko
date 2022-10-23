@@ -27,6 +27,10 @@ Main benefits of using WiKo are:
 * You can change the look of your entire site by changing common headers, side bars, footers and styling in a pair of files which are content independent. And still it is an static web site.
 * You can put your web site or your article under a versioning system (cvs, svn...) for collaborative elaboration and having a published version that updates on commit.
 
+- [Usage](docs/usage)
+- [Examples](docs/examples)
+- [Screenshots](docs/screenshots)
+
 ## Features
 
 ### Common formatting
@@ -39,6 +43,7 @@ Main benefits of using WiKo are:
 * Automatic recompilation of some image formats (dia->eps/png, dot->eps/png, eps->pdf...)
 * User definable paragraphs types
 * Useful constructs for elaboration such as to-do notes and reviewers notes
+* Gallery generation
 
 ### Blogging
 
@@ -50,6 +55,7 @@ such as publication date, author, tags...
 * a front page with newer entries,
 * [RSS](http://en.wikipedia.org/wiki/RSS) file with the last entries
 * filtered pages with entries by the same author or with a given tag,
+* graphical import tool from Blogger and Wordpress
 * objects for the sidebar with archived entries and tags list
 
 ## Authors

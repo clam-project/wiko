@@ -69,7 +69,7 @@ The blog mode is currently under heavy development.
 We would like to evolve it in two directions:
 * Allowing comments
 * User definable side bar widgets
-* Interacting with [blogger](http://www.blogger.com) and [wordpress](http://www.wordpress.org wordpress) API's to export and import
+* Interacting with [blogger](http://www.blogger.com) and [Wordpress](http://www.wordpress.org) API's to export and import
 
 <!-- [[wikosample-blog.zip Sample WiKo project for a blog]] -->
 

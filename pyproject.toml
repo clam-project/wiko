@@ -1,0 +1,43 @@
+[project]
+name = "wiko"
+version = "1.0.0"
+authors = [
+    {name = "David García Garzón", email = "voki@canvoki.net"},
+    {name = "Pau Arumí Albò", email = "pau.arumi@dolby.com"},
+    {name = "Natanael Olaiz"},
+]
+description = "WiKo: The wiki compiler, a static site and pdf generator."
+keywords = [
+    "Static site generator",
+    "Wiki",
+]
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Development Status :: 7 - Inactive",
+    "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Topic :: Internet :: WWW/HTTP :: Dynamic Content :: Wiki",
+    "Topic :: Internet :: WWW/HTTP :: Dynamic Content :: Content Management System",	
+]
+dependencies = [
+    "gdata-python3",
+    "pyside6",
+    "utidylib",
+    "pygments",
+    "pillow",
+]
+
+[tool.setuptools]
+packages = ["wiko"]
+
+[project.scripts]
+wiko="wiko.wiko:main"
+blogger2wiko="wiko.blogger2wiko:main"
+wiko_download_area="wiko.generate_download_area:main"
+wiko_gallery="wiko.generate_gallery:main"
+wiko_figures="wiko.generate_figures:main"

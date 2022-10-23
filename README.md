@@ -48,7 +48,7 @@ according to attributes you can define for each entry
 such as publication date, author, tags...
 
 * a front page with newer entries,
-* [http://en.wikipedia.org/wiki/RSS](RSS) file with the last entries
+* [RSS](http://en.wikipedia.org/wiki/RSS) file with the last entries
 * filtered pages with entries by the same author or with a given tag,
 * objects for the sidebar with archived entries and tags list
 
@@ -57,7 +57,7 @@ such as publication date, author, tags...
 This script has been developed mainly by ''David Garcia Garzon'' and ''Pau Arumi Albo''.
 They developed the script for their own personal use
 on their webs, scientific articles and even their thesis.
-See at the [wiko/web/examples.html](WiKo examples page).
+See at the [WiKo examples page](wiko/web/examples.html).
 
 
 

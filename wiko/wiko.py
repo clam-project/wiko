@@ -1219,7 +1219,7 @@ def generateHtmlBibliographyPretty(outputFilename, bibfiles, skeleton) :
 
 # Generate HTML with HTML content files + skeleton
 def generateHtmlBasedPages(skeleton) :
-	import wiko_util
+	from . import wiko_util
 	htmlFragments = glob.glob(os.path.join(config.htmlContentDir,config.htmlContentPattern))
 	print("Generating %i html based pages..."%len(htmlFragments))
 	for contentFile in htmlFragments :

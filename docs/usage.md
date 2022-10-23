@@ -110,9 +110,7 @@ By using the wiki format you can also use variables to be inserted
 on the skeleton.
 You should introduce a line like this in the .wiki file.
 
-	{{{
 	@variableName: value to use
-	}}}
 
 and then using the tag `%(variableName)s` wherever you want to use it on the skeleton.
 
@@ -161,19 +159,15 @@ svn propset svn:keywords "Revision Date Author" aFile.wiki
 
 then you can insert in the wiki file text like this:
 
-	{{{
 	$Revision$
 	$Date$
 	$Author$
-	}}}
 
 And subversion will rewrite it on update as:
 
-	{{{
 	$Revision: 242$
 	$Date: 2002-07-22 21:42:37 -0700 (Mon, 22 Jul 2002)$
 	$Author: vokimon$
-	}}}
 
 A nice way of using it is placing such tags in @ variables
 so that you can place them in a fixed location in the skeleton.

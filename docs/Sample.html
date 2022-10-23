@@ -1,0 +1,359 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+    "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" >
+<head>
+<title>Wiki sample page</title>
+<link rel='stylesheet' href='style.css' type='text/css'/>
+<link rel='stylesheet' href='style_code.css' type='text/css'/>
+<!-- Autor: David García Garzón -->
+</head>
+<body>
+<div id="sidebar">
+<p id="sitelogo"><a href="index.html"><img src="wikologo.png" alt="[WiKo Logo]" /></a></p>
+<p id="sitenavhead">Site Navigation:</p>
+<ul id="sitenav" class="navlist">
+<li><a href='index.html'>Home</a></li>
+<li><a href='usage.html'>Usage</a></li>
+<li><a href='examples.html'>Examples</a></li>
+<li><a href='screenshots.html'>Screenshots</a></li>
+<li><a href='download.html'>Download</a></li>
+<li><a href='http://sourceforge.net/projects/wiko'>SourceForge</a></li>
+<li><a href='https://lists.sourceforge.net/lists/listinfo/wiko-community'>Mailinglist</a></li>
+</ul>
+<p id="sitenavhead">Sibling Projects:</p>
+<ul id="sitenav" class="navlist">
+<li><a href='http://clam.iua.upf.edu'>CLAM</a></li>
+<li><a href='http://sourceforge.net/projects/testfarm/'>TestFarm</a></li>
+<li><a href='http://sourceforge.net/projects/efficiencyguard'>Efficiency Guardian</a></li>
+<li><a href='http://sourceforge.net/projects/minicppunit'>MiniCppUnit</a></li>
+</ul>
+<p id="sitenavhead">:::</p>
+<ul id="sitenav" class="navlist">
+<li><a href='Sample.wiki' alt="Downloads the wiki source of this page">Wiki Source for this page</a></li>
+</ul>
+</div>
+<div id='content'>
+<h1>Wiki sample page</h1>
+
+<p>
+Take a look to the <a href='Sample.wiki'>source</a> of this page to see how it is generated.
+Take into acount that you should need the <a href='skeleton.html'>skeleton</a>, the <a href='style.css'>style</a>,
+the <a href='biblio.tex'>BibTeX file</a>
+and some images to get the same results.
+</p>
+
+<p>
+<h2>Index</h2>
+<div class='toc'>
+<ul>
+<ul>
+<li><a href='#toc_1'>Headers</a></li>
+<ul>
+<li><a href='#toc_2'>Third level</a></li>
+<ul>
+<li><a href='#toc_3'>Fourth level</a></li>
+</ul>
+</ul>
+<li><a href='#toc_4'>Paragraphs</a></li>
+<li><a href='#toc_5'>Lists</a></li>
+<li><a href='#toc_6'>Inline directives</a></li>
+<ul>
+<li><a href='#toc_7'>Text style</a></li>
+<li><a href='#toc_8'>Linking</a></li>
+<li><a href='#toc_9'>Citations</a></li>
+</ul>
+<li><a href='#toc_10'>Special paragraphs</a></li>
+<li><a href='#toc_11'>Writting tools</a></li>
+<li><a href='#toc_12'>Figures</a></li>
+<li><a href='#toc_13'>Formulas</a></li>
+</ul>
+</ul>
+</div>
+</p>
+
+<p>
+To insert a table of content just place the previous one.
+It will appear just in the HTML output.
+LaTeX output ignores this tac as LaTeX has its own mechanisms
+to generate ToC's.
+</p>
+
+<p>
+Notice that the 'Index' header doesn't appear on the ToC.
+</p>
+
+<h2 id='toc_1'>Headers</h2>
+
+<h3 id='toc_2'>Third level</h3>
+
+<h4 id='toc_3'>Fourth level</h4>
+
+<p>
+Headers generate labels.
+They can be refered from a Table of Content.
+This is the place holder for a Table of Content
+</p>
+
+<h2 id='toc_4'>Paragraphs</h2>
+<p>
+This is a simple test for the web/article generator.
+It takes wiki pages and produces HTML and LaTeX output.
+It also takes a content folder with html fragments and
+embeds them on a scheletton.
+The idea is to have the benefits of a wiki syntax
+but maintain the files on a SVN server and editing
+them using your favorite editor (vim?) instead of
+the web interface.
+</p>
+
+<p>
+Paragraphs are separated by an empty line.
+Like the one before.
+</p>
+
+<h2 id='toc_5'>Lists</h2>
+
+<ol>
+	<li> first</li>
+	<li> second</li>
+</ol>
+
+<ol>
+	<li> new first</li>
+</ol>
+
+<ol>
+	<li> parent 1</li>
+	<ol>
+		<li> child 1</li>
+		<ul>
+			<li> non numerated child</li>
+			<li> non numerated child</li>
+		</ul>
+		<li> child 2</li>
+		<ol>
+			<li> subchild 1</li>
+		</ol>
+		<li> child 3</li>
+	</ol>
+	<li> parent 2</li>
+</ol>
+
+<h2 id='toc_6'>Inline directives</h2>
+
+<p>
+Inline directives should end at the same line they start.
+</p>
+
+<h3 id='toc_7'>Text style</h3>
+
+<p>
+Normal <em>emphasis</em> Normal. <em>Another emphasis</em> Normal
+Normal <em>em'phasis</em> Normal. <em>Another emphasis</em> Normal.
+Normal <b>bold</b> Normal. <b>Another bold</b> Normal.
+Normal <b>bold <em>emphasis</em> more bold. don't </b> Normal. <b>Another bold</b> Normal.
+Normal <em>emphasis <b>bold don't</b> more emphasis</em> Normal. <b>Another bold</b> Normal.
+</p>
+
+<h3 id='toc_8'>Linking</h3>
+
+<p>
+<a href='link.html'>a local link</a>
+<a href='link.html'>local link without alias</a>
+<a href='link.html'>one</a> and <a href='link.html'>other</a> local link in the same line.
+</p>
+
+<h3 id='toc_9'>Citations</h3>
+
+<p>
+Cites are resolved using BibTeX files found in the same directory.
+In LaTeX it works as a regular cite in latex.
+In HTML a tooltip apears with the bibliographic information.
+This work can be found in <a class='bibref' href='bibliography.bib.html#lee87'>[Error lee87]<span class='tooltip'>No bibliography file found.</span></a>. And also in <a class='bibref' href='bibliography.bib.html#www-CLAM'>[Error www-CLAM]<span class='tooltip'>No bibliography file found.</span></a>.
+</p>
+
+<h2 id='toc_10'>Special paragraphs</h2>
+
+<p>
+You can mark a paragraf with a 'Tag:' to mark it
+special in some sense.
+</p>
+
+<div class="abstract"><b>Abstract:</b>
+Some special paragraphs can be defined by preceding them by a
+colon ended keyword such as 'Abstract:'
+</div>
+
+<div class="keywords"><b>Keywords:</b>
+And the Keywords: special paragraph
+</div>
+
+
+<div class="definition"><b>Definition:</b>
+A wiki compiler is a program that takes a text file containing wiki like
+syntax and outputs some publishing format.
+</div>
+
+<div class="corollary"><b>Corollary:</b>
+WiKo is a wiki compiler.
+</div>
+
+<div class="proof"><b>Proof:</b>
+This is a proof
+</div>
+
+<div class="lemma"><b>Lemma:</b>
+Simple is better
+</div>
+
+<blockquote>
+Placing space or tabulators
+at the begining of the line
+creates a cite.
+bla bla bla bla bla bla
+bla bla bla bla bla bla
+bla bla bla bla bla bla
+bla bla bla bla bla bla
+</blockquote>
+
+<pre>
+You can place preformated code by enclosing it in
+three curly braces.
+    Tabs and new lines are preserved.
+	
+Blank lines are alowed if have spaces in it
+</pre>
+
+<p>
+Or better you could use the 'Code:' paragraph
+to have syntax highlighting.
+If the <a href='http://pygments.org/'>Pygments python package</a>
+is available in your system, the code will be highlighted.
+</p>
+
+<code>
+<div class="code"><pre><span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="p">[</span><span class="n">item</span> <span class="k">for</span> <span class="n">a</span><span class="p">]</span> <span class="p">:</span>
+	<span class="k">print</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;&gt;</span> <span class="k">print</span> <span class="s">&quot;hello world&quot;</span>
+</pre></div>
+
+</code>
+
+<p>
+You can choose a different language. For example C++:
+</p>
+
+<code>
+<div class="code"><pre><span class="k">template</span> <span class="o">&lt;</span> <span class="k">typename</span> <span class="n">T</span> <span class="o">&gt;</span> <span class="k">class</span> <span class="nc">A</span><span class="p">;</span>
+</pre></div>
+
+</code>
+
+<p>
+or bash:
+</p>
+
+<code>
+<div class="code"><pre><span class="k">for </span>a in *; <span class="k">do</span>
+<span class="k">	</span><span class="nb">echo </span>a | runme &gt; /dev/null
+<span class="k">done</span>
+</pre></div>
+
+</code>
+
+<h2 id='toc_11'>Writting tools</h2>
+
+<p>
+To-do's are usefull during the writting of a document
+to mark that something is still pending. 
+ <span class='todo'>TODO: This is a pending task.</span> 
+Note that todos' are single line so that they can be
+inserted in the middle of a paragraph.
+You can use grep command to get all the TODO's listed:
+</p>
+<code>
+<div class="code"><pre>grep <span class="s1">&#39;^TODO:&#39;</span> *.wiki | less
+</pre></div>
+
+</code>
+
+<p>
+Annotations are another nice tool while writting an article.
+Co-authors and reviewers can edit the source file,
+if they have access to it via svn for instance, and
+insert annotations such this one:
+ <a class='anno'><img alt='[Ann:DGG]' src='stock_notes.png' /><span class='tooltip'><b>DGG:</b> This explanation is too verbose, it is an annotation and that's it!!</span></a> 
+This is usefull to perform peer review via svn.
+that can be inserted in the middle of a paragraph.
+To see the annotations hover the icon.
+Notes indicates who did it, in this case 'DGG',
+and they are also very visible and searchable on the source code.
+</p>
+
+<p>
+Both, TODO's and annotation appear as side notes on the LaTeX output.
+</p>
+
+<h2 id='toc_12'>Figures</h2>
+ <a name='#OtherLabel'></a>
+
+<p>
+Full featured figures can be generated by using the 'Figure:' special word
+</p>
+<div class='figure' id='MyLabel'><img src='wikologo.png' alt='MyLabel'/><br />
+This is the caption text.
+Til the next empty line.
+</div>
+
+<h2 id='toc_13'>Formulas</h2>
+
+<p>
+You can use LaTeX like formulas with WiKo.
+</p>
+
+<p>
+Formulas can be inserted <img class="inlineFormula" src="http://www.forkosh.dreamhost.com/mimetex.cgi?x+1" alt="x+1" /> inline using back-ticks.
+It is equivalent to the dollar syntax in LaTeX.
+</p>
+
+<p>
+You can use the Math: environment to place non-inline formulas:
+</p>
+<div class='equation'><img src=
+'http://www.forkosh.dreamhost.com/mimetex.cgi?\Large{a\over{b-c}}'
+ /></div>
+
+<p>
+Or use the Equation environment to get numbered equations:
+</p>
+<div class='equation'><img src=
+'http://www.forkosh.dreamhost.com/mimetex.cgi?\Large{a\over{b-c}}'
+ /><!--<span class='eqnumber'>(123)</span>--></div>
+
+<div class='equation'><img src=
+'http://www.forkosh.dreamhost.com/mimetex.cgi?\Large{a\over{b-c}}'
+ /><!--<span class='eqnumber'>(123)</span>--></div>
+
+<p>
+Other examples:
+</p>
+
+<p>
+<img class="inlineFormula" src="http://www.forkosh.dreamhost.com/mimetex.cgi?r_iO_i=r_jI_j" alt="r_iO_i=r_jI_j" />
+</p>
+
+<p>
+Were <img class="inlineFormula" src="http://www.forkosh.dreamhost.com/mimetex.cgi?r_i" alt="r_i" /> and <img class="inlineFormula" src="http://www.forkosh.dreamhost.com/mimetex.cgi?r_j" alt="r_j" /> are the number <img class="inlineFormula" src="http://www.forkosh.dreamhost.com/mimetex.cgi?a\over{b}" alt="a\over{b}" /> of times that node i and node j will be fired during a period. The vector <img class="inlineFormula" src="http://www.forkosh.dreamhost.com/mimetex.cgi?\vec{r}" alt="\vec{r}" /> gives the number of repetitions for each node.
+</p>
+
+
+
+
+
+
+</div>
+<div id="footer" style="position: fixed; top: 90%;">
+</div>
+</body>
+</html>
